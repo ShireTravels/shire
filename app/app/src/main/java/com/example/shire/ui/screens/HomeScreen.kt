@@ -22,30 +22,40 @@ import com.example.shire.ui.theme.ShireTheme
 data class PopularDestination(val city: String, val country: String, val imageRes: Int)
 
 @Composable
-fun HomeScreenHotels() {
+fun HomeScreen(onNavigate: (String) -> Unit) {
+    // 1. Mock Data para destinos
     val popularDestinations = listOf(
         PopularDestination("Barcelona", "España", 0),
         PopularDestination("Paris", "Francia", 0),
         PopularDestination("Roma", "Italia", 0),
         PopularDestination("Londres", "Reino Unido", 0),
-        PopularDestination("Tokio", "Japón", 0), // Añadimos más para forzar el scroll
+        PopularDestination("Tokio", "Japón", 0),
         PopularDestination("Nueva York", "USA", 0)
     )
 
-    // Usamos Scaffold para manejar correctamente las áreas seguras (barras del sistema)
     Scaffold(
         modifier = Modifier.fillMaxSize()
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues) // IMPORTANTE: Respetar los espacios del Scaffold
+                .padding(paddingValues)
                 .background(Color.White)
         ) {
+            // ITEM 1: Header con navegación
             item {
-                HeaderShire()
+                HeaderShire(
+                    selectedCategory = "Hoteles",
+                    onCategoryClick = { categoria ->
+                        when (categoria) {
+                            "Vuelos" -> onNavigate("vuelos")
+                            "Alquiler" -> onNavigate("alquiler")
+                        }
+                    }
+                )
             }
 
+            // ITEM 2: Banner promocional (Mock Image)
             item {
                 Card(
                     modifier = Modifier
@@ -60,10 +70,12 @@ fun HomeScreenHotels() {
                 }
             }
 
+            // ITEM 3: Formulario de búsqueda (Asegúrate de tener esta función definida)
             item {
                 SearchForm()
             }
 
+            // ITEM 4: Título de sección
             item {
                 Text(
                     text = "Destinos populares",
@@ -73,10 +85,9 @@ fun HomeScreenHotels() {
                 )
             }
 
-            // Aquí inyectamos el grid manual
+            // ITEM 5: Cuadrícula de destinos (Mock Data)
             item {
                 DestinationGrid(popularDestinations)
-                // Añadimos un Spacer al final para que no quede pegado al borde inferior
                 Spacer(modifier = Modifier.height(32.dp))
             }
         }
@@ -84,8 +95,11 @@ fun HomeScreenHotels() {
 }
 
 @Composable
-fun HeaderShire(modifier: Modifier = Modifier) {
-    Column(modifier = modifier.padding(16.dp)) {
+fun HeaderShire(
+    selectedCategory: String,
+    onCategoryClick: (String) -> Unit
+) {
+    Column(modifier = Modifier.padding(16.dp)) {
         Text(
             text = "Shire",
             color = Color(0xFF0052CC),
@@ -97,17 +111,28 @@ fun HeaderShire(modifier: Modifier = Modifier) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            CategoryButton("Hoteles", true, Modifier.weight(1f))
-            CategoryButton("Vuelos", false, Modifier.weight(1f))
-            CategoryButton("Alquiler", false, Modifier.weight(1f))
+            CategoryButton("Hoteles", selectedCategory == "Hoteles", Modifier.weight(1f)) {
+                onCategoryClick("Hoteles")
+            }
+            CategoryButton("Vuelos", selectedCategory == "Vuelos", Modifier.weight(1f)) {
+                onCategoryClick("Vuelos")
+            }
+            CategoryButton("Alquiler", selectedCategory == "Alquiler", Modifier.weight(1f)) {
+                onCategoryClick("Alquiler")
+            }
         }
     }
 }
 
 @Composable
-fun CategoryButton(label: String, isSelected: Boolean, modifier: Modifier = Modifier) {
+fun CategoryButton(
+    label: String,
+    isSelected: Boolean,
+    modifier: Modifier,
+    onClick: () -> Unit
+) {
     Button(
-        onClick = { },
+        onClick = onClick,
         modifier = modifier,
         shape = RoundedCornerShape(8.dp),
         colors = ButtonDefaults.buttonColors(
@@ -115,10 +140,9 @@ fun CategoryButton(label: String, isSelected: Boolean, modifier: Modifier = Modi
             contentColor = if (isSelected) Color.White else Color.Gray
         )
     ) {
-        Text(text = label, maxLines = 1, fontSize = 12.sp)
+        Text(text = label, maxLines = 1, fontSize = 11.sp)
     }
 }
-
 @Composable
 fun SearchForm(modifier: Modifier = Modifier) {
     Column(modifier = modifier.padding(16.dp)) {
@@ -197,13 +221,5 @@ fun DestinationCard(dest: PopularDestination, modifier: Modifier = Modifier) {
                 Text(dest.country, color = Color.White, fontSize = 12.sp)
             }
         }
-    }
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun HomeScreenHotelsPreview(){
-    ShireTheme {
-        HomeScreenHotels()
     }
 }
