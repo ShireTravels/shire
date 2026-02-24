@@ -10,7 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.shire.ui.theme.ShireTheme
-import com.example.shire.ui.screens.HomeScreenHotels
+import com.example.shire.ui.screens.HomeScreen
 
 
 import com.example.shire.ui.screens.AppNavigation
