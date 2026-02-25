@@ -1,0 +1,147 @@
+classDiagram
+    class User {
+        +userId: String
+        +name: String
+        +email: String
+        +phoneNumber: String
+        +createTrip() Trip
+        +updateProfile() void
+        +getTrips() List~Trip~
+    }
+    
+    class Authentication {
+        +authId: String
+        +passwordHash: String
+        +lastLoginTime: DateTime
+        +authenticate() boolean
+        +logout() void
+        +resetPassword() void
+    }
+    
+    class Preferences {
+        +preferenceId: String
+        +language: String
+        +currency: String
+        +notifications: boolean
+        +darkMode: boolean
+        +updatePreferences() void
+    }
+    
+    class Trip {
+        +tripId: String
+        +title: String
+        +startDate: DateTime
+        +endDate: DateTime
+        +destination: String
+        +budget: Double
+        +addBooking() void
+        +getItinerary() List~Booking~
+        +calculateCost() Double
+    }
+    
+    class Booking {
+        +bookingId: String
+        +bookingDate: DateTime
+        +confirmationNumber: String
+        +status: String
+        +getDetails() String
+        +cancel() void
+    }
+    
+    class Flight {
+        +flightNumber: String
+        +airline: String
+        +departureTime: DateTime
+        +arrivalTime: DateTime
+        +seatNumber: String
+        +getFlightInfo() String
+    }
+    
+    class Hotel {
+        +hotelName: String
+        +roomType: String
+        +checkInDate: DateTime
+        +checkOutDate: DateTime
+        +nightsCount: int
+        +getHotelInfo() String
+    }
+    
+    class RentalCar {
+        +carModel: String
+        +rentalCompany: String
+        +pickupDate: DateTime
+        +dropoffDate: DateTime
+        +licensePlate: String
+        +getCarInfo() String
+    }
+
+    class Car {
+        +carId: String
+        +make: String
+        +model: String
+        +year: int
+        +licensePlate: String
+        +status: String
+        +getAvailability() boolean
+    }
+
+    class Payment {
+        +paymentId: String
+        +amount: Double
+        +paymentMethod: String
+        +transactionDate: DateTime
+        +status: String
+        +processPayment() boolean
+        +getReceipt() String
+    }
+    
+    class Map {
+        +mapId: String
+        +latitude: Double
+        +longitude: Double
+        +zoomLevel: int
+        +displayLocation() void
+        +calculateDistance() Double
+    }
+    
+    class Image {
+        +imageId: String
+        +url: String
+        +uploadDate: DateTime
+        +description: String
+        +uploadImage() void
+        +deleteImage() void
+    }
+    
+    class AIRecommendations {
+        +recommendationId: String
+        +suggestions: List~String~
+        +confidence: Double
+        +generateRecommendations() List~String~
+        +rankRecommendations() void
+    }
+
+    class Review {
+        +reviewId: String
+        +rating: int
+        +comment: String
+        +reviewDate: DateTime
+        +addReview() void
+        +editReview() void
+        +deleteReview() void
+    }
+    
+    User "1" --> "1" Authentication: manages
+    User "1" --> "1" Preferences: owns
+    User "1" --> "*" Trip: owns
+    User "1" --> "*" Review: writes
+    Trip "1" --> "*" Review: has
+    Trip "1" --> "*" Booking: contains
+    Booking <|-- Flight: inherits
+    Booking <|-- Hotel: inherits
+    Booking <|-- RentalCar: inherits
+    RentalCar "1" --> "*" Car: contains
+    Booking "1" --> "1" Payment: books
+    Trip "1" --> "1" Map: uses
+    Trip "1" --> "*" Image: contains
+    Trip "1" --> "1" AIRecommendations: gets
