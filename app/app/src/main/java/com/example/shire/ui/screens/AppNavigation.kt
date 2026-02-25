@@ -31,5 +31,11 @@ fun AppNavigation() {
                 onNavigate = { route -> navController.navigate(route) }
             )
         }
+
+        composable("searchHotel") {
+            HotelsSearch(
+                onNavigate = { route -> navController.navigate(route) }
+            )
+        }
     }
 }
