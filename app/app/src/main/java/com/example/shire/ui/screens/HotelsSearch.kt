@@ -11,15 +11,6 @@ fun HotelsSearch() {
 }
 
 
-
-fun HotelCard() {
-    Card {
-
-    }
-
-}
-
-
 @Preview(showBackground = true , showSystemUi = true)
 @Composable
 fun HotelsSearchPreview() {
