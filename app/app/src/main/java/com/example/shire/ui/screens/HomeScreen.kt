@@ -45,7 +45,7 @@ fun HomeScreen(onNavigate: (String) -> Unit) {
             // ITEM 1: Header con navegación
             item {
                 HeaderShire(
-                    selectedCategory = "Hoteles",
+                    selectedCategory = "searchHotel",
                     onCategoryClick = { categoria ->
                         when (categoria) {
                             "Vuelos" -> onNavigate("vuelos")
@@ -89,6 +89,11 @@ fun HomeScreen(onNavigate: (String) -> Unit) {
             item {
                 DestinationGrid(popularDestinations)
                 Spacer(modifier = Modifier.height(32.dp))
+            }
+
+            item {
+                // AQUÍ: Pasamos el onNavigate al formulario de búsqueda
+                SearchForm(onNavigate = onNavigate)
             }
         }
     }
@@ -143,8 +148,9 @@ fun CategoryButton(
         Text(text = label, maxLines = 1, fontSize = 11.sp)
     }
 }
+
 @Composable
-fun SearchForm(modifier: Modifier = Modifier) {
+fun SearchForm(modifier: Modifier = Modifier, onNavigate: (String) -> Unit = {}) {
     Column(modifier = modifier.padding(16.dp)) {
         Text("¿Dónde quieres alojarte?", fontWeight = FontWeight.Bold, fontSize = 20.sp)
         Spacer(modifier = Modifier.height(16.dp))
@@ -179,8 +185,21 @@ fun SearchForm(modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
+
+        // NUEVO: CategoryButton para cambiar al layout SearchHotel
+        // Lo configuramos para que parezca un botón de acceso rápido
+        CategoryButton(
+            label = "Ver listado de Hoteles",
+            isSelected = false,
+            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+        ) {
+            onNavigate("searchHotel")
+        }
+
         Button(
-            onClick = {},
+            onClick = {
+                onNavigate("searchHotel")
+            },
             modifier = Modifier.fillMaxWidth().height(50.dp),
             shape = RoundedCornerShape(8.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1A73E8))
@@ -222,4 +241,10 @@ fun DestinationCard(dest: PopularDestination, modifier: Modifier = Modifier) {
             }
         }
     }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun HomeScreenPreview() {
+    HomeScreen(onNavigate = {})
 }
