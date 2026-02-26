@@ -1,3 +1,5 @@
+package com.example.shire.ui.screens
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -6,13 +8,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.shire.ui.screens.HeaderShire
-import androidx.compose.material.icons.filled.DirectionsCar
+import com.example.shire.ui.components.HeaderShire
+import com.example.shire.ui.components.ShireButton
+import com.example.shire.ui.components.ShireCard
 
 // 1. Modelo de datos para los coches (Mock Data)
 data class CarRental(val model: String, val type: String, val pricePerDay: String)
@@ -65,7 +67,20 @@ fun HomeScreenRent(onNavigate: (String) -> Unit) {
 
                 // ITEM 4: Listado de coches (Populated with Mock Data)
                 items(mockCars) { car ->
-                    CarCard(car)
+                    ShireCard(
+                        title = car.model,
+                        subtitle = car.type,
+                        price = car.pricePerDay,
+                        priceSuffix = " / día",
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.DirectionsCar,
+                                contentDescription = null,
+                                modifier = Modifier.size(40.dp),
+                                tint = Color.LightGray
+                            )
+                        }
+                    )
                 }
             }
         }
@@ -100,50 +115,10 @@ fun RentSearchForm() {
             )
         }
 
-        Button(
+        ShireButton(
+            text = "Buscar disponibilidad",
             onClick = {},
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp)
-                .height(50.dp),
-            shape = MaterialTheme.shapes.medium
-        ) {
-            Text("Buscar disponibilidad")
-        }
-    }
-}
-
-@Composable
-fun CarCard(car: CarRental) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        elevation = CardDefaults.cardElevation(2.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column {
-                Text(text = car.model, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text(text = car.type, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-                Text(
-                    text = "${car.pricePerDay} / día",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Color(0xFF1A73E8),
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            Icon(
-                imageVector = Icons.Default.DirectionsCar,
-                contentDescription = null,
-                modifier = Modifier.size(40.dp),
-                tint = Color.LightGray
-            )
-        }
+            modifier = Modifier.padding(top = 16.dp)
+        )
     }
 }
