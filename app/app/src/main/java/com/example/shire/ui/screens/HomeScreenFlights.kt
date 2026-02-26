@@ -1,9 +1,7 @@
 package com.example.shire.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,8 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -23,8 +19,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-
-
+import com.example.shire.ui.components.HeaderShire
+import com.example.shire.ui.components.ShireCard
 
 @Composable
 fun HomeScreenFlights(onNavigate: (String) -> Unit) {
@@ -73,7 +69,11 @@ fun HomeScreenFlights(onNavigate: (String) -> Unit) {
 
                 // ITEM 4: La lista de vuelos (Mock Data)
                 items(mockFlights) { flight ->
-                    FlightCard(flight)
+                    ShireCard(
+                        title = flight.airline,
+                        subtitle = "${flight.departure} - ${flight.arrival}",
+                        price = flight.price
+                    )
                 }
             }
         }
@@ -82,22 +82,6 @@ fun HomeScreenFlights(onNavigate: (String) -> Unit) {
 
 // Modelo de datos para el simulacro
 data class FlightInfo(val airline: String, val departure: String, val arrival: String, val price: String)
-
-@Composable
-fun FlightCard(flight: FlightInfo) {
-    Card(
-        modifier = Modifier.fillMaxWidth().padding(8.dp),
-        elevation = CardDefaults.cardElevation(4.dp)
-    ) {
-        Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-            Column {
-                Text(flight.airline, fontWeight = FontWeight.Bold)
-                Text("${flight.departure} - ${flight.arrival}")
-            }
-            Text(flight.price, color = Color(0xFF1A73E8), fontWeight = FontWeight.Bold)
-        }
-    }
-}
 
 @Composable
 fun FlightSearchForm() {
@@ -111,4 +95,3 @@ fun FlightSearchForm() {
         }
     }
 }
-

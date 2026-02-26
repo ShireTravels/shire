@@ -17,13 +17,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.shire.ui.theme.ShireTheme
+import com.example.shire.ui.components.HeaderShire
+import com.example.shire.ui.components.SectionTitle
+import com.example.shire.ui.components.ShireButton
+import com.example.shire.ui.components.ShireTextField
 
 data class PopularDestination(val city: String, val country: String, val imageRes: Int)
 
 @Composable
 fun HomeScreen(onNavigate: (String) -> Unit) {
-    // 1. Mock Data para destinos
     val popularDestinations = listOf(
         PopularDestination("Barcelona", "España", 0),
         PopularDestination("Paris", "Francia", 0),
@@ -42,7 +44,6 @@ fun HomeScreen(onNavigate: (String) -> Unit) {
                 .padding(paddingValues)
                 .background(Color.White)
         ) {
-            // ITEM 1: Header con navegación
             item {
                 HeaderShire(
                     selectedCategory = "searchHotel",
@@ -55,7 +56,6 @@ fun HomeScreen(onNavigate: (String) -> Unit) {
                 )
             }
 
-            // ITEM 2: Banner promocional (Mock Image)
             item {
                 Card(
                     modifier = Modifier
@@ -70,82 +70,19 @@ fun HomeScreen(onNavigate: (String) -> Unit) {
                 }
             }
 
-            // ITEM 3: Formulario de búsqueda (Asegúrate de tener esta función definida)
             item {
-                SearchForm()
+                SearchForm(onNavigate = onNavigate)
             }
 
-            // ITEM 4: Título de sección
             item {
-                Text(
-                    text = "Destinos populares",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(16.dp)
-                )
+                SectionTitle(text = "Destinos populares")
             }
 
-            // ITEM 5: Cuadrícula de destinos (Mock Data)
             item {
                 DestinationGrid(popularDestinations)
                 Spacer(modifier = Modifier.height(32.dp))
             }
-
-            item {
-                // AQUÍ: Pasamos el onNavigate al formulario de búsqueda
-                SearchForm(onNavigate = onNavigate)
-            }
         }
-    }
-}
-
-@Composable
-fun HeaderShire(
-    selectedCategory: String,
-    onCategoryClick: (String) -> Unit
-) {
-    Column(modifier = Modifier.padding(16.dp)) {
-        Text(
-            text = "Shire",
-            color = Color(0xFF0052CC),
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.ExtraBold
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            CategoryButton("Hoteles", selectedCategory == "Hoteles", Modifier.weight(1f)) {
-                onCategoryClick("Hoteles")
-            }
-            CategoryButton("Vuelos", selectedCategory == "Vuelos", Modifier.weight(1f)) {
-                onCategoryClick("Vuelos")
-            }
-            CategoryButton("Alquiler", selectedCategory == "Alquiler", Modifier.weight(1f)) {
-                onCategoryClick("Alquiler")
-            }
-        }
-    }
-}
-
-@Composable
-fun CategoryButton(
-    label: String,
-    isSelected: Boolean,
-    modifier: Modifier,
-    onClick: () -> Unit
-) {
-    Button(
-        onClick = onClick,
-        modifier = modifier,
-        shape = RoundedCornerShape(8.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = if (isSelected) Color(0xFF1A73E8) else Color(0xFFF1F3F4),
-            contentColor = if (isSelected) Color.White else Color.Gray
-        )
-    ) {
-        Text(text = label, maxLines = 1, fontSize = 11.sp)
     }
 }
 
@@ -155,59 +92,47 @@ fun SearchForm(modifier: Modifier = Modifier, onNavigate: (String) -> Unit = {})
         Text("¿Dónde quieres alojarte?", fontWeight = FontWeight.Bold, fontSize = 20.sp)
         Spacer(modifier = Modifier.height(16.dp))
 
-        OutlinedTextField(
+        ShireTextField(
             value = "",
             onValueChange = {},
-            label = { Text("Destino") },
-            placeholder = { Text("País o ciudad") },
-            modifier = Modifier.fillMaxWidth(),
-            leadingIcon = { Icon(Icons.Default.LocationOn, null) }
+            label = "Destino",
+            placeholder = "País o ciudad",
+            leadingIcon = Icons.Default.LocationOn
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedTextField(
+            ShireTextField(
                 value = "",
                 onValueChange = {},
-                label = { Text("Entrada") },
+                label = "Entrada",
                 modifier = Modifier.weight(1f),
-                leadingIcon = { Icon(Icons.Default.DateRange, null) }
+                leadingIcon = Icons.Default.DateRange
             )
-            OutlinedTextField(
+            ShireTextField(
                 value = "",
                 onValueChange = {},
-                label = { Text("Salida") },
+                label = "Salida",
                 modifier = Modifier.weight(1f),
-                leadingIcon = { Icon(Icons.Default.DateRange, null) }
+                leadingIcon = Icons.Default.DateRange
             )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        ShireButton(
+            text = "Ver listado de Hoteles",
+            onClick = { onNavigate("searchHotel") },
+            containerColor = Color(0xFFF1F3F4),
+            contentColor = Color.Gray
+        )
 
-        // NUEVO: CategoryButton para cambiar al layout SearchHotel
-        // Lo configuramos para que parezca un botón de acceso rápido
-        CategoryButton(
-            label = "Ver listado de Hoteles",
-            isSelected = false,
-            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
-        ) {
-            onNavigate("searchHotel")
-        }
-
-        Button(
-            onClick = {
-                onNavigate("searchHotel")
-            },
-            modifier = Modifier.fillMaxWidth().height(50.dp),
-            shape = RoundedCornerShape(8.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1A73E8))
-        ) {
-            Icon(Icons.Default.Search, null)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Buscar")
-        }
+        ShireButton(
+            text = "Buscar",
+            onClick = { onNavigate("searchHotel") },
+            icon = Icons.Default.Search
+        )
     }
 }
 
