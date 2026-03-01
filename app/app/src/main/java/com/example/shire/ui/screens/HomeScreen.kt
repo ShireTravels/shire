@@ -10,6 +10,10 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -88,13 +92,17 @@ fun HomeScreen(onNavigate: (String) -> Unit) {
 
 @Composable
 fun SearchForm(modifier: Modifier = Modifier, onNavigate: (String) -> Unit = {}) {
+    var destination by remember { mutableStateOf("") }
+    var checkIn by remember { mutableStateOf("") }
+    var checkOut by remember { mutableStateOf("") }
+
     Column(modifier = modifier.padding(16.dp)) {
         Text("¿Dónde quieres alojarte?", fontWeight = FontWeight.Bold, fontSize = 20.sp)
         Spacer(modifier = Modifier.height(16.dp))
 
         ShireTextField(
-            value = "",
-            onValueChange = {},
+            value = destination,
+            onValueChange = { destination = it },
             label = "Destino",
             placeholder = "País o ciudad",
             leadingIcon = Icons.Default.LocationOn
@@ -104,15 +112,15 @@ fun SearchForm(modifier: Modifier = Modifier, onNavigate: (String) -> Unit = {})
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             ShireTextField(
-                value = "",
-                onValueChange = {},
+                value = checkIn,
+                onValueChange = { checkIn = it },
                 label = "Entrada",
                 modifier = Modifier.weight(1f),
                 leadingIcon = Icons.Default.DateRange
             )
             ShireTextField(
-                value = "",
-                onValueChange = {},
+                value = checkOut,
+                onValueChange = { checkOut = it },
                 label = "Salida",
                 modifier = Modifier.weight(1f),
                 leadingIcon = Icons.Default.DateRange
