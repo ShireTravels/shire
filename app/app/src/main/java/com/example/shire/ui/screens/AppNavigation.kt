@@ -36,5 +36,11 @@ fun AppNavigation() {
                 onNavigate = { route -> navController.navigate(route) }
             )
         }
+
+        composable("hotel_details") {
+            HotelDetailsScreen(
+                onNavigateUp = { navController.popBackStack() }
+            )
+        }
     }
 }

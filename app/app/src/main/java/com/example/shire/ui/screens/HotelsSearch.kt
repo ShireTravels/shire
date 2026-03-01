@@ -14,14 +14,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.shire.ui.components.SectionTitle
 import com.example.shire.ui.components.ShireButton
 import com.example.shire.ui.components.ShireTextField
 import com.example.shire.ui.theme.ShireTheme
 
 data class HotelOffer(val city: String, val price: String)
+data class HotelResult(val name: String, val location: String, val rating: String, val price: String)
 
 @Composable
 fun HotelsSearch(onNavigate: (String) -> Unit) {
@@ -35,6 +38,12 @@ fun HotelsSearch(onNavigate: (String) -> Unit) {
         HotelOffer("Harlow", "120"),
         HotelOffer("Londres", "85"),
         HotelOffer("Paris", "140")
+    )
+
+    val searchResults = listOf(
+        HotelResult("Hotel Plaza", "Barcelona", "4.5/5", "120€"),
+        HotelResult("Gran Via Resort", "Madrid", "4.2/5", "95€"),
+        HotelResult("Sea View", "Costa Brava", "4.8/5", "150€")
     )
 
     Scaffold(
@@ -155,6 +164,18 @@ fun HotelsSearch(onNavigate: (String) -> Unit) {
                         HotelOfferCard(offer = offer)
                     }
                 }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            item {
+                SectionTitle(text = "Resultados encontrados")
+            }
+
+            items(searchResults) { hotel ->
+                HotelResultCard(hotel = hotel, onClick = { onNavigate("hotel_details") })
+            }
+
+            item {
                 Spacer(modifier = Modifier.height(32.dp))
             }
         }
@@ -202,6 +223,100 @@ fun HotelOfferCard(offer: HotelOffer, modifier: Modifier = Modifier) {
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun HotelResultCard(hotel: HotelResult, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(140.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        onClick = onClick
+    ) {
+        Row(modifier = Modifier.fillMaxSize()) {
+            // Image Placeholder
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .width(120.dp)
+                    .background(Color.Gray)
+            )
+
+            // Content
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(12.dp),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                // Top Row: Title, Location and Rating
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = hotel.name,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = hotel.location,
+                            fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    // Rating Badge
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                color = Color(0xFF003B95), // Booking.com style blue
+                                shape = RoundedCornerShape(4.dp)
+                            )
+                            .padding(horizontal = 6.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = hotel.rating,
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp
+                        )
+                    }
+                }
+
+                // Bottom Row: Price Strategy
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = "1 noche, 2 adultos",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = hotel.price,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
             }
         }
     }
