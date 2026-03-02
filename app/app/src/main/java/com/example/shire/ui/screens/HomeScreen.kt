@@ -50,9 +50,10 @@ fun HomeScreen(onNavigate: (String) -> Unit) {
         ) {
             item {
                 HeaderShire(
-                    selectedCategory = "searchHotel",
+                    selectedCategory = "Hoteles",
                     onCategoryClick = { categoria ->
                         when (categoria) {
+                            "Hoteles" -> onNavigate("home")
                             "Vuelos" -> onNavigate("vuelos")
                             "Alquiler" -> onNavigate("alquiler")
                         }
@@ -141,6 +142,29 @@ fun SearchForm(modifier: Modifier = Modifier, onNavigate: (String) -> Unit = {})
             onClick = { onNavigate("searchHotel") },
             icon = Icons.Default.Search
         )
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        // Quick access to new screens as requested
+        Text("Explora tus nuevos espacios", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.onBackground)
+        Spacer(modifier = Modifier.height(12.dp))
+        
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            ShireButton(
+                text = "Mis Viajes",
+                onClick = { onNavigate("trips") },
+                modifier = Modifier.weight(1f),
+                containerColor = Color(0xFFFCE4EC),
+                contentColor = Color(0xFFC2185B)
+            )
+            ShireButton(
+                text = "Mi Perfil",
+                onClick = { onNavigate("profile") },
+                modifier = Modifier.weight(1f),
+                containerColor = Color(0xFFE3F2FD),
+                contentColor = Color(0xFF1976D2)
+            )
+        }
     }
 }
 
