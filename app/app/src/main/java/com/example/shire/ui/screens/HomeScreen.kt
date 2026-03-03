@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.shire.ui.components.DestinationCard
 import com.example.shire.ui.components.HeaderShire
 import com.example.shire.ui.components.SectionTitle
 import com.example.shire.ui.components.ShireButton
@@ -181,24 +182,7 @@ fun DestinationGrid(items: List<PopularDestination>, modifier: Modifier = Modifi
     }
 }
 
-@Composable
-fun DestinationCard(dest: PopularDestination, modifier: Modifier = Modifier) {
-    Card(
-        modifier = modifier.padding(8.dp).height(150.dp),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            Box(modifier = Modifier.fillMaxSize().background(Color.Gray))
 
-            Column(
-                modifier = Modifier.align(Alignment.BottomStart).padding(8.dp)
-            ) {
-                Text(dest.city, color = Color.White, fontWeight = FontWeight.Bold)
-                Text(dest.country, color = Color.White, fontSize = 12.sp)
-            }
-        }
-    }
-}
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
