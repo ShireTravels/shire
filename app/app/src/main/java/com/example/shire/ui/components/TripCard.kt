@@ -16,6 +16,8 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.shire.R // Tu paquete de recursos
@@ -35,7 +37,7 @@ fun TripCard(trip: UpcomingTrip, onClick: () -> Unit) {
         Box(modifier = Modifier.height(280.dp)) {
             // 1. IMAGEN DE FONDO
             Image(
-                painter = painterResource(id = R.drawable.shiretitle), // Aquí iría la foto del destino
+                painter = painterResource(id = R.drawable.monkey), // Aquí iría la foto del destino
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
