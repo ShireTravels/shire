@@ -11,8 +11,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun BottomNavBar(
@@ -36,9 +38,12 @@ fun BottomNavBar(
                 horizontalArrangement = Arrangement.SpaceAround,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Home
+                // SECCIÓN IZQUIERDA: Home
                 Box(
-                    modifier = Modifier.weight(1f).fillMaxHeight().clickable { onNavigate("home") },
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .clickable { onNavigate("home") },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -48,20 +53,28 @@ fun BottomNavBar(
                         modifier = Modifier.size(32.dp)
                     )
                 }
+
                 // Empty space for the floating center button
                 Spacer(modifier = Modifier.weight(1f))
 
-                // Profile
+
+                // SECCIÓN DERECHA: Perfil
                 Box(
-                    modifier = Modifier.weight(1f).fillMaxHeight().clickable { onNavigate("profile") },
+                    modifier = Modifier
+                        .weight(1f) // Ocupa exactamente 1/3
+                        .fillMaxHeight()
+                        .clickable { onNavigate("profile") },
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = "Profile",
-                        tint = if (currentRoute == "profile") Color(0xFF006CE4) else Color.Gray,
-                        modifier = Modifier.size(32.dp)
-                    )
+                    // Círculo de perfil centrado en su tercio
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .background(Color(0xFFFF9800), shape = CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("V", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    }
                 }
             }
         }
