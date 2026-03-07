@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -47,35 +48,8 @@ fun BottomNavBar(
                         modifier = Modifier.size(32.dp)
                     )
                 }
-
-                // Hotels
-                Box(
-                    modifier = Modifier.weight(1f).fillMaxHeight().clickable { onNavigate("searchHotel") },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.LocationOn,
-                        contentDescription = "Hotels",
-                        tint = if (currentRoute == "searchHotel" || currentRoute == "hoteles") Color(0xFF006CE4) else Color.Gray,
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
-
                 // Empty space for the floating center button
                 Spacer(modifier = Modifier.weight(1f))
-
-                // Planes
-                Box(
-                    modifier = Modifier.weight(1f).fillMaxHeight().clickable { onNavigate("vuelos") },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Send,
-                        contentDescription = "Planes",
-                        tint = if (currentRoute == "vuelos") Color(0xFF006CE4) else Color.Gray,
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
 
                 // Profile
                 Box(
@@ -114,3 +88,4 @@ fun BottomNavBar(
         }
     }
 }
+

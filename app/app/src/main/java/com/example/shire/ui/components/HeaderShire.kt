@@ -1,14 +1,19 @@
 package com.example.shire.ui.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.shire.R
+
 
 @Composable
 fun HeaderShire(
@@ -16,8 +21,9 @@ fun HeaderShire(
     onCategoryClick: (String) -> Unit
 ) {
     Column(modifier = Modifier.padding(16.dp)) {
+
         Text(
-            text = "Shire",
+            text = "Crea un nuevo viaje",
             color = Color(0xFF0052CC),
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.ExtraBold

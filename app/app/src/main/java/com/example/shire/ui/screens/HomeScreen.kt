@@ -31,6 +31,7 @@ data class PopularDestination(val city: String, val country: String, val imageRe
 
 @Composable
 fun HomeScreen(onNavigate: (String) -> Unit) {
+
     val popularDestinations = listOf(
         PopularDestination("Barcelona", "España", 0),
         PopularDestination("Paris", "Francia", 0),
@@ -63,21 +64,7 @@ fun HomeScreen(onNavigate: (String) -> Unit) {
             }
 
             item {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp)
-                        .padding(horizontal = 16.dp),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Box(modifier = Modifier.fillMaxSize().background(Color.LightGray)) {
-                        Text("Imagen Playa", modifier = Modifier.align(Alignment.Center))
-                    }
-                }
-            }
-
-            item {
-                SearchForm(onNavigate = onNavigate)
+                SearchForm { onNavigate("searchHotel") }
             }
 
             item {
@@ -93,13 +80,17 @@ fun HomeScreen(onNavigate: (String) -> Unit) {
 }
 
 @Composable
-fun SearchForm(modifier: Modifier = Modifier, onNavigate: (String) -> Unit = {}) {
+fun SearchForm(
+    modifier: Modifier = Modifier,
+    onNavigate: (String) -> Unit = {}
+
+) {
     var destination by remember { mutableStateOf("") }
     var checkIn by remember { mutableStateOf("") }
     var checkOut by remember { mutableStateOf("") }
 
     Column(modifier = modifier.padding(16.dp)) {
-        Text("¿Dónde quieres alojarte?", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+        Text("¿Dónde quieres alojarte?", fontWeight = FontWeight.Bold, fontSize = 25.sp)
         Spacer(modifier = Modifier.height(16.dp))
 
         ShireTextField(
@@ -132,42 +123,17 @@ fun SearchForm(modifier: Modifier = Modifier, onNavigate: (String) -> Unit = {})
         Spacer(modifier = Modifier.height(16.dp))
 
         ShireButton(
-            text = "Ver listado de Hoteles",
-            onClick = { onNavigate("searchHotel") },
-            containerColor = Color(0xFFF1F3F4),
-            contentColor = Color.Gray
-        )
-
-        ShireButton(
             text = "Buscar",
             onClick = { onNavigate("searchHotel") },
             icon = Icons.Default.Search
         )
-        
-        Spacer(modifier = Modifier.height(24.dp))
-        
-        // Quick access to new screens as requested
-        Text("Explora tus nuevos espacios", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.onBackground)
-        Spacer(modifier = Modifier.height(12.dp))
-        
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            ShireButton(
-                text = "Mis Viajes",
-                onClick = { onNavigate("trips") },
-                modifier = Modifier.weight(1f),
-                containerColor = Color(0xFFFCE4EC),
-                contentColor = Color(0xFFC2185B)
-            )
-            ShireButton(
-                text = "Mi Perfil",
-                onClick = { onNavigate("profile") },
-                modifier = Modifier.weight(1f),
-                containerColor = Color(0xFFE3F2FD),
-                contentColor = Color(0xFF1976D2)
-            )
-        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+
     }
 }
+
 
 @Composable
 fun DestinationGrid(items: List<PopularDestination>, modifier: Modifier = Modifier) {

@@ -42,7 +42,7 @@ fun TripsScreen(onNavigate: (String) -> Unit) {
         containerColor = MaterialTheme.colorScheme.background,
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { /* TODO Add trip */ },
+                onClick = { onNavigate("home") },
                 containerColor = Color(0xFF006CE4),
                 shape = CircleShape,
                 modifier = Modifier.padding(bottom = 80.dp) // Avoid bottom nav bar overlap
@@ -85,7 +85,7 @@ fun TripsScreen(onNavigate: (String) -> Unit) {
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "Mis Viajes",
+                        text = "Shire",
                         color = Color.White,
                         fontSize = 32.sp,
                         fontWeight = FontWeight.Bold

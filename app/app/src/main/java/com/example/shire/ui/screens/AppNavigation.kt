@@ -47,9 +47,13 @@ fun AppNavigation() {
     ) { innerPadding ->
         NavHost(
             navController = navController, 
-            startDestination = "home",
+            startDestination = "tripsScreen",
             modifier = Modifier.padding(innerPadding)
         ) {
+            // Página Trips
+            composable("tripsScreen") {
+                TripsScreen(onNavigate = navigateAction)
+            }
             // Página Principal
             composable("home") {
                 HomeScreen(onNavigate = navigateAction)
