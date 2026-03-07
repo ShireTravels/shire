@@ -12,12 +12,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.shire.ui.components.SectionTitle
 import com.example.shire.ui.components.ShireButton
 import com.example.shire.ui.components.ShireTextField
@@ -57,16 +57,23 @@ fun HotelsSearch(onNavigate: (String) -> Unit) {
         ) {
             // Header Content
             item {
-                Column(
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp)
-                        .padding(top = 16.dp)
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.primary,
+                                    MaterialTheme.colorScheme.primaryContainer
+                                )
+                            )
+                        )
+                        .padding(horizontal = 24.dp, vertical = 40.dp)
                 ) {
                     Text(
                         text = "Reserva de Hotel",
-                        color = MaterialTheme.colorScheme.onBackground,
-                        fontSize = 28.sp,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        style = MaterialTheme.typography.headlineLarge,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -74,20 +81,21 @@ fun HotelsSearch(onNavigate: (String) -> Unit) {
 
             // Form Content
             item {
-                Card(
+                Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .padding(bottom = 24.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        .padding(16.dp)
+                        .offset(y = (-20).dp),
+                    shape = MaterialTheme.shapes.large,
+                    color = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 2.dp,
+                    shadowElevation = 8.dp
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                            .padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         ShireTextField(
                             label = "Destino/nombre del hotel",
@@ -116,12 +124,13 @@ fun HotelsSearch(onNavigate: (String) -> Unit) {
                         ) {
                             Checkbox(
                                 checked = alojamientoSoloParte,
-                                onCheckedChange = { alojamientoSoloParte = it }
+                                onCheckedChange = { alojamientoSoloParte = it },
+                                colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.primary)
                             )
                             Text(
                                 text = "Alojamiento solo para una parte de mi viaje",
+                                style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurface,
-                                fontSize = 14.sp,
                                 modifier = Modifier.padding(start = 4.dp)
                             )
                         }
@@ -141,13 +150,12 @@ fun HotelsSearch(onNavigate: (String) -> Unit) {
                 Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                     Text(
                         text = "Ofertas de Hotel",
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.primary
                     )
                     Text(
                         text = "Descubre nuestros destinos más populares",
-                        fontSize = 14.sp,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -164,7 +172,6 @@ fun HotelsSearch(onNavigate: (String) -> Unit) {
                         HotelOfferCard(offer = offer)
                     }
                 }
-                Spacer(modifier = Modifier.height(16.dp))
             }
 
             item {
@@ -188,40 +195,60 @@ fun HotelOfferCard(offer: HotelOffer, modifier: Modifier = Modifier) {
         modifier = modifier
             .width(200.dp)
             .height(240.dp),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             // Image Placeholder
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Gray)
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.tertiaryContainer,
+                                MaterialTheme.colorScheme.tertiary
+                            )
+                        )
+                    )
             )
             
+            // Gradient Overlay
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.6f)),
+                            startY = 300f
+                        )
+                    )
+            )
+
             // City Name
             Text(
                 text = offer.city,
                 color = Color.White,
+                style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                fontSize = 20.sp,
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .padding(16.dp)
             )
             
             // Price Tag
-            Box(
+            Surface(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(8.dp)
-                    .background(Color(0xFF006CE4), RoundedCornerShape(4.dp))
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                    .padding(12.dp),
+                color = MaterialTheme.colorScheme.primary,
+                shape = RoundedCornerShape(8.dp)
             ) {
                 Text(
                     text = "desde ${offer.price} €",
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    style = MaterialTheme.typography.labelLarge,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                 )
             }
         }
@@ -235,7 +262,7 @@ fun HotelResultCard(hotel: HotelResult, onClick: () -> Unit, modifier: Modifier 
             .fillMaxWidth()
             .height(140.dp)
             .padding(horizontal = 16.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         onClick = onClick
@@ -246,7 +273,7 @@ fun HotelResultCard(hotel: HotelResult, onClick: () -> Unit, modifier: Modifier 
                 modifier = Modifier
                     .fillMaxHeight()
                     .width(120.dp)
-                    .background(Color.Gray)
+                    .background(MaterialTheme.colorScheme.secondaryContainer)
             )
 
             // Content
@@ -256,7 +283,6 @@ fun HotelResultCard(hotel: HotelResult, onClick: () -> Unit, modifier: Modifier 
                     .padding(12.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                // Top Row: Title, Location and Rating
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -265,39 +291,32 @@ fun HotelResultCard(hotel: HotelResult, onClick: () -> Unit, modifier: Modifier 
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = hotel.name,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp,
+                            style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSurface,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
-                        Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = hotel.location,
-                            fontSize = 14.sp,
+                            style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
 
-                    // Rating Badge
-                    Box(
-                        modifier = Modifier
-                            .background(
-                                color = Color(0xFF003B95), // Booking.com style blue
-                                shape = RoundedCornerShape(4.dp)
-                            )
-                            .padding(horizontal = 6.dp, vertical = 4.dp)
+                    Surface(
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        shape = RoundedCornerShape(4.dp)
                     ) {
                         Text(
                             text = hotel.rating,
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp),
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
 
-                // Bottom Row: Price Strategy
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End,
@@ -306,14 +325,14 @@ fun HotelResultCard(hotel: HotelResult, onClick: () -> Unit, modifier: Modifier 
                     Column(horizontalAlignment = Alignment.End) {
                         Text(
                             text = "1 noche, 2 adultos",
-                            fontSize = 11.sp,
+                            style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
                             text = hotel.price,
+                            style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                 }

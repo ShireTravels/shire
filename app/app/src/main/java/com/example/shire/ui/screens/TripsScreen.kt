@@ -12,11 +12,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.shire.ui.theme.ShireTheme
 
 data class UpcomingTrip(
@@ -26,7 +25,7 @@ data class UpcomingTrip(
     val price: String,
     val progress: Float
 )
-@OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 fun TripsScreen(onNavigate: (String) -> Unit) {
     val trips = listOf(
@@ -36,18 +35,19 @@ fun TripsScreen(onNavigate: (String) -> Unit) {
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        containerColor = Color(0xFFF8F9FA), // Fondo ligeramente gris para que resalten las cards blancas
+        containerColor = MaterialTheme.colorScheme.background,
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { onNavigate("home") },
-                containerColor = Color(0xFF006CE4),
+                onClick = { onNavigate("create_trip") },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
                 shape = CircleShape,
-                modifier = Modifier.offset(y = 10.dp) // Ajuste para que no choque con la BottomNav
+                modifier = Modifier.padding(bottom = 16.dp)
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Añadir Viaje", tint = Color.White)
+                Icon(Icons.Default.Add, contentDescription = "Añadir Viaje")
             }
         },
-        floatingActionButtonPosition = FabPosition.Start
+        floatingActionButtonPosition = FabPosition.End
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
@@ -60,25 +60,27 @@ fun TripsScreen(onNavigate: (String) -> Unit) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(
-                            brush = androidx.compose.ui.graphics.Brush.verticalGradient(
-                                colors = listOf(Color(0xFF006CE4), Color(0xFF004BA0))
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.primary,
+                                    MaterialTheme.colorScheme.primaryContainer
+                                )
                             )
                         )
-                        .padding(horizontal = 24.dp, vertical = 32.dp)
+                        .padding(horizontal = 24.dp, vertical = 40.dp)
                 ) {
                     Column {
                         Text(
                             text = "Buenos días, Victor \uD83D\uDC4B",
-                            color = Color.White.copy(alpha = 0.8f),
-                            fontSize = 14.sp
+                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
+                            style = MaterialTheme.typography.labelLarge
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "SHIRE",
-                            color = Color.White,
-                            fontSize = 28.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            lineHeight = 34.sp
+                            text = "TUS VIAJES",
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            style = MaterialTheme.typography.headlineLarge,
+                            fontWeight = FontWeight.ExtraBold
                         )
                     }
                 }
@@ -95,56 +97,40 @@ fun TripsScreen(onNavigate: (String) -> Unit) {
                 ) {
                     Text(
                         text = "Itinerarios activos",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1A1C1E)
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                     TextButton(onClick = { /* TODO */ }) {
-                        Text("Ver historial", color = Color(0xFF006CE4), fontWeight = FontWeight.SemiBold)
+                        Text(
+                            text = "Ver historial",
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.labelLarge
+                        )
                     }
                 }
             }
 
-            // Implementación usando tu ShireCard personalizada
             items(trips) { trip ->
                 TripCard(trip = trip, onClick = { onNavigate("trip_details/" + trip.id) })
             }
 
-
-            // Sección de Título de Lista
             item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Proximos Itinerarios",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1A1C1E)
-                    )
-                    TextButton(onClick = { /* TODO */ }) {
-                        Text("Ver historial", color = Color(0xFF006CE4), fontWeight = FontWeight.SemiBold)
-                    }
-                }
+                Text(
+                    text = "Próximos Itinerarios",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 8.dp)
+                )
             }
 
-            // Implementación usando tu ShireCard personalizada
             items(trips) { trip ->
                 TripCard(trip = trip, onClick = { onNavigate("trip_details/" + trip.id) })
             }
 
-
-            // Espaciador final para no tapar contenido
             item { Spacer(modifier = Modifier.height(100.dp)) }
         }
     }
 }
-
-
 
 @Preview(showBackground = true)
 @Composable
@@ -153,4 +139,3 @@ fun TripsScreenPreview() {
         TripsScreen(onNavigate = {})
     }
 }
-

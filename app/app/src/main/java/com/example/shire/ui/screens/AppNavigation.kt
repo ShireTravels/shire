@@ -98,6 +98,11 @@ fun AppNavigation() {
             composable("terms") {
                 TermsScreen(onNavigateUp = { navController.popBackStack() })
             }
+            composable("create_trip") {
+                CreateTripScreen(
+                    onNavigateUp = { navController.popBackStack() }
+                )
+            }
         }
     }
 }

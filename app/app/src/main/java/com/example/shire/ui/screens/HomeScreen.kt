@@ -3,7 +3,6 @@ package com.example.shire.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.LocationOn
@@ -14,13 +13,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.shire.ui.components.DestinationCard
 import com.example.shire.ui.components.HeaderShire
 import com.example.shire.ui.components.SectionTitle
@@ -48,7 +44,7 @@ fun HomeScreen(onNavigate: (String) -> Unit) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(Color.White)
+                .background(MaterialTheme.colorScheme.background)
         ) {
             item {
                 HeaderShire(
@@ -83,54 +79,62 @@ fun HomeScreen(onNavigate: (String) -> Unit) {
 fun SearchForm(
     modifier: Modifier = Modifier,
     onNavigate: (String) -> Unit = {}
-
 ) {
     var destination by remember { mutableStateOf("") }
     var checkIn by remember { mutableStateOf("") }
     var checkOut by remember { mutableStateOf("") }
 
-    Column(modifier = modifier.padding(16.dp)) {
-        Text("¿Dónde quieres alojarte?", fontWeight = FontWeight.Bold, fontSize = 25.sp)
-        Spacer(modifier = Modifier.height(16.dp))
-
-        ShireTextField(
-            value = destination,
-            onValueChange = { destination = it },
-            label = "Destino",
-            placeholder = "País o ciudad",
-            leadingIcon = Icons.Default.LocationOn
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            ShireTextField(
-                value = checkIn,
-                onValueChange = { checkIn = it },
-                label = "Entrada",
-                modifier = Modifier.weight(1f),
-                leadingIcon = Icons.Default.DateRange
+    Surface(
+        modifier = modifier.padding(16.dp),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 2.dp,
+        shadowElevation = 4.dp
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Text(
+                text = "¿Dónde quieres alojarte?",
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.Bold
             )
+            Spacer(modifier = Modifier.height(20.dp))
+
             ShireTextField(
-                value = checkOut,
-                onValueChange = { checkOut = it },
-                label = "Salida",
-                modifier = Modifier.weight(1f),
-                leadingIcon = Icons.Default.DateRange
+                value = destination,
+                onValueChange = { destination = it },
+                label = "Destino",
+                placeholder = "País o ciudad",
+                leadingIcon = Icons.Default.LocationOn
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                ShireTextField(
+                    value = checkIn,
+                    onValueChange = { checkIn = it },
+                    label = "Entrada",
+                    modifier = Modifier.weight(1f),
+                    leadingIcon = Icons.Default.DateRange
+                )
+                ShireTextField(
+                    value = checkOut,
+                    onValueChange = { checkOut = it },
+                    label = "Salida",
+                    modifier = Modifier.weight(1f),
+                    leadingIcon = Icons.Default.DateRange
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            ShireButton(
+                text = "Buscar",
+                onClick = { onNavigate("searchHotel") },
+                icon = Icons.Default.Search
             )
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        ShireButton(
-            text = "Buscar",
-            onClick = { onNavigate("searchHotel") },
-            icon = Icons.Default.Search
-        )
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-
     }
 }
 
