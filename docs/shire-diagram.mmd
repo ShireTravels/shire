@@ -1,0 +1,219 @@
+classDiagram
+direction LR
+
+%% =========================
+%% Screens
+%% =========================
+class AppNavigation {
+  <<Composable>>
+  +AppNavigation()
+  +PlaceholderScreen(title: String)
+}
+
+class HomeScreen {
+  <<Composable>>
+  +HomeScreen(onNavigate)
+  +SearchForm(onNavigate)
+  +DestinationGrid(items)
+}
+class HomeScreenFlights {
+  <<Composable>>
+  +HomeScreenFlights(onNavigate)
+  +FlightSearchForm()
+}
+class HomeScreenRent {
+  <<Composable>>
+  +HomeScreenRent(onNavigate)
+  +RentSearchForm()
+}
+class TripsScreen {
+  <<Composable>>
+  +TripsScreen(onNavigate)
+}
+class TripDetailsScreen {
+  <<Composable>>
+  +TripDetailsScreen(tripId, onNavigateUp, onNavigate)
+  +StatItem(value, label)
+  +ItineraryItemRow(item)
+}
+class TripGalleryScreen {
+  <<Composable>>
+  +TripGalleryScreen(tripId, onNavigateUp)
+  +GalleryPhotoCard(photo)
+}
+class CreateTripScreen {
+  <<Composable>>
+  +CreateTripScreen(onNavigateUp, onNavigate)
+  +ShireDatePickerDialog(onDateSelected, onDismiss)
+}
+class HotelDetailsScreen {
+  <<Composable>>
+  +HotelDetailsScreen(onNavigateUp)
+}
+class ProfileScreen {
+  <<Composable>>
+  +ProfileScreen(onNavigate)
+  +PreferenceCard()
+  +PreferenceSectionTitle()
+  +PreferenceChoiceItem()
+  +PreferenceSwitchItem()
+  +PreferenceNavItem()
+  +PreferenceIcon()
+}
+class AboutScreen {
+  <<Composable>>
+  +AboutScreen(onNavigateUp)
+  +TeamMember(initials, name, role, color)
+}
+class TermsScreen {
+  <<Composable>>
+  +TermsScreen(onNavigateUp)
+  +TermsSection(title, content)
+}
+
+%% =========================
+%% Components
+%% =========================
+class BottomNavBar {
+  <<Composable>>
+  +BottomNavBar(currentRoute, onNavigate)
+}
+class HeaderShire {
+  <<Composable>>
+  +HeaderShire(selectedCategory, onCategoryClick)
+  +CategoryButton(label, isSelected, modifier, onClick)
+}
+class SectionTitle {
+  <<Composable>>
+  +SectionTitle(text, modifier)
+}
+class ShireButton {
+  <<Composable>>
+  +ShireButton(text, onClick, modifier, icon, containerColor, contentColor)
+}
+class ShireTextField {
+  <<Composable>>
+  +ShireTextField(value, onValueChange, label, modifier, placeholder, leadingIcon, enabled, onClick)
+}
+class ShireCard {
+  <<Composable>>
+  +ShireCard(title, subtitle, price, modifier, priceSuffix, annotation, icon)
+}
+class StepProgressBar {
+  <<Composable>>
+  +StepProgressBar(currentStep, steps, modifier)
+}
+class DestinationCard {
+  <<Composable>>
+  +DestinationCard(dest, modifier)
+}
+class TripCard {
+  <<Composable>>
+  +TripCard(trip, onClick)
+}
+
+%% =========================
+%% UI Data Models
+%% =========================
+class PopularDestination {
+  +city: String
+  +country: String
+  +imageRes: Int
+}
+class FlightInfo {
+  +airline: String
+  +departure: String
+  +arrival: String
+  +price: String
+}
+class CarRental {
+  +model: String
+  +type: String
+  +pricePerDay: String
+}
+class UpcomingTrip {
+  +id: String
+  +title: String
+  +dates: String
+  +price: String
+  +progress: Float
+}
+class ItineraryItem {
+  +time: String
+  +title: String
+  +subtitle: String
+  +cost: String
+  +icon: ImageVector
+  +iconTint: Color
+  +iconBg: Color
+}
+class ItineraryDay {
+  +dayTitle: String
+  +items: List~ItineraryItem~
+}
+class GalleryPhoto {
+  +id: Int
+  +color: Color
+  +isTop: Boolean
+}
+class MockHotel
+class MockFlight
+class MockCar
+class MockSpot
+
+%% =========================
+%% Main dependencies
+%% =========================
+AppNavigation --> BottomNavBar : uses
+AppNavigation --> HomeScreen : route
+AppNavigation --> HomeScreenFlights : route
+AppNavigation --> HomeScreenRent : route
+AppNavigation --> TripsScreen : route
+AppNavigation --> TripDetailsScreen : route
+AppNavigation --> TripGalleryScreen : route
+AppNavigation --> CreateTripScreen : route
+AppNavigation --> HotelDetailsScreen : route
+AppNavigation --> ProfileScreen : route
+AppNavigation --> AboutScreen : route
+AppNavigation --> TermsScreen : route
+
+HomeScreen --> SectionTitle : uses
+HomeScreen --> ShireTextField : uses
+HomeScreen --> ShireButton : uses
+HomeScreen --> DestinationCard : uses
+HomeScreen --> PopularDestination : creates list
+
+HomeScreenFlights --> HeaderShire : uses
+HomeScreenFlights --> ShireCard : uses
+HomeScreenFlights --> FlightInfo : creates list
+
+HomeScreenRent --> HeaderShire : uses
+HomeScreenRent --> ShireCard : uses
+HomeScreenRent --> ShireButton : uses
+HomeScreenRent --> CarRental : creates list
+
+TripsScreen --> TripCard : uses
+TripsScreen --> UpcomingTrip : creates list
+
+TripDetailsScreen --> ItineraryDay : creates list
+TripDetailsScreen --> ItineraryItem : uses
+ItineraryDay "1" *-- "many" ItineraryItem : contains
+
+TripGalleryScreen --> GalleryPhoto : creates list
+
+CreateTripScreen --> StepProgressBar : uses
+CreateTripScreen --> SectionTitle : uses
+CreateTripScreen --> ShireTextField : uses
+CreateTripScreen --> ShireButton : uses
+CreateTripScreen --> MockHotel : uses
+CreateTripScreen --> MockFlight : uses
+CreateTripScreen --> MockCar : uses
+CreateTripScreen --> MockSpot : uses
+
+HotelDetailsScreen --> ShireButton : imports/reusable action style
+
+ProfileScreen --> AboutScreen : navigates
+ProfileScreen --> TermsScreen : navigates
+
+DestinationCard --> PopularDestination : depends on
+TripCard --> UpcomingTrip : depends on
