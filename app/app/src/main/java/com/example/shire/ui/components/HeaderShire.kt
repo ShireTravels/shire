@@ -1,19 +1,12 @@
 package com.example.shire.ui.components
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.example.shire.R
-
 
 @Composable
 fun HeaderShire(
@@ -21,12 +14,11 @@ fun HeaderShire(
     onCategoryClick: (String) -> Unit
 ) {
     Column(modifier = Modifier.padding(16.dp)) {
-
         Text(
             text = "Crea un nuevo viaje",
-            color = Color(0xFF0052CC),
+            color = MaterialTheme.colorScheme.primary,
             style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.ExtraBold
+            fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(16.dp))
         Row(
@@ -55,13 +47,18 @@ fun CategoryButton(
 ) {
     Button(
         onClick = onClick,
-        modifier = modifier,
-        shape = RoundedCornerShape(8.dp),
+        modifier = modifier.height(40.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (isSelected) Color(0xFF1A73E8) else Color(0xFFF1F3F4),
-            contentColor = if (isSelected) Color.White else Color.Gray
-        )
+            containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+            contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+        ),
+        contentPadding = PaddingValues(horizontal = 8.dp)
     ) {
-        Text(text = label, maxLines = 1, fontSize = 11.sp)
+        Text(
+            text = label, 
+            style = MaterialTheme.typography.labelLarge,
+            maxLines = 1
+        )
     }
 }

@@ -1,6 +1,5 @@
 package com.example.shire.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -28,13 +27,25 @@ fun TermsScreen(onNavigateUp: () -> Unit) {
             TopAppBar(
                 title = { 
                     Column {
-                        Text("Términos y Condiciones", fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                        Text("Última actualización: 1 de marzo de 2026", fontSize = 12.sp, color = Color.Gray)
+                        Text(
+                            "Términos y Condiciones", 
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            "Última actualización: 1 de marzo de 2026", 
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateUp) {
-                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack, 
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onBackground
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
@@ -43,25 +54,37 @@ fun TermsScreen(onNavigateUp: () -> Unit) {
         bottomBar = {
             Surface(
                 shadowElevation = 16.dp, 
+                tonalElevation = 8.dp,
                 color = MaterialTheme.colorScheme.surface,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .windowInsetsPadding(WindowInsets.navigationBars),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     TextButton(onClick = onNavigateUp) {
-                        Text("Rechazar", color = Color.Gray, fontWeight = FontWeight.Bold)
+                        Text(
+                            "Rechazar", 
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                     Button(
                         onClick = onNavigateUp,
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF006CE4)),
-                        shape = RoundedCornerShape(24.dp)
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.height(48.dp)
                     ) {
                         Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Aceptar y continuar", fontWeight = FontWeight.Bold)
+                        Text("Aceptar y continuar", style = MaterialTheme.typography.labelLarge)
                     }
                 }
             }
@@ -102,15 +125,15 @@ fun TermsSection(title: String, content: String) {
     Column(modifier = Modifier.padding(bottom = 24.dp)) {
         Text(
             text = title,
+            style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
-            fontSize = 18.sp,
-            color = MaterialTheme.colorScheme.onBackground
+            color = MaterialTheme.colorScheme.primary
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = content,
-            fontSize = 14.sp,
-            color = Color.Gray,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             lineHeight = 22.sp
         )
     }

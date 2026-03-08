@@ -10,9 +10,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -28,17 +26,19 @@ fun BottomNavBar(
         // The background navbar
         Surface(
             color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 8.dp,
             shadowElevation = 16.dp,
             modifier = Modifier.fillMaxWidth()
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp), // Slimmer
+                    .height(64.dp)
+                    .windowInsetsPadding(WindowInsets.navigationBars),
                 horizontalArrangement = Arrangement.SpaceAround,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // SECCIÓN IZQUIERDA: Home
+                // HOME SECTION
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -46,59 +46,75 @@ fun BottomNavBar(
                         .clickable { onNavigate("home") },
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Home,
-                        contentDescription = "Home",
-                        tint = if (currentRoute == "home") Color(0xFF006CE4) else Color.Gray,
-                        modifier = Modifier.size(32.dp)
-                    )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(
+                            imageVector = Icons.Default.Home,
+                            contentDescription = "Home",
+                            tint = if (currentRoute == "home") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Text(
+                            text = "Inicio",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (currentRoute == "home") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
 
                 // Empty space for the floating center button
                 Spacer(modifier = Modifier.weight(1f))
 
-
-                // SECCIÓN DERECHA: Perfil
+                // PROFILE SECTION
                 Box(
                     modifier = Modifier
-                        .weight(1f) // Ocupa exactamente 1/3
+                        .weight(1f)
                         .fillMaxHeight()
                         .clickable { onNavigate("profile") },
                     contentAlignment = Alignment.Center
                 ) {
-                    // Círculo de perfil centrado en su tercio
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .background(Color(0xFFFF9800), shape = CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("V", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Box(
+                            modifier = Modifier
+                                .size(24.dp)
+                                .background(
+                                    if (currentRoute == "profile") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
+                                    shape = CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                "V",
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp
+                            )
+                        }
+                        Text(
+                            text = "Perfil",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (currentRoute == "profile") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             }
         }
 
-        // The overlapping circle button
-        Box(
+        // The overlapping circle button for Trips
+        FloatingActionButton(
+            onClick = { onNavigate("trips") },
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+            shape = CircleShape,
             modifier = Modifier
-                .offset(y = 4.dp) // Keeps its center vertically aligned with the 56dp navbar
-                .size(64.dp) // Slightly bigger than the 56dp navbar to overlay
-                .background(Color(0xFF006CE4), shape = CircleShape),
-            contentAlignment = Alignment.Center
+                .offset(y = (-20).dp)
+                .size(64.dp),
+            elevation = FloatingActionButtonDefaults.elevation(8.dp)
         ) {
-            Box(
-                modifier = Modifier.fillMaxSize().clickable { onNavigate("trips") },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Star,
-                    contentDescription = "Trips",
-                    tint = Color.White,
-                    modifier = Modifier.size(32.dp)
-                )
-            }
+            Icon(
+                imageVector = Icons.Default.Star,
+                contentDescription = "Trips",
+                modifier = Modifier.size(32.dp)
+            )
         }
     }
 }
-
