@@ -22,7 +22,7 @@ fun AppNavigation() {
     val currentRoute = navBackStackEntry?.destination?.route
 
     val navigateAction: (String) -> Unit = { route ->
-        if (route == "hotel_details") {
+        if (route == "hotel_details" || route.startsWith("trip_details")) {
             // Standard navigation for child screens
             navController.navigate(route)
         } else {
@@ -48,7 +48,7 @@ fun AppNavigation() {
         NavHost(
             navController = navController, 
             startDestination = "tripsScreen",
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())
         ) {
             // Página Trips
             composable("tripsScreen") {
@@ -65,10 +65,6 @@ fun AppNavigation() {
             // Alquiler
             composable("alquiler") {
                 HomeScreenRent(onNavigate = navigateAction)
-            }
-            // Hoteles Búsqueda (Actual)
-            composable("searchHotel") {
-                HotelsSearch(onNavigate = navigateAction)
             }
             // Detalles del Hotel
             composable("hotel_details") {
@@ -100,7 +96,8 @@ fun AppNavigation() {
             }
             composable("create_trip") {
                 CreateTripScreen(
-                    onNavigateUp = { navController.popBackStack() }
+                    onNavigateUp = { navController.popBackStack() },
+                    onNavigate = navigateAction
                 )
             }
         }

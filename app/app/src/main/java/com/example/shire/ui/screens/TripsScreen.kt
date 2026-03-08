@@ -33,28 +33,13 @@ fun TripsScreen(onNavigate: (String) -> Unit) {
         UpcomingTrip("2", "Escapada a París", "5 Abr - 9 Abr • 4 noches", "990€", 0.30f)
     )
 
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.background,
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { onNavigate("create_trip") },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                shape = CircleShape,
-                modifier = Modifier.padding(bottom = 16.dp)
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Añadir Viaje")
-            }
-        },
-        floatingActionButtonPosition = FabPosition.End
-    ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            // Header con Gradiente y Estilo Moderno
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        LazyColumn(modifier = Modifier.fillMaxSize()) {
+            // Header con Gradiente
             item {
                 Box(
                     modifier = Modifier
@@ -67,7 +52,7 @@ fun TripsScreen(onNavigate: (String) -> Unit) {
                                 )
                             )
                         )
-                        .padding(horizontal = 24.dp, vertical = 40.dp)
+                        .padding(start = 24.dp, end = 24.dp, top = 40.dp, bottom = 24.dp)
                 ) {
                     Column {
                         Text(
@@ -128,6 +113,19 @@ fun TripsScreen(onNavigate: (String) -> Unit) {
             }
 
             item { Spacer(modifier = Modifier.height(100.dp)) }
+        }
+
+        // FAB
+        FloatingActionButton(
+            onClick = { onNavigate("create_trip") },
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+            shape = CircleShape,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 16.dp, bottom = 16.dp)
+        ) {
+            Icon(Icons.Default.Add, contentDescription = "Añadir Viaje")
         }
     }
 }
