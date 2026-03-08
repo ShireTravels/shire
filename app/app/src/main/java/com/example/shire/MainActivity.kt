@@ -23,7 +23,6 @@ class MainActivity : ComponentActivity() {
                 // Surface es el contenedor base que aplica el color de fondo del tema
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
                 ) {
                     // Llamamos al orquestador de la navegación
                     AppNavigation()

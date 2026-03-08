@@ -1,6 +1,6 @@
 package com.example.shire.ui.screens
 
-import androidx.compose.animation.*
+
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -518,6 +518,12 @@ private fun DestinationStepContent(
     adults: Int, onAdultsChange: (Int) -> Unit,
     children: Int, onChildrenChange: (Int) -> Unit
 ) {
+
+    // Estados para controlar la visibilidad de los calendarios
+    var showStartDatePicker by remember { mutableStateOf(false) }
+    var showEndDatePicker by remember { mutableStateOf(false) }
+
+
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -548,21 +554,49 @@ private fun DestinationStepContent(
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 ShireTextField(
                     value = startDate,
-                    onValueChange = onStartDateChange,
+                    onValueChange = {},
                     label = "Ida",
                     placeholder = "dd/mm/aaaa",
                     modifier = Modifier.weight(1f),
-                    leadingIcon = Icons.Default.DateRange
+                    leadingIcon = Icons.Default.DateRange,
+                    enabled = false, // Evita que se abra el teclado
+                    onClick = { showStartDatePicker = true } // Abre el calendario
                 )
                 ShireTextField(
                     value = endDate,
-                    onValueChange = onEndDateChange,
+                    onValueChange = { },
                     label = "Vuelta",
                     placeholder = "dd/mm/aaaa",
                     modifier = Modifier.weight(1f),
-                    leadingIcon = Icons.Default.DateRange
+                    leadingIcon = Icons.Default.DateRange,
+                    enabled = false, // Evita que se abra el teclado
+                    onClick = { showEndDatePicker = true } // Abre el calendario
                 )
+
+                // --- LÓGICA DE LOS DIÁLOGOS DE FECHAS ---
+
+                if (showStartDatePicker) {
+                    ShireDatePickerDialog(
+                        onDateSelected = { fecha ->
+                            onStartDateChange(fecha) // Actualiza el estado de la fecha de ida
+                            showStartDatePicker = false // Cierra el calendario
+                        },
+                        onDismiss = { showStartDatePicker = false }
+                    )
+                }
+
+                if (showEndDatePicker) {
+                    ShireDatePickerDialog(
+                        onDateSelected = { fecha ->
+                            onEndDateChange(fecha) // Actualiza el estado de la fecha de vuelta
+                            showEndDatePicker = false // Cierra el calendario
+                        },
+                        onDismiss = { showEndDatePicker = false }
+                    )
+                }
             }
+
+
 
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Text(
@@ -803,6 +837,39 @@ private fun NavigationButtons(
                 )
             }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ShireDatePickerDialog(
+    onDateSelected: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val datePickerState = rememberDatePickerState()
+    val selectedDate = datePickerState.selectedDateMillis?.let {
+        val date = java.util.Date(it)
+        val format = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault())
+        format.format(date)
+    } ?: ""
+
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = {
+                onDateSelected(selectedDate)
+                onDismiss()
+            }) {
+                Text("Aceptar")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        }
+    ) {
+        DatePicker(state = datePickerState)
     }
 }
 
