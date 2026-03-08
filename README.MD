@@ -32,4 +32,5 @@ Els membres del grup som:
 
 ## Estat del projecte
 
-Projecte en desenvolupament actiu dins del curs academic.
+- Relese V.1.0.0 
+- Sprint 01

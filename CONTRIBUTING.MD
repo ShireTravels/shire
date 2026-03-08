@@ -8,17 +8,10 @@ Fem servir una variant simple de Git Flow amb les branques seguents:
 
 - `main`: branca estable i preparable per entrega.
 - `develop`: branca d'integracio de treball diari.
-- `feature/<nom-curt>`: noves funcionalitats.
-- `fix/<nom-curt>`: correccions de bugs no critics.
-- `hotfix/<nom-curt>`: correccions urgents sobre `main`.
-- `release/<versio>`: preparacio d'una versio (opc.)
 
 ## Flux de treball
 
-1. Actualitza `develop` localment.
-2. Crea una branca des de `develop`:
-	 - `feature/...` per funcionalitats
-	 - `fix/...` per correccions
+1. Actualitza `la teva branca` localment.
 3. Fes commits petits i descriptius.
 4. Obre una Pull Request (PR) cap a `develop`.
 5. Un altre membre revisa i aprova la PR.
