@@ -1,4 +1,4 @@
-package com.example.shire.ui.screens
+package com.example.shire.ui.view
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -22,7 +22,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.shire.ui.components.DestinationCard
-import com.example.shire.ui.components.HeaderShire
 import com.example.shire.ui.components.SectionTitle
 import com.example.shire.ui.components.ShireButton
 import com.example.shire.ui.components.ShireTextField

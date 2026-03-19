@@ -1,4 +1,4 @@
-package com.example.shire.ui.screens
+package com.example.shire.ui.view
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -57,14 +57,6 @@ fun AppNavigation() {
             // Página Principal
             composable("home") {
                 HomeScreen(onNavigate = navigateAction)
-            }
-            // Vuelos
-            composable("vuelos") {
-                HomeScreenFlights(onNavigate = navigateAction)
-            }
-            // Alquiler
-            composable("alquiler") {
-                HomeScreenRent(onNavigate = navigateAction)
             }
             // Detalles del Hotel
             composable("hotel_details") {

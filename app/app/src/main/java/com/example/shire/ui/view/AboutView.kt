@@ -1,4 +1,4 @@
-package com.example.shire.ui.screens
+package com.example.shire.ui.view
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background

@@ -18,7 +18,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.shire.R
-import com.example.shire.ui.screens.UpcomingTrip
+import com.example.shire.ui.view.UpcomingTrip
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

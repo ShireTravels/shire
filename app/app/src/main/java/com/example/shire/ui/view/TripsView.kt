@@ -1,4 +1,4 @@
-package com.example.shire.ui.screens
+package com.example.shire.ui.view
 
 import com.example.shire.ui.components.TripCard
 import androidx.compose.foundation.background

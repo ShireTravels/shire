@@ -11,7 +11,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.shire.ui.screens.PopularDestination
+import com.example.shire.ui.view.PopularDestination
 
 @Composable
 fun DestinationCard(dest: PopularDestination, modifier: Modifier = Modifier) {
