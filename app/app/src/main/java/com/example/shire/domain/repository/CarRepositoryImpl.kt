@@ -25,11 +25,11 @@ class CarRepositoryImpl @Inject constructor() : CarRepository {
         TODO("Not yet implemented")
     }
 
-    override fun addCar(Car: Car): Car {
+    override fun addCar(car: Car): Car {
         // Generamos un id simple basado en el tamaño actual
         val newCar = Car.copy(id = Cars.size + 1)
         Cars.add(newCar)
-        return newCar
+        return car
     }
 
     override fun deleteCar(carId: Int): Boolean {

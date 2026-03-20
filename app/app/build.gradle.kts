@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "com.example.shire"
-    compileSdk = 36
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.shire"
@@ -69,5 +69,5 @@ dependencies {
 
 // Allow references to generated code
 kapt {
-    correctErrorTypes = true
+    correctErrorTypes = false
 }
