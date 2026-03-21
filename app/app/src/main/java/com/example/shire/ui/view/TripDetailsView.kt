@@ -22,7 +22,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.shire.ui.theme.ShireTheme
+import com.example.shire.ui.viewmodel.TripsDetailsViewModel
 
 data class ItineraryItem(
     val time: String,
@@ -41,26 +43,80 @@ data class ItineraryDay(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TripDetailsScreen(tripId: String, onNavigateUp: () -> Unit, onNavigate: (String) -> Unit) {
+fun TripDetailsScreen(
+    tripId: String, 
+    onNavigateUp: () -> Unit, 
+    onNavigate: (String) -> Unit,
+    viewModel: TripsDetailsViewModel = hiltViewModel()
+) {
     var selectedTabIndex by remember { mutableStateOf(0) }
     val tabs = listOf("Itinerario", "Galería", "Presupuesto", "Notas")
 
-    val itinerary = listOf(
-        ItineraryDay(
-            "DÍA 1 - 10 MAR",
-            listOf(
-                ItineraryItem("08:00", "Vuelo BCN → NRT", "Vueling VY7182 · Terminal 1", "420€", Icons.Default.Flight, Color(0xFF1976D2), Color(0xFFE3F2FD)),
-                ItineraryItem("22:30", "Check-in · Shinjuku Hotel", "Shinjuku, Tokyo · 8k", "95€/nit", Icons.Default.Hotel, Color(0xFFD84315), Color(0xFFFBE9E7))
-            )
-        ),
-        ItineraryDay(
-            "DÍA 2 - 11 MAR",
-            listOf(
-                ItineraryItem("09:00", "Templo Senso-ji", "Asakusa · 2h visita", "Gratis", Icons.Default.Place, Color(0xFFC2185B), Color(0xFFFCE4EC)),
-                ItineraryItem("13:00", "Ramen Ippudo", "Shibuya · Reserva hecha", "18€", Icons.Default.Restaurant, Color(0xFFFBC02D), Color(0xFFFFF9C4))
-            )
-        )
-    )
+    val trip = viewModel.getTrip(tripId.toIntOrNull() ?: 0)
+
+    val itinerary = remember(trip) {
+        if (trip == null) return@remember emptyList<ItineraryDay>()
+
+        // Pre-compute first and last day per hotel to show Check-in / Check-out only once
+        val hotelFirstDay = mutableMapOf<Int, Int>()
+        val hotelLastDay = mutableMapOf<Int, Int>()
+        trip.hotel.forEach { (day, hotelId) ->
+            hotelFirstDay[hotelId] = minOf(hotelFirstDay[hotelId] ?: day, day)
+            hotelLastDay[hotelId] = maxOf(hotelLastDay[hotelId] ?: day, day)
+        }
+
+        // The checkout day is the day AFTER the last hotel night
+        val checkoutDay = hotelLastDay.mapValues { (_, lastDay) -> lastDay + 1 }
+
+        val maxDay = listOf(
+            trip.hotel.keys.maxOrNull() ?: 0,
+            trip.flight.keys.maxOrNull() ?: 0,
+            trip.car.keys.maxOrNull() ?: 0,
+            trip.places.keys.maxOrNull() ?: 0,
+            checkoutDay.values.maxOrNull() ?: 0
+        ).maxOrNull() ?: 0
+
+        val days = mutableListOf<ItineraryDay>()
+
+        for (day in 1..maxDay) {
+            val items = mutableListOf<ItineraryItem>()
+
+            trip.flight[day]?.let { id ->
+                viewModel.getFlight(id)?.let { flight ->
+                    items.add(ItineraryItem("08:00", "Vuelo ${flight.flightNumber}", "${flight.departureCity} → ${flight.arrivalCity} · Terminal ${flight.terminal}", "${flight.price}€", Icons.Default.Flight, Color(0xFF1976D2), Color(0xFFE3F2FD)))
+                }
+            }
+
+            // Show Check-in only on the first day of the hotel stay
+            trip.hotel[day]?.let { hotelId ->
+                if (hotelFirstDay[hotelId] == day) {
+                    viewModel.getHotel(hotelId)?.let { hotel ->
+                        items.add(ItineraryItem("14:00", "Check-in · ${hotel.name}", "${hotel.location} · ${hotel.rating}⭐", "${hotel.price}€/nit", Icons.Default.Hotel, Color(0xFFD84315), Color(0xFFFBE9E7)))
+                    }
+                }
+            }
+
+            // Show Check-out on the day after the last hotel night
+            checkoutDay.forEach { (hotelId, coDay) ->
+                if (coDay == day) {
+                    viewModel.getHotel(hotelId)?.let { hotel ->
+                        items.add(ItineraryItem("12:00", "Check-out · ${hotel.name}", "${hotel.location} · ${hotel.rating}⭐", "", Icons.Default.Hotel, Color(0xFFD84315), Color(0xFFFBE9E7)))
+                    }
+                }
+            }
+
+            trip.places[day]?.let { id ->
+                viewModel.getPlace(id)?.let { place ->
+                    items.add(ItineraryItem("16:00", place.name, "${place.location} · ${place.type}", if (place.price == 0.0) "Gratis" else "${place.price}€", Icons.Default.Place, Color(0xFFC2185B), Color(0xFFFCE4EC)))
+                }
+            }
+
+            if (items.isNotEmpty()) {
+                days.add(ItineraryDay("DÍA $day", items))
+            }
+        }
+        days
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -106,14 +162,14 @@ fun TripDetailsScreen(tripId: String, onNavigateUp: () -> Unit, onNavigate: (Str
                             .padding(24.dp)
                     ) {
                         Text(
-                            text = "Aventura en Tokio",
+                            text = trip?.title ?: "Viaje no encontrado",
                             color = Color.White,
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "10 Mar - 18 Mar • 8 noches",
+                            text = trip?.dates ?: "",
                             color = Color.White.copy(alpha = 0.8f),
                             style = MaterialTheme.typography.bodyMedium
                         )
@@ -133,11 +189,11 @@ fun TripDetailsScreen(tripId: String, onNavigateUp: () -> Unit, onNavigate: (Str
                             .padding(vertical = 16.dp, horizontal = 24.dp),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        StatItem("8", "NOCHES")
+                        StatItem(trip?.hotel?.size?.toString() ?: "0", "NOCHES")
                         VerticalDivider(modifier = Modifier.height(40.dp))
-                        StatItem("1.240€", "PRESUPUESTO")
+                        StatItem("${trip?.price ?: "0"}€", "PRESUPUESTO")
                         VerticalDivider(modifier = Modifier.height(40.dp))
-                        StatItem("14", "ACTIVIDADES")
+                        StatItem(trip?.places?.size?.toString() ?: "0", "ACTIVIDADES")
                     }
                 }
             }

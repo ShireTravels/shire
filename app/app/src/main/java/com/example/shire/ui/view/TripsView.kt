@@ -16,7 +16,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.shire.ui.theme.ShireTheme
+import com.example.shire.ui.viewmodel.TripsViewModel
 
 data class UpcomingTrip(
     val id: String,
@@ -27,11 +29,20 @@ data class UpcomingTrip(
 )
 
 @Composable
-fun TripsScreen(onNavigate: (String) -> Unit) {
-    val trips = listOf(
-        UpcomingTrip("1", "Aventura en Tokio", "10 Mar - 18 Mar • 8 noches", "1.240€", 0.65f),
-        UpcomingTrip("2", "Escapada a París", "5 Abr - 9 Abr • 4 noches", "990€", 0.30f)
-    )
+fun TripsScreen(
+    onNavigate: (String) -> Unit,
+    viewModel: TripsViewModel = hiltViewModel()
+) {
+    val domainTrips = viewModel.trips
+    val trips = domainTrips.map { trip ->
+        UpcomingTrip(
+            id = trip.id.toString(),
+            title = trip.title,
+            dates = trip.dates,
+            price = "${trip.price}€",
+            progress = 0.5f // Static placeholder for UI progress
+        )
+    }
 
     Box(
         modifier = Modifier
