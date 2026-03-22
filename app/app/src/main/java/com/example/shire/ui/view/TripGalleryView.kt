@@ -24,7 +24,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.shire.R
 import com.example.shire.ui.theme.ShireTheme
 import com.example.shire.ui.viewmodel.TripGalleryViewModel
 
@@ -57,13 +59,13 @@ fun TripGalleryScreen(
             TopAppBar(
                 title = {
                     Column(verticalArrangement = Arrangement.Center) {
-                        Text(trip?.title ?: "Galería", fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                        Text("${photos.size} fotos", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(trip?.title ?: stringResource(id = R.string.gallery_title), fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                        Text(stringResource(id = R.string.photos_count, photos.size), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateUp) {
-                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = stringResource(id = R.string.back_desc))
                     }
                 },
                 actions = {
@@ -76,7 +78,7 @@ fun TripGalleryScreen(
                     ) {
                         Icon(imageVector = Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Añadir", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text(stringResource(id = R.string.add_btn), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
@@ -98,7 +100,7 @@ fun TripGalleryScreen(
                 FilterChip(
                     selected = true,
                     onClick = { },
-                    label = { Text("Todas", fontWeight = FontWeight.Medium) },
+                    label = { Text(stringResource(id = R.string.all_filter), fontWeight = FontWeight.Medium) },
                     colors = FilterChipDefaults.filterChipColors(selectedContainerColor = Color(0xFF006CE4), selectedLabelColor = Color.White),
                     shape = RoundedCornerShape(16.dp)
                 )
@@ -106,14 +108,14 @@ fun TripGalleryScreen(
                 FilterChip(
                     selected = false,
                     onClick = { },
-                    label = { Text("★ Top", fontWeight = FontWeight.Medium) },
+                    label = { Text(stringResource(id = R.string.top_filter), fontWeight = FontWeight.Medium) },
                     shape = RoundedCornerShape(16.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 FilterChip(
                     selected = false,
                     onClick = { },
-                    label = { Text("Videos", fontWeight = FontWeight.Medium) },
+                    label = { Text(stringResource(id = R.string.videos_filter), fontWeight = FontWeight.Medium) },
                     shape = RoundedCornerShape(16.dp)
                 )
             }
@@ -126,9 +128,9 @@ fun TripGalleryScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "${photos.size} elementos", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
+                Text(text = stringResource(id = R.string.items_count, photos.size), fontSize = 14.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { }) {
-                    Text(text = "Ordenar: Fecha", fontSize = 14.sp, color = Color(0xFF006CE4), fontWeight = FontWeight.Medium)
+                    Text(text = stringResource(id = R.string.sort_date), fontSize = 14.sp, color = Color(0xFF006CE4), fontWeight = FontWeight.Medium)
                     Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color(0xFF006CE4)) // Placeholder for sort icon
                 }
             }
@@ -185,7 +187,7 @@ fun TripGalleryScreen(
                             ) {
                                 Icon(imageVector = Icons.Default.Add, contentDescription = "Añadir", tint = borderColor)
                                 Spacer(modifier = Modifier.height(4.dp))
-                                Text("AÑADIR", color = borderColor, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                Text(stringResource(id = R.string.add_cap_btn), color = borderColor, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -200,12 +202,12 @@ fun TripGalleryScreen(
     if (showAddDialog) {
         AlertDialog(
             onDismissRequest = { showAddDialog = false },
-            title = { Text("Añadir Foto") },
+            title = { Text(stringResource(id = R.string.add_photo_title)) },
             text = {
                 OutlinedTextField(
                     value = photoUrlToAdd,
                     onValueChange = { photoUrlToAdd = it },
-                    label = { Text("URL de la imagen") },
+                    label = { Text(stringResource(id = R.string.image_url_label)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -218,12 +220,12 @@ fun TripGalleryScreen(
                     }
                     showAddDialog = false
                 }) {
-                    Text("Añadir")
+                    Text(stringResource(id = R.string.add_btn))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showAddDialog = false }) {
-                    Text("Cancelar")
+                    Text(stringResource(id = R.string.cancel_btn))
                 }
             }
         )
@@ -233,7 +235,7 @@ fun TripGalleryScreen(
         AlertDialog(
             onDismissRequest = { showWatchDialog = null },
             confirmButton = {
-                TextButton(onClick = { showWatchDialog = null }) { Text("Cerrar") }
+                TextButton(onClick = { showWatchDialog = null }) { Text(stringResource(id = R.string.close_btn)) }
             },
             text = {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -283,7 +285,7 @@ fun GalleryPhotoCard(photo: GalleryPhoto, onClick: () -> Unit, onRemove: () -> U
                 .clickable { onRemove() },
             contentAlignment = Alignment.Center
         ) {
-            Icon(imageVector = Icons.Default.Close, contentDescription = "Delete", tint = Color.White, modifier = Modifier.size(12.dp))
+            Icon(imageVector = Icons.Default.Close, contentDescription = stringResource(id = R.string.delete_desc), tint = Color.White, modifier = Modifier.size(12.dp))
         }
 
     }

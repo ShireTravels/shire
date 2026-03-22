@@ -11,6 +11,8 @@ import com.example.shire.domain.repository.PlaceRepositoryImpl
 import com.example.shire.domain.repository.ProfilePreferencesRepository
 import com.example.shire.domain.repository.ProfilePreferencesRepositoryImpl
 import com.example.shire.domain.repository.TripRepository
+import com.example.shire.domain.repository.ActivityRepository
+import com.example.shire.domain.repository.ActivityRepositoryImpl
 import com.example.shire.domain.repository.TripRepositoryImpl
 import dagger.Binds
 import dagger.Module
@@ -18,11 +20,15 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
-//cuando un ViewModel pide la interfaz, Hilt sabe qué debe inyectar
-
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {
+
+    @Binds
+    @Singleton
+    abstract fun bindActivityRepository(
+        activityRepositoryImpl: ActivityRepositoryImpl
+    ): ActivityRepository
 
     @Binds
     @Singleton

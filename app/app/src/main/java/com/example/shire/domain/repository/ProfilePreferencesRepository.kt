@@ -20,4 +20,6 @@ interface ProfilePreferencesRepository {
     suspend fun setTripRemindersEnabled(enabled: Boolean)
     suspend fun setWeeklySummaryEnabled(enabled: Boolean)
     suspend fun setTermsAccepted(accepted: Boolean)
+    suspend fun setUsername(username: String)
+    suspend fun setDateOfBirth(dateOfBirth: String)
 }

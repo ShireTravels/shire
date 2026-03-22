@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.foundation.Image
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import com.example.shire.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -103,7 +104,7 @@ fun HomeScreen(onNavigate: (String) -> Unit) {
                         Spacer(modifier = Modifier.height(12.dp))
 
                         Text(
-                            text = "Encuentra ofertas, compara hoteles y organiza tu próxima escapada.",
+                            text = stringResource(id = R.string.home_subtitle),
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f)
                         )
@@ -146,8 +147,8 @@ fun HomeScreen(onNavigate: (String) -> Unit) {
 
             item {
                 HomeSectionHeader(
-                    title = "Recomendaciones para ti",
-                    actionText = "Ver todo",
+                    title = stringResource(id = R.string.recommendations),
+                    actionText = stringResource(id = R.string.see_all),
                     onAction = { onNavigate("trips") }
                 )
                 DestinationGrid(recommendedDestinations)
@@ -156,8 +157,8 @@ fun HomeScreen(onNavigate: (String) -> Unit) {
 
             item {
                 HomeSectionHeader(
-                    title = "Mejores hoteles",
-                    actionText = "Más opciones",
+                    title = stringResource(id = R.string.top_hotels),
+                    actionText = stringResource(id = R.string.more_options),
                     onAction = { onNavigate("trips") }
                 )
                 Column(
@@ -175,8 +176,8 @@ fun HomeScreen(onNavigate: (String) -> Unit) {
 
             item {
                 HomeSectionHeader(
-                    title = "Escapadas populares",
-                    actionText = "Explorar",
+                    title = stringResource(id = R.string.popular_getaways),
+                    actionText = stringResource(id = R.string.explore),
                     onAction = { onNavigate("trips") }
                 )
                 DestinationGrid(getawayDestinations)
@@ -204,7 +205,7 @@ fun SearchForm(
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Text(
-                text = "¿A donde quieres viajar?",
+                text = stringResource(id = R.string.search_dest_prompt),
                 style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Bold
@@ -214,8 +215,8 @@ fun SearchForm(
             ShireTextField(
                 value = destination,
                 onValueChange = { destination = it },
-                label = "Destino",
-                placeholder = "País o ciudad",
+                label = stringResource(id = R.string.dest_label),
+                placeholder = stringResource(id = R.string.dest_placeholder),
                 leadingIcon = Icons.Default.LocationOn
             )
 
@@ -225,14 +226,14 @@ fun SearchForm(
                 ShireTextField(
                     value = checkIn,
                     onValueChange = { checkIn = it },
-                    label = "Entrada",
+                    label = stringResource(id = R.string.check_in),
                     modifier = Modifier.weight(1f),
                     leadingIcon = Icons.Default.DateRange
                 )
                 ShireTextField(
                     value = checkOut,
                     onValueChange = { checkOut = it },
-                    label = "Salida",
+                    label = stringResource(id = R.string.check_out),
                     modifier = Modifier.weight(1f),
                     leadingIcon = Icons.Default.DateRange
                 )
@@ -241,7 +242,7 @@ fun SearchForm(
             Spacer(modifier = Modifier.height(24.dp))
 
             ShireButton(
-                text = "Buscar",
+                text = stringResource(id = R.string.search_btn),
                 onClick = { onNavigate("trips") },
                 icon = Icons.Default.Search
             )
@@ -272,7 +273,7 @@ fun HomeActionCard(onCreateTrip: () -> Unit) {
             ) {
                 Icon(Icons.Default.Add, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Crear viaje")
+                Text(stringResource(id = R.string.create_trip))
             }
         }
     }

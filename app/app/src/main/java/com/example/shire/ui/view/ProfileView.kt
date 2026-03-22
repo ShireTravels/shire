@@ -17,10 +17,13 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.ui.res.stringResource
+import com.example.shire.R
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.shire.domain.model.TextSizeOption
 import com.example.shire.domain.model.ThemeOption
@@ -59,14 +62,14 @@ fun ProfileScreen(
                 ) {
                     Column {
                         Text(
-                            text = "Preferencias",
+                            text = stringResource(id = R.string.preferences_title),
                             color = MaterialTheme.colorScheme.onPrimary,
                             style = MaterialTheme.typography.displaySmall,
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Personaliza tu experiencia en Travel Planner",
+                            text = stringResource(id = R.string.preferences_subtitle),
                             color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
                             style = MaterialTheme.typography.bodyMedium
                         )
@@ -74,9 +77,47 @@ fun ProfileScreen(
                 }
             }
 
+            // Información Personal
+            item {
+                PreferenceSectionTitle(stringResource(id = R.string.personal_info_section))
+                PreferenceCard {
+                    val prefs = preferences
+                    if (prefs != null) {
+                        OutlinedTextField(
+                            value = prefs.username,
+                            onValueChange = viewModel::updateUsername,
+                            label = { Text(stringResource(id = R.string.username_label)) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            singleLine = true
+                        )
+                        OutlinedTextField(
+                            value = prefs.dateOfBirth,
+                            onValueChange = viewModel::updateDateOfBirth,
+                            label = { Text(stringResource(id = R.string.dob_label)) },
+                            placeholder = { Text(stringResource(id = R.string.dob_placeholder)) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            singleLine = true
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                }
+            }
+
+            item {
+                PreferenceSectionTitle(stringResource(id = R.string.app_language_section))
+                LanguageSelectorRow(
+                    currentLanguage = viewModel.getCurrentLanguage(),
+                    onLanguageChange = { code -> viewModel.changeLanguage(code) }
+                )
+            }
+
             // Idioma y Región
             item {
-                PreferenceSectionTitle("IDIOMA Y REGIÓN")
+                PreferenceSectionTitle(stringResource(id = R.string.language_region_section))
                 PreferenceCard {
                     val prefs = preferences
                     if (prefs != null) {
@@ -84,8 +125,8 @@ fun ProfileScreen(
                             icon = Icons.Default.Language,
                             iconTint = MaterialTheme.colorScheme.primary,
                             iconBg = MaterialTheme.colorScheme.primaryContainer,
-                            title = "Idioma",
-                            subtitle = "Idioma de la interfaz",
+                            title = stringResource(id = R.string.language_label),
+                            subtitle = stringResource(id = R.string.interface_language_desc),
                             value = prefs.language.label,
                             options = viewModel.languageOptions.map { it.label },
                             onOptionSelected = { label ->
@@ -98,8 +139,8 @@ fun ProfileScreen(
                             icon = Icons.Default.AttachMoney,
                             iconTint = MaterialTheme.colorScheme.secondary,
                             iconBg = MaterialTheme.colorScheme.secondaryContainer,
-                            title = "Moneda",
-                            subtitle = "Para presupuestos",
+                            title = stringResource(id = R.string.currency_label),
+                            subtitle = stringResource(id = R.string.budget_currency_desc),
                             value = prefs.currency.label,
                             options = viewModel.currencyOptions.map { it.label },
                             onOptionSelected = { label ->
@@ -112,7 +153,7 @@ fun ProfileScreen(
                             icon = Icons.Default.DateRange,
                             iconTint = MaterialTheme.colorScheme.tertiary,
                             iconBg = MaterialTheme.colorScheme.tertiaryContainer,
-                            title = "Formato fecha",
+                            title = stringResource(id = R.string.date_format_label),
                             subtitle = "",
                             value = prefs.dateFormat.label,
                             options = viewModel.dateFormatOptions.map { it.label },
@@ -127,7 +168,7 @@ fun ProfileScreen(
 
             // Apariencia
             item {
-                PreferenceSectionTitle("APARIENCIA")
+                PreferenceSectionTitle(stringResource(id = R.string.appearance_section))
                 PreferenceCard {
                     val prefs = preferences
                     if (prefs != null) {
@@ -135,8 +176,8 @@ fun ProfileScreen(
                             icon = Icons.Default.DarkMode,
                             iconTint = MaterialTheme.colorScheme.primary,
                             iconBg = MaterialTheme.colorScheme.primaryContainer,
-                            title = "Modo oscuro",
-                            subtitle = "Tema de la aplicación",
+                            title = stringResource(id = R.string.dark_mode_label),
+                            subtitle = stringResource(id = R.string.app_theme_desc),
                             checked = prefs.theme == ThemeOption.DARK,
                             onCheckedChange = { enabled ->
                                 viewModel.updateTheme(
@@ -149,8 +190,8 @@ fun ProfileScreen(
                             icon = Icons.Default.FormatSize,
                             iconTint = MaterialTheme.colorScheme.primary,
                             iconBg = MaterialTheme.colorScheme.primaryContainer,
-                            title = "Tamaño de texto",
-                            subtitle = "Ajuste de accesibilidad",
+                            title = stringResource(id = R.string.text_size_label),
+                            subtitle = stringResource(id = R.string.accessibility_adjustment_desc),
                             value = prefs.textSize.label,
                             options = viewModel.textSizeOptions.map { it.label },
                             onOptionSelected = { label ->
@@ -164,7 +205,7 @@ fun ProfileScreen(
 
             // Notificaciones
             item {
-                PreferenceSectionTitle("NOTIFICACIONES")
+                PreferenceSectionTitle(stringResource(id = R.string.notifications_section))
                 PreferenceCard {
                     val prefs = preferences
                     if (prefs != null) {
@@ -172,8 +213,8 @@ fun ProfileScreen(
                             icon = Icons.Default.Notifications,
                             iconTint = MaterialTheme.colorScheme.primary,
                             iconBg = MaterialTheme.colorScheme.primaryContainer,
-                            title = "Recordatorios de viaje",
-                            subtitle = "Aviso 24h antes del vuelo",
+                            title = stringResource(id = R.string.trip_reminders_label),
+                            subtitle = stringResource(id = R.string.flight_reminder_desc),
                             checked = prefs.tripRemindersEnabled,
                             onCheckedChange = viewModel::updateTripReminders
                         )
@@ -182,8 +223,8 @@ fun ProfileScreen(
                             icon = Icons.Default.Email,
                             iconTint = MaterialTheme.colorScheme.primary,
                             iconBg = MaterialTheme.colorScheme.primaryContainer,
-                            title = "Resumen semanal",
-                            subtitle = "Email con próximos viajes",
+                            title = stringResource(id = R.string.weekly_summary_label),
+                            subtitle = stringResource(id = R.string.upcoming_trips_email_desc),
                             checked = prefs.weeklySummaryEnabled,
                             onCheckedChange = viewModel::updateWeeklySummary
                         )
@@ -193,13 +234,13 @@ fun ProfileScreen(
             
             // Acerca de
             item {
-                PreferenceSectionTitle("ACERCA DE")
+                PreferenceSectionTitle(stringResource(id = R.string.about_section))
                 PreferenceCard {
-                    PreferenceNavItem(Icons.Default.Info, MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.primaryContainer, "Sobre la app", "Información y equipo") {
+                    PreferenceNavItem(Icons.Default.Info, MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.primaryContainer, stringResource(id = R.string.about_app_label), stringResource(id = R.string.info_team_desc)) {
                         onNavigate("about")
                     }
                     HorizontalDivider(modifier = Modifier.padding(start = 56.dp), color = MaterialTheme.colorScheme.outlineVariant)
-                    PreferenceNavItem(Icons.Default.Description, MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.primaryContainer, "Términos y Condiciones", "Legal y privacidad") {
+                    PreferenceNavItem(Icons.Default.Description, MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.primaryContainer, stringResource(id = R.string.terms_conditions_label), stringResource(id = R.string.legal_privacy_desc)) {
                         onNavigate("terms")
                     }
                 }
@@ -378,6 +419,49 @@ fun PreferenceIcon(icon: ImageVector, tint: Color, bg: Color) {
     ) {
         Box(contentAlignment = Alignment.Center) {
             Icon(imageVector = icon, contentDescription = null, tint = tint, modifier = Modifier.size(20.dp))
+        }
+    }
+}
+
+@Composable
+fun LanguageSelectorRow(
+    currentLanguage: String,
+    onLanguageChange: (String) -> Unit
+) {
+    val languages = listOf(
+        "es" to "Español",
+        "en" to "English",
+        "ca" to "Català"
+    )
+
+    Surface(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        color = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(12.dp),
+        shadowElevation = 2.dp
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(4.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            languages.forEach { (code, name) ->
+                val isSelected = currentLanguage == code
+                Surface(
+                    modifier = Modifier.weight(1f).padding(4.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
+                    onClick = { onLanguageChange(code) }
+                ) {
+                    Text(
+                        text = name,
+                        modifier = Modifier.padding(vertical = 12.dp),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
         }
     }
 }

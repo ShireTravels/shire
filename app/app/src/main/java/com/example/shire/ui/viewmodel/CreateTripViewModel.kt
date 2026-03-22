@@ -12,6 +12,7 @@ import com.example.shire.domain.repository.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.LinkedList
 import javax.inject.Inject
+import android.util.Log
 
 @HiltViewModel
 class CreateTripViewModel @Inject constructor(
@@ -19,14 +20,13 @@ class CreateTripViewModel @Inject constructor(
     private val hotelRepository: HotelRepository,
     private val flightRepository: FlightRepository,
     private val carRepository: CarRepository,
-    private val placeRepository: PlaceRepository
+    private val activityRepository: ActivityRepository
 ) : ViewModel() {
 
     // ── Repository data ──
     val availableDestinations: List<String>
         get() = (hotelRepository.getHotels().map { it.location } +
-                 flightRepository.getFlights().map { it.arrivalCity } +
-                 placeRepository.getPlaces().map { it.location }).distinct().sorted()
+                 flightRepository.getFlights().map { it.arrivalCity }).distinct().sorted()
 
     val hotels: List<Hotel>
         get() = if (tripDestination.isBlank()) emptyList() else hotelRepository.getHotels().filter { it.location.contains(tripDestination, ignoreCase = true) }
@@ -35,9 +35,6 @@ class CreateTripViewModel @Inject constructor(
         get() = if (tripDestination.isBlank()) emptyList() else flightRepository.getFlights().filter { it.arrivalCity.contains(tripDestination, ignoreCase = true) }
 
     val cars: List<Car> get() = carRepository.getCars()
-
-    val places: List<Place>
-        get() = if (tripDestination.isBlank()) emptyList() else placeRepository.getPlaces().filter { it.location.contains(tripDestination, ignoreCase = true) }
 
     // ── Destination step state ──
     var tripDestination by mutableStateOf("")
@@ -50,7 +47,8 @@ class CreateTripViewModel @Inject constructor(
     var selectedHotel by mutableStateOf<Hotel?>(null)
     var selectedFlight by mutableStateOf<Flight?>(null)
     var selectedCar by mutableStateOf<Car?>(null)
-    val selectedPlaces = mutableStateMapOf<Place, Int>()
+
+    val pendingActivities = mutableStateListOf<Activity>()
 
     // ── Accumulated Trip Data ──
     private var accumulatedDays = 0
@@ -58,15 +56,52 @@ class CreateTripViewModel @Inject constructor(
     private val accumulatedHotels = hashMapOf<Int, Int>()
     private val accumulatedFlights = hashMapOf<Int, Int>()
     private val accumulatedCars = hashMapOf<Int, Int>()
-    private val accumulatedPlaces = hashMapOf<Int, MutableList<Int>>()
     private val destinationsList = mutableListOf<String>()
     private val datesList = mutableListOf<String>()
+
+    var errorMessage by mutableStateOf<String?>(null)
+
+    fun validateDestinationStep(): Boolean {
+        Log.i("CreateTripViewModel", "Validating destination step parameters: $tripDestination, $tripStartDate - $tripEndDate")
+        if (tripDestination.isBlank()) {
+            errorMessage = "El destino no puede estar vacío."
+            Log.w("CreateTripViewModel", "Validation failed: Destination empty")
+            return false
+        }
+        if (tripStartDate.isBlank()) {
+            errorMessage = "La fecha de inicio no puede estar vacía."
+            Log.w("CreateTripViewModel", "Validation failed: Start date empty")
+            return false
+        }
+        if (tripEndDate.isBlank()) {
+            errorMessage = "La fecha de fin no puede estar vacía."
+            Log.w("CreateTripViewModel", "Validation failed: End date empty")
+            return false
+        }
+        try {
+            val sdf = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault())
+            val start = sdf.parse(tripStartDate)
+            val end = sdf.parse(tripEndDate)
+            if (start != null && end != null && start.after(end)) {
+                errorMessage = "La fecha de inicio debe ser anterior a la fecha de fin."
+                Log.w("CreateTripViewModel", "Validation failed: Start after end")
+                return false
+            }
+        } catch (e: Exception) {
+            errorMessage = "Formato de fecha inválido."
+            Log.e("CreateTripViewModel", "Validation failed: Date parsing exception", e)
+            return false
+        }
+        errorMessage = null
+        return true
+    }
 
     /**
      * Adds the current destination selections to the accumulated trip data
      * and resets the current selection for the next destination.
      */
     fun addCurrentDestination() {
+        Log.d("CreateTripViewModel", "Adding current destination to accumulating trip. Current destination: $tripDestination")
         val days = computeTripDays()
 
         selectedHotel?.let { hotel ->
@@ -84,12 +119,6 @@ class CreateTripViewModel @Inject constructor(
             accumulatedTotalPrice += car.pricePerDay * days
         }
 
-        selectedPlaces.forEach { (place, localDay) ->
-            val targetDay = accumulatedDays + localDay
-            accumulatedPlaces.getOrPut(targetDay) { mutableListOf() }.add(place.id)
-            accumulatedTotalPrice += place.price
-        }
-
         if (tripDestination.isNotBlank()) destinationsList.add(tripDestination)
         if (tripStartDate.isNotBlank() && tripEndDate.isNotBlank()) datesList.add("$tripStartDate - $tripEndDate")
 
@@ -101,7 +130,25 @@ class CreateTripViewModel @Inject constructor(
         selectedHotel = null
         selectedFlight = null
         selectedCar = null
-        selectedPlaces.clear()
+    }
+
+    fun addPendingActivity(title: String, description: String, date: java.time.LocalDate?, time: java.time.LocalTime?, price: Double = 0.0) {
+        Log.d("CreateTripViewModel", "addPendingActivity: $title")
+        val newActivity = Activity(
+            id = (pendingActivities.maxOfOrNull { it.id } ?: 0) + 1,
+            tripId = 0,
+            title = title,
+            description = description,
+            date = date ?: java.time.LocalDate.now(),
+            time = time ?: java.time.LocalTime.now(),
+            price = price
+        )
+        pendingActivities.add(newActivity)
+    }
+
+    fun removePendingActivity(activity: Activity) {
+        Log.d("CreateTripViewModel", "removePendingActivity: ${activity.title}")
+        pendingActivities.remove(activity)
     }
 
     fun getMinStartDateMillis(): Long? {
@@ -138,19 +185,6 @@ class CreateTripViewModel @Inject constructor(
         return getMinStartDateMillis()
     }
 
-    fun togglePlaceSelection(place: Place) {
-        if (selectedPlaces.containsKey(place)) {
-            selectedPlaces.remove(place)
-        } else {
-            selectedPlaces[place] = 1
-        }
-    }
-
-    fun updatePlaceDay(place: Place, day: Int) {
-        if (selectedPlaces.containsKey(place)) {
-            selectedPlaces[place] = day
-        }
-    }
 
     /**
      * Computes the number of days from the date strings (dd/MM/yyyy).
@@ -175,7 +209,7 @@ class CreateTripViewModel @Inject constructor(
      * Returns the new trip's ID.
      */
     fun createTrip(): Int {
-        if (tripDestination.isNotBlank() || selectedHotel != null || selectedFlight != null || selectedCar != null || selectedPlaces.isNotEmpty()) {
+        if (tripDestination.isNotBlank() || selectedHotel != null || selectedFlight != null || selectedCar != null) {
             addCurrentDestination()
         }
 
@@ -185,24 +219,32 @@ class CreateTripViewModel @Inject constructor(
             "Viaje a " + destinationsList.joinToString(", ")
         } else "Nuevo Viaje"
 
-        val dates = if (datesList.isNotEmpty()) {
-            datesList.joinToString(" y ")
-        } else ""
+        val finalStartDate = datesList.firstOrNull()?.split(" - ")?.getOrNull(0) ?: tripStartDate
+        val finalEndDate = datesList.lastOrNull()?.split(" - ")?.getOrNull(1) ?: tripEndDate
+
+        val tripPrice = accumulatedTotalPrice + pendingActivities.sumOf { it.price }
 
         val trip = Trip(
             id = newId,
             title = title,
-            dates = dates,
-            price = accumulatedTotalPrice,
+            startDate = finalStartDate,
+            endDate = finalEndDate,
+            price = tripPrice,
             hotel = accumulatedHotels,
             flight = accumulatedFlights,
             car = accumulatedCars,
-            places = accumulatedPlaces,
+            places = hashMapOf(),
             gallery = LinkedList(),
-            notes = ""
+            description = ""
         )
 
         tripRepository.addTrip(trip)
+
+        pendingActivities.forEach { activity ->
+            activityRepository.addActivity(activity.copy(tripId = newId))
+        }
+
+        Log.i("CreateTripViewModel", "Trip created successfully with ID: $newId and ${pendingActivities.size} pending activities.")
         return newId
     }
 }

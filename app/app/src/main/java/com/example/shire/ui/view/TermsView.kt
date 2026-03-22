@@ -12,8 +12,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.shire.R
 import com.example.shire.ui.theme.ShireTheme
 import com.example.shire.ui.viewmodel.ProfileViewModel
 
@@ -27,9 +29,9 @@ fun TermsScreen(
 ) {
     val preferences = viewModel.preferences.collectAsStateWithLifecycle().value
     val termsStateText = when (preferences?.termsAccepted) {
-        true -> "Aceptados"
-        false -> "Rechazados"
-        null -> "Pendientes"
+        true -> stringResource(id = R.string.terms_accepted)
+        false -> stringResource(id = R.string.terms_rejected)
+        null -> stringResource(id = R.string.terms_pending)
     }
 
     val termsStateColor = when (preferences?.termsAccepted) {
@@ -46,12 +48,12 @@ fun TermsScreen(
                 title = { 
                     Column {
                         Text(
-                            "Términos y condiciones", 
+                            stringResource(id = R.string.terms_title), 
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            "Información legal y privacidad", 
+                            stringResource(id = R.string.terms_subtitle), 
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -90,7 +92,7 @@ fun TermsScreen(
                         },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Rechazar")
+                        Text(stringResource(id = R.string.reject))
                     }
 
                     Button(
@@ -100,7 +102,7 @@ fun TermsScreen(
                         },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Aceptar")
+                        Text(stringResource(id = R.string.accept))
                     }
                 }
             }
@@ -115,7 +117,7 @@ fun TermsScreen(
             item {
                 Spacer(modifier = Modifier.height(24.dp))
 
-                SectionTitle(title = "📋 Términos y condiciones")
+                SectionTitle(title = "📋 " + stringResource(id = R.string.terms_title))
 
                 Surface(
                     color = termsStateColor.copy(alpha = 0.12f),
@@ -123,7 +125,7 @@ fun TermsScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "Estado actual: $termsStateText",
+                        text = stringResource(id = R.string.current_status, termsStateText),
                         color = termsStateColor,
                         style = MaterialTheme.typography.labelLarge,
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)
@@ -133,20 +135,20 @@ fun TermsScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 TermsSection(
-                    title = "1. 📄 Aceptación de los términos",
-                    content = "Al utilizar Travel Planner aceptas estos términos y condiciones. Si no estás de acuerdo con alguna de estas condiciones, no debes usar la aplicación."
+                    title = stringResource(id = R.string.terms_h1),
+                    content = stringResource(id = R.string.terms_p1)
                 )
                 TermsSection(
-                    title = "2. 🔐 Privacidad y datos",
-                    content = "Travel Planner recopila únicamente los datos necesarios para el funcionamiento de la app: nombre de usuario, destinos guardados e itinerarios. No compartimos tus datos con terceros sin tu consentimiento explícito."
+                    title = stringResource(id = R.string.terms_h2),
+                    content = stringResource(id = R.string.terms_p2)
                 )
                 TermsSection(
-                    title = "3. 🛠️ Uso de la aplicación",
-                    content = "Travel Planner es una herramienta de planificación personal. La información mostrada es orientativa. Verifica siempre los datos con los proveedores oficiales antes de realizar reservas."
+                    title = stringResource(id = R.string.terms_h3),
+                    content = stringResource(id = R.string.terms_p3)
                 )
                 TermsSection(
-                    title = "4. 🌐 Servicios de terceros",
-                    content = "La aplicación puede integrar servicios externos como Google Maps o APIs de vuelos. El uso de estos servicios está sujeto a sus propias políticas de privacidad y términos de uso."
+                    title = stringResource(id = R.string.terms_h4),
+                    content = stringResource(id = R.string.terms_p4)
                 )
 
                 Spacer(modifier = Modifier.height(32.dp))

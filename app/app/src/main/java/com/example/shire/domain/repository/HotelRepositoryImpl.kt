@@ -4,6 +4,7 @@ import com.example.shire.domain.model.Hotel
 import com.example.shire.domain.model.User
 import javax.inject.Inject
 import javax.inject.Singleton
+import android.util.Log
 
 @Singleton
 class HotelRepositoryImpl @Inject constructor() : HotelRepository {
@@ -62,32 +63,41 @@ class HotelRepositoryImpl @Inject constructor() : HotelRepository {
     }
 
     override fun getHotel(hotelId: Int): Hotel {
+        Log.d("HotelRepo", "Fetching hotel with id: $hotelId")
         return hotels.first { it.id == hotelId }
     }
 
     override fun getHotels(): List<Hotel> {
+        Log.d("HotelRepo", "Fetching all hotels. Count: ${hotels.size}")
         return hotels
     }
 
     override fun getUserHotels(user: User): List<Hotel> {
+        Log.d("HotelRepo", "Fetching hotels for user: $user")
         return hotels
     }
 
     override fun addHotel(hotel: Hotel): Hotel {
         hotels.add(hotel)
+        Log.i("HotelRepo", "Added new hotel: ${hotel.name} (ID: ${hotel.id})")
         return hotel
     }
 
     override fun deleteHotel(hotelId: Int): Boolean {
-        return hotels.removeAll { it.id == hotelId }
+        val removed = hotels.removeAll { it.id == hotelId }
+        if (removed) Log.i("HotelRepo", "Deleted hotel successfully (ID: $hotelId)")
+        else Log.e("HotelRepo", "Failed to delete hotel: ID $hotelId not found")
+        return removed
     }
 
     override fun updateHotel(hotel: Hotel): Boolean {
         val index = hotels.indexOfFirst { it.id == hotel.id }
         if (index != -1) {
             hotels[index] = hotel
+            Log.i("HotelRepo", "Updated hotel successfully (ID: ${hotel.id})")
             return true
         }
+        Log.e("HotelRepo", "Failed to update hotel: ID ${hotel.id} not found")
         return false
     }
 }

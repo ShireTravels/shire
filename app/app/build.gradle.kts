@@ -39,6 +39,9 @@ android {
     buildFeatures {
         compose = true
     }
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
 }
 
 kotlin {
@@ -68,6 +71,7 @@ dependencies {
     implementation(libs.hilt.android)
     "kapt"(libs.hilt.compiler)
     implementation ("androidx.hilt:hilt-navigation-compose:1.2.0")
+    implementation("androidx.appcompat:appcompat:1.6.1")
 }
 
 // Allow references to generated code

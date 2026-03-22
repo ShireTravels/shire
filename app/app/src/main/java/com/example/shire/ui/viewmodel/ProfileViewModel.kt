@@ -2,6 +2,8 @@ package com.example.shire.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import com.example.shire.domain.model.CurrencyOption
 import com.example.shire.domain.model.DateFormatOption
 import com.example.shire.domain.model.LanguageOption
@@ -84,5 +86,25 @@ class ProfileViewModel @Inject constructor(
 			preferencesRepository.setTermsAccepted(accepted)
 		}
 	}
-}
 
+	fun updateUsername(username: String) {
+		viewModelScope.launch {
+			preferencesRepository.setUsername(username)
+		}
+	}
+
+	fun updateDateOfBirth(newDateOfBirth: String) {
+		viewModelScope.launch {
+			preferencesRepository.setDateOfBirth(newDateOfBirth)
+		}
+	}
+
+    fun changeLanguage(languageCode: String) {
+        AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(languageCode))
+    }
+
+    fun getCurrentLanguage(): String {
+        return AppCompatDelegate.getApplicationLocales().toLanguageTags().split("-")[0]
+            .ifEmpty { java.util.Locale.getDefault().language }
+    }
+}

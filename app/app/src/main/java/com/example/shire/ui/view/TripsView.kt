@@ -14,9 +14,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.shire.R
 import com.example.shire.ui.theme.ShireTheme
 import com.example.shire.ui.viewmodel.TripsViewModel
 
@@ -38,7 +40,7 @@ fun TripsScreen(
         UpcomingTrip(
             id = trip.id.toString(),
             title = trip.title,
-            dates = trip.dates,
+            dates = "${trip.startDate} - ${trip.endDate}",
             price = "${trip.price}€",
             progress = 0.5f // Static placeholder for UI progress
         )
@@ -67,13 +69,13 @@ fun TripsScreen(
                 ) {
                     Column {
                         Text(
-                            text = "Buenos días, Victor \uD83D\uDC4B",
+                            text = stringResource(id = R.string.good_morning),
                             color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
                             style = MaterialTheme.typography.labelLarge
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "TUS VIAJES",
+                            text = stringResource(id = R.string.your_trips),
                             color = MaterialTheme.colorScheme.onPrimary,
                             style = MaterialTheme.typography.headlineLarge,
                             fontWeight = FontWeight.ExtraBold
@@ -92,13 +94,13 @@ fun TripsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Itinerarios activos",
+                        text = stringResource(id = R.string.active_itineraries),
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onBackground
                     )
                     TextButton(onClick = { /* TODO */ }) {
                         Text(
-                            text = "Ver historial",
+                            text = stringResource(id = R.string.view_history),
                             color = MaterialTheme.colorScheme.primary,
                             style = MaterialTheme.typography.labelLarge
                         )
@@ -112,7 +114,7 @@ fun TripsScreen(
 
             item {
                 Text(
-                    text = "Próximos Itinerarios",
+                    text = stringResource(id = R.string.upcoming_itineraries),
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 8.dp)
@@ -136,7 +138,7 @@ fun TripsScreen(
                 .align(Alignment.BottomEnd)
                 .padding(end = 16.dp, bottom = 16.dp)
         ) {
-            Icon(Icons.Default.Add, contentDescription = "Añadir Viaje")
+            Icon(Icons.Default.Add, contentDescription = stringResource(id = R.string.add_trip))
         }
     }
 }

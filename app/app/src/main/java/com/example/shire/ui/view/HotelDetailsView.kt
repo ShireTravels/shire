@@ -14,9 +14,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.shire.R
 import com.example.shire.ui.theme.ShireTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -27,7 +29,7 @@ fun HotelDetailsScreen(onNavigateUp: () -> Unit) {
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = { Text("Detalles del hotel") },
+                title = { Text(stringResource(id = R.string.hotel_details_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateUp) {
                         Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Atrás")
@@ -54,7 +56,7 @@ fun HotelDetailsScreen(onNavigateUp: () -> Unit) {
                 ) {
                     Column {
                         Text(
-                            text = "Precio total",
+                            text = stringResource(id = R.string.total_price),
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -74,7 +76,7 @@ fun HotelDetailsScreen(onNavigateUp: () -> Unit) {
                             .width(160.dp)
                     ) {
                         Text(
-                            text = "Reservar",
+                            text = stringResource(id = R.string.book_button),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -97,7 +99,7 @@ fun HotelDetailsScreen(onNavigateUp: () -> Unit) {
                         .background(Color.LightGray)
                 ) {
                     Text(
-                        text = "Foto Principal",
+                        text = stringResource(id = R.string.main_photo),
                         modifier = Modifier.align(Alignment.Center),
                         color = Color.DarkGray
                     )
@@ -127,7 +129,7 @@ fun HotelDetailsScreen(onNavigateUp: () -> Unit) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
                                     imageVector = Icons.Default.LocationOn,
-                                    contentDescription = "Ubicación",
+                                    contentDescription = stringResource(id = R.string.location_desc),
                                     tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(16.dp)
                                 )
@@ -162,14 +164,14 @@ fun HotelDetailsScreen(onNavigateUp: () -> Unit) {
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
-                        text = "Descripción",
+                        text = stringResource(id = R.string.description),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onBackground
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "El Hotel Plaza se encuentra en el centro histórico de Barcelona, ofreciendo un alojamiento de lujo con vistas increíbles a la ciudad. Las instalaciones incluyen piscina en la azotea, spa completo, restaurante gourmet y gimnasio.",
+                        text = stringResource(id = R.string.hotel_desc_placeholder),
                         fontSize = 15.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         lineHeight = 22.sp
@@ -185,7 +187,7 @@ fun HotelDetailsScreen(onNavigateUp: () -> Unit) {
                         .padding(horizontal = 16.dp)
                 ) {
                     Text(
-                        text = "Servicios principales",
+                        text = stringResource(id = R.string.main_services),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onBackground
@@ -193,11 +195,11 @@ fun HotelDetailsScreen(onNavigateUp: () -> Unit) {
                     Spacer(modifier = Modifier.height(12.dp))
 
                     val amenities = listOf(
-                        "WiFi gratis",
-                        "Desayuno incluido",
-                        "Piscina al aire libre",
-                        "Recepción 24 horas",
-                        "Aire acondicionado"
+                        stringResource(id = R.string.wifi_free),
+                        stringResource(id = R.string.breakfast_included),
+                        stringResource(id = R.string.outdoor_pool),
+                        stringResource(id = R.string.reception_24h),
+                        stringResource(id = R.string.air_conditioning)
                     )
 
                     amenities.forEach { amenity ->

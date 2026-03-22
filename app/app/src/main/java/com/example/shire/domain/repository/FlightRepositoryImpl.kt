@@ -5,6 +5,7 @@ import com.example.shire.domain.model.User
 import java.util.Date
 import javax.inject.Inject
 import javax.inject.Singleton
+import android.util.Log
 
 @Singleton
 class FlightRepositoryImpl @Inject constructor() : FlightRepository {
@@ -76,32 +77,41 @@ class FlightRepositoryImpl @Inject constructor() : FlightRepository {
     }
 
     override fun getFlight(flightId: Int): Flight {
+        Log.d("FlightRepo", "Fetching flight with id: $flightId")
         return flights.first { it.id == flightId }
     }
 
     override fun getFlights(): List<Flight> {
+        Log.d("FlightRepo", "Fetching all flights. Count: ${flights.size}")
         return flights
     }
 
     override fun getUserFlights(user: User): List<Flight> {
+        Log.d("FlightRepo", "Fetching flights for user: $user")
         return flights
     }
 
     override fun addFlight(flight: Flight): Flight {
         flights.add(flight)
+        Log.i("FlightRepo", "Added new flight: ${flight.flightNumber} (ID: ${flight.id})")
         return flight
     }
 
     override fun deleteFlight(flightId: Int): Boolean {
-        return flights.removeAll { it.id == flightId }
+        val removed = flights.removeAll { it.id == flightId }
+        if (removed) Log.i("FlightRepo", "Deleted flight successfully (ID: $flightId)")
+        else Log.e("FlightRepo", "Failed to delete flight: ID $flightId not found")
+        return removed
     }
 
     override fun updateFlight(flight: Flight): Boolean {
         val index = flights.indexOfFirst { it.id == flight.id }
         if (index != -1) {
             flights[index] = flight
+            Log.i("FlightRepo", "Updated flight successfully (ID: ${flight.id})")
             return true
         }
+        Log.e("FlightRepo", "Failed to update flight: ID ${flight.id} not found")
         return false
     }
 }

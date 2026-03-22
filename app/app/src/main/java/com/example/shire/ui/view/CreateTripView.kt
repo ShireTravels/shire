@@ -24,10 +24,17 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.shire.ui.components.SectionTitle
 import com.example.shire.ui.components.ShireButton
 import com.example.shire.ui.components.ShireTextField
+import com.example.shire.ui.components.ShireDatePickerDialog
 import com.example.shire.ui.components.StepProgressBar
+import com.example.shire.ui.components.ShireTimePickerDialog
+import androidx.compose.ui.res.stringResource
+import com.example.shire.R
 import com.example.shire.ui.theme.ShireTheme
 import com.example.shire.ui.viewmodel.CreateTripViewModel
 import com.example.shire.ui.components.DestinationStepContent
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 
 // ──────────────────────────────── Main Screen ────────────────────────────────
@@ -47,7 +54,14 @@ fun CreateTripScreen(
     var currentStep by remember(initialDestination) {
         mutableIntStateOf(if (initialDestination.isNullOrBlank()) 0 else 1)
     }
-    val stepLabels = listOf("Destino", "Hotel", "Vuelo", "Coche", "Lugares")
+    val stepLabels = listOf(
+        stringResource(id = R.string.step_destination),
+        stringResource(id = R.string.step_hotel),
+        stringResource(id = R.string.step_flight),
+        stringResource(id = R.string.step_car),
+        stringResource(id = R.string.step_activities)
+    )
+    var showAddActivityDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(initialDestination, initialStartDate, initialEndDate, initialAdults, initialChildren) {
         if (!initialDestination.isNullOrBlank()) {
@@ -60,21 +74,31 @@ fun CreateTripScreen(
         }
     }
 
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(viewModel.errorMessage) {
+        viewModel.errorMessage?.let { error ->
+            snackbarHostState.showSnackbar(error)
+            viewModel.errorMessage = null
+        }
+    }
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        "Crear Viaje",
+                        stringResource(id = R.string.create_trip),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateUp) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(id = R.string.back_desc))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -101,8 +125,8 @@ fun CreateTripScreen(
                         destination = viewModel.tripDestination,
                         dates = if (viewModel.tripStartDate.isNotBlank() && viewModel.tripEndDate.isNotBlank())
                             "${viewModel.tripStartDate} → ${viewModel.tripEndDate}" else viewModel.tripStartDate,
-                        travelers = "${viewModel.numAdults} adultos" +
-                                if (viewModel.numChildren > 0) " · ${viewModel.numChildren} niños" else ""
+                        travelers = stringResource(id = R.string.adults_format, viewModel.numAdults) +
+                                if (viewModel.numChildren > 0) stringResource(id = R.string.children_format_dot, viewModel.numChildren) else ""
                     )
                 }
             }
@@ -111,11 +135,11 @@ fun CreateTripScreen(
             item {
                 SectionTitle(
                     text = when (currentStep) {
-                        0 -> "¿Dónde quieres ir?"
-                        1 -> "Reserva de Hotel"
-                        2 -> "Reserva de Vuelo"
-                        3 -> "Alquiler de Coche"
-                        4 -> "Lugares a Visitar"
+                        0 -> stringResource(id = R.string.where_to_go)
+                        1 -> stringResource(id = R.string.hotel_reservation)
+                        2 -> stringResource(id = R.string.flight_reservation)
+                        3 -> stringResource(id = R.string.car_rental)
+                        4 -> stringResource(id = R.string.add_activities)
                         else -> ""
                     }
                 )
@@ -143,7 +167,7 @@ fun CreateTripScreen(
                     }
                 }
                 1 -> {
-                    item { StepSubtitle("Hoteles disponibles") }
+                    item { StepSubtitle(stringResource(id = R.string.available_hotels)) }
                     items(viewModel.hotels) { hotel ->
                         SelectableCard(
                             icon = Icons.Default.Hotel,
@@ -151,7 +175,7 @@ fun CreateTripScreen(
                             iconBg = Color(0xFFFBE9E7),
                             title = hotel.name,
                             subtitle = "${hotel.location} · ${hotel.rating}⭐",
-                            trailing = "${hotel.price}€/nit",
+                            trailing = "${hotel.price}${stringResource(id = R.string.price_per_night)}",
                             badge = hotel.amenities.take(3).joinToString(", "),
                             isSelected = viewModel.selectedHotel == hotel,
                             onClick = {
@@ -161,7 +185,7 @@ fun CreateTripScreen(
                     }
                 }
                 2 -> {
-                    item { StepSubtitle("Vuelos disponibles") }
+                    item { StepSubtitle(stringResource(id = R.string.available_flights)) }
                     items(viewModel.flights) { flight ->
                         SelectableCard(
                             icon = Icons.Default.Flight,
@@ -179,7 +203,7 @@ fun CreateTripScreen(
                     }
                 }
                 3 -> {
-                    item { StepSubtitle("Coches disponibles") }
+                    item { StepSubtitle(stringResource(id = R.string.available_cars)) }
                     items(viewModel.cars) { car ->
                         SelectableCard(
                             icon = Icons.Default.DirectionsCar,
@@ -187,8 +211,8 @@ fun CreateTripScreen(
                             iconBg = Color(0xFFE8F5E9),
                             title = car.model,
                             subtitle = "${car.type} · ${car.transmission}",
-                            trailing = "${car.pricePerDay}€/día",
-                            badge = "${car.seats} plazas",
+                            trailing = "${car.pricePerDay}${stringResource(id = R.string.price_per_day)}",
+                            badge = stringResource(id = R.string.seats_format, car.seats),
                             isSelected = viewModel.selectedCar == car,
                             onClick = {
                                 viewModel.selectedCar = if (viewModel.selectedCar == car) null else car
@@ -197,70 +221,37 @@ fun CreateTripScreen(
                     }
                 }
                 4 -> {
-                    item { StepSubtitle("Lugares para visitar") }
-                    items(viewModel.places) { place ->
-                        val isSelected = viewModel.selectedPlaces.containsKey(place)
-                        Column {
-                            SelectableCard(
-                                icon = Icons.Default.Place,
-                                iconTint = Color(0xFFC2185B),
-                                iconBg = Color(0xFFFCE4EC),
-                                title = place.name,
-                                subtitle = "${place.location} · ${place.type}",
-                                trailing = if (place.price == 0.0) "Gratis" else "${place.price}€",
-                                badge = "${place.rating}⭐",
-                                isSelected = isSelected,
-                                onClick = { viewModel.togglePlaceSelection(place) }
-                            )
-
-                            if (isSelected) {
-                                val tripDays = viewModel.computeTripDays()
-                                val selectedDay = viewModel.selectedPlaces[place] ?: 1
-
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 32.dp, vertical = 4.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = "Día de visita",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        FilledIconButton(
-                                            onClick = { if (selectedDay > 1) viewModel.updatePlaceDay(place, selectedDay - 1) },
-                                            enabled = selectedDay > 1,
-                                            modifier = Modifier.size(32.dp),
-                                            colors = IconButtonDefaults.filledIconButtonColors(
-                                                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                                            )
-                                        ) {
-                                            Icon(Icons.Default.Remove, contentDescription = "Día anterior", modifier = Modifier.size(16.dp))
-                                        }
-                                        Text(
-                                            text = "DÍA $selectedDay",
-                                            style = MaterialTheme.typography.labelLarge,
-                                            fontWeight = FontWeight.Bold,
-                                            modifier = Modifier.padding(horizontal = 12.dp)
-                                        )
-                                        FilledIconButton(
-                                            onClick = { if (selectedDay < tripDays) viewModel.updatePlaceDay(place, selectedDay + 1) },
-                                            enabled = selectedDay < tripDays,
-                                            modifier = Modifier.size(32.dp),
-                                            colors = IconButtonDefaults.filledIconButtonColors(
-                                                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                                            )
-                                        ) {
-                                            Icon(Icons.Default.Add, contentDescription = "Día siguiente", modifier = Modifier.size(16.dp))
-                                        }
-                                    }
-                                }
+                    item { StepSubtitle(stringResource(id = R.string.trip_activities)) }
+                    items(viewModel.pendingActivities) { activity ->
+                        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Box(modifier = Modifier.weight(1f)) {
+                                SelectableCard(
+                                    icon = Icons.Default.Event,
+                                    iconTint = Color(0xFF9C27B0),
+                                    iconBg = Color(0xFFF3E5F5),
+                                    title = activity.title,
+                                    subtitle = "${activity.date} · ${activity.time}",
+                                    trailing = if (activity.price == 0.0) stringResource(id = R.string.free) else "${activity.price}€",
+                                    badge = "",
+                                    isSelected = false,
+                                    onClick = { }
+                                )
                             }
+                            IconButton(onClick = { viewModel.removePendingActivity(activity) }) {
+                                Icon(Icons.Default.Delete, contentDescription = stringResource(id = R.string.delete_desc), tint = MaterialTheme.colorScheme.error)
+                            }
+                        }
+                    }
+                    item {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        OutlinedButton(
+                            onClick = { showAddActivityDialog = true },
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                            shape = MaterialTheme.shapes.medium
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(stringResource(id = R.string.add_new_activity), style = MaterialTheme.typography.labelLarge)
                         }
                     }
                 }
@@ -273,7 +264,15 @@ fun CreateTripScreen(
                     currentStep = currentStep,
                     totalSteps = stepLabels.size,
                     onPrevious = { if (currentStep > 0) currentStep-- },
-                    onNext = { if (currentStep < stepLabels.size - 1) currentStep++ },
+                    onNext = { 
+                        if (currentStep == 0) {
+                            if (viewModel.validateDestinationStep()) {
+                                currentStep++
+                            }
+                        } else if (currentStep < stepLabels.size - 1) {
+                            currentStep++
+                        }
+                    },
                     onSkip = { if (currentStep < stepLabels.size - 1) currentStep++ },
                     onAddDestination = {
                         viewModel.addCurrentDestination()
@@ -287,6 +286,98 @@ fun CreateTripScreen(
                 Spacer(modifier = Modifier.height(32.dp))
             }
         }
+    }
+
+    if (showAddActivityDialog) {
+        var newTitle by remember { mutableStateOf("") }
+        var newDesc by remember { mutableStateOf("") }
+        var newDate by remember { mutableStateOf("") }
+        var newTime by remember { mutableStateOf("") }
+        var newPrice by remember { mutableStateOf("") }
+        var showDateDialog by remember { mutableStateOf(false) }
+        var showTimeDialog by remember { mutableStateOf(false) }
+
+        if (showDateDialog) {
+            ShireDatePickerDialog(
+                onDateSelected = { 
+                    newDate = it 
+                    showDateDialog = false
+                },
+                onDismiss = { showDateDialog = false }
+            )
+        }
+
+        if (showTimeDialog) {
+            ShireTimePickerDialog(
+                onTimeSelected = {
+                    newTime = it
+                    showTimeDialog = false
+                },
+                onDismiss = { showTimeDialog = false }
+            )
+        }
+
+        AlertDialog(
+            onDismissRequest = { showAddActivityDialog = false },
+            title = { Text(stringResource(id = R.string.add_activity_title)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = newTitle,
+                        onValueChange = { newTitle = it },
+                        label = { Text(stringResource(id = R.string.title_label)) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = newDesc,
+                        onValueChange = { newDesc = it },
+                        label = { Text(stringResource(id = R.string.desc_label)) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        ShireTextField(
+                            value = newDate,
+                            onValueChange = { },
+                            label = stringResource(id = R.string.date_label),
+                            modifier = Modifier.weight(1f),
+                            enabled = false,
+                            onClick = { showDateDialog = true }
+                        )
+                        ShireTextField(
+                            value = newTime,
+                            onValueChange = { },
+                            label = stringResource(id = R.string.time_label),
+                            modifier = Modifier.weight(1f),
+                            enabled = false,
+                            onClick = { showTimeDialog = true }
+                        )
+                    }
+                    OutlinedTextField(
+                        value = newPrice,
+                        onValueChange = { newPrice = it },
+                        label = { Text(stringResource(id = R.string.price_label)) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val d = try { LocalDate.parse(newDate, DateTimeFormatter.ofPattern("dd/MM/yyyy")) } catch (e: Exception) { null }
+                    val t = try { LocalTime.parse(newTime, DateTimeFormatter.ofPattern("HH:mm")) } catch (e: Exception) { null }
+                    val p = newPrice.toDoubleOrNull() ?: 0.0
+
+                    viewModel.addPendingActivity(newTitle, newDesc, d, t, p)
+                    showAddActivityDialog = false
+                }) {
+                    Text(stringResource(id = R.string.save_btn))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAddActivityDialog = false }) {
+                    Text(stringResource(id = R.string.cancel_btn))
+                }
+            }
+        )
     }
 }
 
@@ -501,20 +592,20 @@ private fun NavigationButtons(
                 ) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Anterior", style = MaterialTheme.typography.labelLarge)
+                    Text(stringResource(id = R.string.previous_btn), style = MaterialTheme.typography.labelLarge)
                 }
             }
 
             if (currentStep < totalSteps - 1) {
                 ShireButton(
-                    text = "Siguiente",
+                    text = stringResource(id = R.string.next_btn),
                     onClick = onNext,
                     modifier = Modifier.weight(1f),
                     icon = Icons.AutoMirrored.Filled.ArrowForward
                 )
             } else {
                 ShireButton(
-                    text = "Finalizar",
+                    text = stringResource(id = R.string.finish_btn),
                     onClick = onFinish,
                     modifier = Modifier.weight(1f),
                     icon = Icons.Default.Check
@@ -533,7 +624,7 @@ private fun NavigationButtons(
             ) {
                 Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(6.dp))
-                Text("Añadir otro destino", style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(id = R.string.add_another_destination), style = MaterialTheme.typography.labelLarge)
             }
         }
 
@@ -543,7 +634,7 @@ private fun NavigationButtons(
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             ) {
                 Text(
-                    text = "Omitir este paso",
+                    text = stringResource(id = R.string.skip_step),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.labelLarge
                 )

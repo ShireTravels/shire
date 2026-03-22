@@ -1,78 +1,80 @@
 package com.example.shire.domain.repository
 
 import com.example.shire.domain.model.Trip
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Test
-import java.util.LinkedList
 
 class TripRepositoryTest {
-    private lateinit var tripRepository: TripRepositoryImpl
+
+    private lateinit var repository: TripRepositoryImpl
 
     @Before
     fun setUp() {
-        val hotelRepository = HotelRepositoryImpl()
-        val flightRepository = FlightRepositoryImpl()
-        val carRepository = CarRepositoryImpl()
-        val placeRepository = PlaceRepositoryImpl()
-        
-        tripRepository = TripRepositoryImpl(
-            hotelRepository,
-            flightRepository,
-            carRepository,
-            placeRepository
+        repository = TripRepositoryImpl(
+            HotelRepositoryImpl(),
+            FlightRepositoryImpl(),
+            CarRepositoryImpl(),
+            PlaceRepositoryImpl()
         )
     }
 
     @Test
-    fun testGetTrips_returnsInitialList() {
-        val trips = tripRepository.getTrips()
-        assertTrue(trips.isNotEmpty())
-    }
-
-    @Test
-    fun testGetTrip_existingId_returnsTrip() {
-        val trip = tripRepository.getTrip(1)
-        assertNotNull(trip)
-        assertEquals("Viaje a París", trip?.title)
-    }
-
-    @Test
-    fun testAddTrip_addsToList() {
-        val initialSize = tripRepository.getTrips().size
+    fun addTrip_increasesCountAndReturnsValidId() {
+        val initialSize = repository.getTrips().size
         val newTrip = Trip(
-            id = 999,
+            id = 10,
             title = "Test Trip",
-            dates = "01/01/2026 - 05/01/2026",
+            startDate = "10/10/2026",
+            endDate = "20/10/2026",
             price = 500.0,
             hotel = hashMapOf(),
             flight = hashMapOf(),
             car = hashMapOf(),
             places = hashMapOf(),
-            gallery = LinkedList(),
-            notes = "Test notes"
+            gallery = java.util.LinkedList(),
+            description = "Test Desc"
         )
+        val addedTrip = repository.addTrip(newTrip)
         
-        tripRepository.addTrip(newTrip)
-        assertEquals(initialSize + 1, tripRepository.getTrips().size)
+        assertEquals(10, addedTrip.id)
+        assertEquals(initialSize + 1, repository.getTrips().size)
     }
 
     @Test
-    fun testDeleteTrip_removesFromList() {
-        val initialSize = tripRepository.getTrips().size
-        val success = tripRepository.deleteTrip(1)
+    fun getTrip_returnsCorrectTrip() {
+        val newTrip = Trip(0, "Test Trip", "10/10/2026", "20/10/2026", 500.0, hashMapOf(), hashMapOf(), hashMapOf(), hashMapOf(), java.util.LinkedList(), "Desc")
+        val addedTrip = repository.addTrip(newTrip)
+        val retrieved = repository.getTrip(addedTrip.id)
         
-        assertTrue(success)
-        assertEquals(initialSize - 1, tripRepository.getTrips().size)
+        assertNotNull(retrieved)
+        assertEquals("Test Trip", retrieved?.title)
     }
 
     @Test
-    fun testUpdateTrip_modifiesExistingTrip() {
-        val existing = tripRepository.getTrip(1)!!
-        val updated = existing.copy(title = "Updated Paris")
+    fun updateTrip_modifiesExistingData() {
+        val newTrip = Trip(0, "Old Title", "10/10/2026", "20/10/2026", 500.0, hashMapOf(), hashMapOf(), hashMapOf(), hashMapOf(), java.util.LinkedList(), "Desc")
+        val addedTrip = repository.addTrip(newTrip)
         
-        val success = tripRepository.updateTrip(updated)
+        val retrieved = repository.getTrip(addedTrip.id)!!
+        val updatedTrip = retrieved.copy(title = "New Title")
+        val success = repository.updateTrip(updatedTrip)
+        
         assertTrue(success)
-        assertEquals("Updated Paris", tripRepository.getTrip(1)?.title)
+        assertEquals("New Title", repository.getTrip(addedTrip.id)?.title)
+    }
+
+    @Test
+    fun deleteTrip_removesTrip() {
+        val newTrip = Trip(0, "To Delete", "10/10/2026", "20/10/2026", 500.0, hashMapOf(), hashMapOf(), hashMapOf(), hashMapOf(), java.util.LinkedList(), "Desc")
+        val addedTrip = repository.addTrip(newTrip)
+        val success = repository.deleteTrip(addedTrip.id)
+        
+        assertTrue(success)
+        assertNull(repository.getTrip(addedTrip.id))
     }
 }

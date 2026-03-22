@@ -18,6 +18,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
 import com.example.shire.R
 import com.example.shire.ui.theme.ShireTheme
 
@@ -76,7 +77,7 @@ fun AboutScreen(onNavigateUp: () -> Unit) {
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    text = "Plan your adventures, your way. Built\nwith ❤️ at Campus Igualada.",
+                    text = stringResource(id = R.string.about_subtitle),
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center,
@@ -89,18 +90,18 @@ fun AboutScreen(onNavigateUp: () -> Unit) {
             item {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Text(
-                        text = "EQUIPO DE DESARROLLO",
+                        text = stringResource(id = R.string.dev_team),
                         color = MaterialTheme.colorScheme.primary,
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
 
-                    TeamMember("VD", "Vitor Da Silva", "Scrum Master", Color(0xFF4CAF50))
+                    TeamMember("VD", "Vitor Da Silva", stringResource(id = R.string.role_scrum), Color(0xFF4CAF50))
                     Spacer(modifier = Modifier.height(16.dp))
-                    TeamMember("PL", "Paul Lázaro", "Good guy", Color(0xFF9C27B0))
+                    TeamMember("PL", "Paul Lázaro", stringResource(id = R.string.role_guy), Color(0xFF9C27B0))
                     Spacer(modifier = Modifier.height(16.dp))
-                    TeamMember("AC", "Arnau Cribillers", "love coding", Color(0xFFFF9800))
+                    TeamMember("AC", "Arnau Cribillers", stringResource(id = R.string.role_coding), Color(0xFFFF9800))
                 }
                 Spacer(modifier = Modifier.height(48.dp))
             }
@@ -109,7 +110,7 @@ fun AboutScreen(onNavigateUp: () -> Unit) {
             item {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Text(
-                        text = "INFORMACIÓN TÉCNICA",
+                        text = stringResource(id = R.string.tech_info),
                         color = MaterialTheme.colorScheme.primary,
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
@@ -117,12 +118,12 @@ fun AboutScreen(onNavigateUp: () -> Unit) {
                     )
                     
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Versión", color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.bodyLarge)
+                        Text(stringResource(id = R.string.version), color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.bodyLarge)
                         Text("1.0.0", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyLarge)
                     }
                     HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.outlineVariant)
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Sprint", color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.bodyLarge)
+                        Text(stringResource(id = R.string.sprint), color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.bodyLarge)
                         Text("01", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyLarge)
                     }
                 }

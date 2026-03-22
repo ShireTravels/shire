@@ -16,6 +16,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import androidx.navigation.NavType
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.ui.res.stringResource
+import com.example.shire.R
 import com.example.shire.ui.components.BottomNavBar
 
 @Composable
@@ -148,6 +150,6 @@ fun AppNavigation() {
 @Composable
 fun PlaceholderScreen(title: String) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(text = "Pantalla: $title")
+        Text(text = stringResource(id = R.string.screen_placeholder, title))
     }
 }

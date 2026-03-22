@@ -44,5 +44,7 @@ data class Preferences(
     val textSize: TextSizeOption,
     val tripRemindersEnabled: Boolean,
     val weeklySummaryEnabled: Boolean,
-    val termsAccepted: Boolean?
+    val termsAccepted: Boolean?,
+    val username: String = "",
+    val dateOfBirth: String = ""
 )

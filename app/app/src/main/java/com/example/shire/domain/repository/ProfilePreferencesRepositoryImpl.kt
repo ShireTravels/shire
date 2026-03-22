@@ -1,10 +1,7 @@
 package com.example.shire.domain.repository
 
 import android.content.Context
-import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
+import android.content.SharedPreferences
 import com.example.shire.domain.model.CurrencyOption
 import com.example.shire.domain.model.DateFormatOption
 import com.example.shire.domain.model.LanguageOption
@@ -14,99 +11,95 @@ import com.example.shire.domain.model.ThemeOption
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
-
-private val Context.profileDataStore by preferencesDataStore(name = "profile_preferences")
 
 @Singleton
 class ProfilePreferencesRepositoryImpl @Inject constructor(
     @ApplicationContext private val context: Context
 ) : ProfilePreferencesRepository {
 
+    private val sharedPrefs: SharedPreferences = context.getSharedPreferences("profile_preferences", Context.MODE_PRIVATE)
+
     private object Keys {
-        val language = stringPreferencesKey("profile_language")
-        val currency = stringPreferencesKey("profile_currency")
-        val dateFormat = stringPreferencesKey("profile_date_format")
-        val theme = stringPreferencesKey("profile_theme")
-        val textSize = stringPreferencesKey("profile_text_size")
-        val tripReminders = booleanPreferencesKey("profile_trip_reminders")
-        val weeklySummary = booleanPreferencesKey("profile_weekly_summary")
-        val termsAccepted = booleanPreferencesKey("profile_terms_accepted")
+        const val language = "profile_language"
+        const val currency = "profile_currency"
+        const val dateFormat = "profile_date_format"
+        const val theme = "profile_theme"
+        const val textSize = "profile_text_size"
+        const val tripReminders = "profile_trip_reminders"
+        const val weeklySummary = "profile_weekly_summary"
+        const val termsAccepted = "profile_terms_accepted"
+        const val username = "profile_username"
+        const val dateOfBirth = "profile_date_of_birth"
     }
 
-    override val profilePreferencesFlow: Flow<Preferences> = context.profileDataStore.data
-        .map { preferences ->
-            Preferences(
-                language = preferences[Keys.language]
-                    ?.toLanguageOptionOrDefault()
-                    ?: LanguageOption.SPANISH,
-                currency = preferences[Keys.currency]
-                    ?.toCurrencyOptionOrDefault()
-                    ?: CurrencyOption.EUR,
-                dateFormat = preferences[Keys.dateFormat]
-                    ?.toDateFormatOptionOrDefault()
-                    ?: DateFormatOption.DD_MM_YYYY,
-                theme = preferences[Keys.theme]
-                    ?.toThemeOptionOrDefault()
-                    ?: ThemeOption.LIGHT,
-                textSize = preferences[Keys.textSize]
-                    ?.toTextSizeOptionOrDefault()
-                    ?: TextSizeOption.NORMAL,
-                tripRemindersEnabled = preferences[Keys.tripReminders] ?: true,
-                weeklySummaryEnabled = preferences[Keys.weeklySummary] ?: false,
-                termsAccepted = preferences[Keys.termsAccepted]
-            )
+    private fun getCurrentPreferences(): Preferences {
+        return Preferences(
+            language = sharedPrefs.getString(Keys.language, null)?.toLanguageOptionOrDefault() ?: LanguageOption.SPANISH,
+            currency = sharedPrefs.getString(Keys.currency, null)?.toCurrencyOptionOrDefault() ?: CurrencyOption.EUR,
+            dateFormat = sharedPrefs.getString(Keys.dateFormat, null)?.toDateFormatOptionOrDefault() ?: DateFormatOption.DD_MM_YYYY,
+            theme = sharedPrefs.getString(Keys.theme, null)?.toThemeOptionOrDefault() ?: ThemeOption.LIGHT,
+            textSize = sharedPrefs.getString(Keys.textSize, null)?.toTextSizeOptionOrDefault() ?: TextSizeOption.NORMAL,
+            tripRemindersEnabled = sharedPrefs.getBoolean(Keys.tripReminders, true),
+            weeklySummaryEnabled = sharedPrefs.getBoolean(Keys.weeklySummary, false),
+            termsAccepted = if (sharedPrefs.contains(Keys.termsAccepted)) sharedPrefs.getBoolean(Keys.termsAccepted, false) else null,
+            username = sharedPrefs.getString(Keys.username, null) ?: "",
+            dateOfBirth = sharedPrefs.getString(Keys.dateOfBirth, null) ?: ""
+        )
+    }
+
+    override val profilePreferencesFlow: Flow<Preferences> = callbackFlow {
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ ->
+            trySend(getCurrentPreferences())
         }
-        .distinctUntilChanged()
+        sharedPrefs.registerOnSharedPreferenceChangeListener(listener)
+        trySend(getCurrentPreferences()) // Emit initial value
+        awaitClose {
+            sharedPrefs.unregisterOnSharedPreferenceChangeListener(listener)
+        }
+    }.distinctUntilChanged()
 
     override suspend fun setLanguage(language: LanguageOption) {
-        context.profileDataStore.edit { preferences ->
-            preferences[Keys.language] = language.id
-        }
+        sharedPrefs.edit().putString(Keys.language, language.id).apply()
     }
 
     override suspend fun setCurrency(currency: CurrencyOption) {
-        context.profileDataStore.edit { preferences ->
-            preferences[Keys.currency] = currency.id
-        }
+        sharedPrefs.edit().putString(Keys.currency, currency.id).apply()
     }
 
     override suspend fun setDateFormat(dateFormat: DateFormatOption) {
-        context.profileDataStore.edit { preferences ->
-            preferences[Keys.dateFormat] = dateFormat.id
-        }
+        sharedPrefs.edit().putString(Keys.dateFormat, dateFormat.id).apply()
     }
 
     override suspend fun setTheme(theme: ThemeOption) {
-        context.profileDataStore.edit { preferences ->
-            preferences[Keys.theme] = theme.id
-        }
+        sharedPrefs.edit().putString(Keys.theme, theme.id).apply()
     }
 
     override suspend fun setTextSize(textSize: TextSizeOption) {
-        context.profileDataStore.edit { preferences ->
-            preferences[Keys.textSize] = textSize.id
-        }
+        sharedPrefs.edit().putString(Keys.textSize, textSize.id).apply()
     }
 
     override suspend fun setTripRemindersEnabled(enabled: Boolean) {
-        context.profileDataStore.edit { preferences ->
-            preferences[Keys.tripReminders] = enabled
-        }
+        sharedPrefs.edit().putBoolean(Keys.tripReminders, enabled).apply()
     }
 
     override suspend fun setWeeklySummaryEnabled(enabled: Boolean) {
-        context.profileDataStore.edit { preferences ->
-            preferences[Keys.weeklySummary] = enabled
-        }
+        sharedPrefs.edit().putBoolean(Keys.weeklySummary, enabled).apply()
     }
 
     override suspend fun setTermsAccepted(accepted: Boolean) {
-        context.profileDataStore.edit { preferences ->
-            preferences[Keys.termsAccepted] = accepted
-        }
+        sharedPrefs.edit().putBoolean(Keys.termsAccepted, accepted).apply()
+    }
+
+    override suspend fun setUsername(username: String) {
+        sharedPrefs.edit().putString(Keys.username, username).apply()
+    }
+
+    override suspend fun setDateOfBirth(dateOfBirth: String) {
+        sharedPrefs.edit().putString(Keys.dateOfBirth, dateOfBirth).apply()
     }
 }
 
