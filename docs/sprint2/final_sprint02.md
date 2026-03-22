@@ -16,6 +16,8 @@ Key objectives:
 
 ## 2. Functionalities to Implement & Status
 
+| Task ID | Functionality | Status | Priority | Notes |
+|---------|---------------|--------|----------|-------|
 | **T1.1** | InMemory CRUD operations for trips (add, edit, delete) | Completed | High | `TripsViewModel` and `CreateTripViewModel` handle in-memory data source. |
 | **T1.2** | InMemory CRUD operations for itinerary/activities | Completed | High | Implemented activities with title, description, time, and price that compute into budget. |
 | **T1.3** | Date and input validation (DatePickers, chronological checks) | Completed | Medium | Prevent free text; trip start < end; activities within trip range. |
