@@ -29,12 +29,19 @@ enum class ThemeOption(val id: String, val label: String) {
     DARK("dark", "Oscuro")
 }
 
+enum class TextSizeOption(val id: String, val label: String) {
+    SMALL("small", "Pequeño"),
+    NORMAL("normal", "Normal"),
+    LARGE("large", "Grande")
+}
+
 
 data class Preferences(
     val language: LanguageOption,
     val currency: CurrencyOption,
     val dateFormat: DateFormatOption,
     val theme: ThemeOption,
+    val textSize: TextSizeOption,
     val tripRemindersEnabled: Boolean,
     val weeklySummaryEnabled: Boolean,
     val termsAccepted: Boolean?

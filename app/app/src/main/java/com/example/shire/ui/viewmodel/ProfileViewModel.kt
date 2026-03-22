@@ -6,6 +6,7 @@ import com.example.shire.domain.model.CurrencyOption
 import com.example.shire.domain.model.DateFormatOption
 import com.example.shire.domain.model.LanguageOption
 import com.example.shire.domain.model.Preferences
+import com.example.shire.domain.model.TextSizeOption
 import com.example.shire.domain.model.ThemeOption
 import com.example.shire.domain.repository.ProfilePreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,6 +27,7 @@ class ProfileViewModel @Inject constructor(
 	val languageOptions: List<LanguageOption> = LanguageOption.entries
 	val currencyOptions: List<CurrencyOption> = CurrencyOption.entries
 	val dateFormatOptions: List<DateFormatOption> = DateFormatOption.entries
+	val textSizeOptions: List<TextSizeOption> = TextSizeOption.entries
 
 	init {
 		viewModelScope.launch {
@@ -56,6 +58,12 @@ class ProfileViewModel @Inject constructor(
 	fun updateTheme(theme: ThemeOption) {
 		viewModelScope.launch {
 			preferencesRepository.setTheme(theme)
+		}
+	}
+
+	fun updateTextSize(textSize: TextSizeOption) {
+		viewModelScope.launch {
+			preferencesRepository.setTextSize(textSize)
 		}
 	}
 

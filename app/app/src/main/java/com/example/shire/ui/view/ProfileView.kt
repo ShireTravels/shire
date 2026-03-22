@@ -20,6 +20,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.shire.domain.model.TextSizeOption
 import com.example.shire.domain.model.ThemeOption
 import com.example.shire.ui.theme.ShireTheme
 import com.example.shire.ui.viewmodel.ProfileViewModel
@@ -142,13 +143,18 @@ fun ProfileScreen(
                             }
                         )
                         HorizontalDivider(modifier = Modifier.padding(start = 56.dp), color = MaterialTheme.colorScheme.outlineVariant)
-                        PreferenceValueItem(
+                        PreferenceChoiceItem(
                             icon = Icons.Default.FormatSize,
                             iconTint = MaterialTheme.colorScheme.primary,
                             iconBg = MaterialTheme.colorScheme.primaryContainer,
                             title = "Tamaño de texto",
                             subtitle = "Ajuste de accesibilidad",
-                            value = "Normal"
+                            value = prefs.textSize.label,
+                            options = viewModel.textSizeOptions.map { it.label },
+                            onOptionSelected = { label ->
+                                viewModel.textSizeOptions.find { it.label == label }
+                                    ?.let(viewModel::updateTextSize)
+                            }
                         )
                     }
                 }

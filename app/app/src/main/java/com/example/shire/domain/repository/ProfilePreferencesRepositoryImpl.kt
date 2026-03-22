@@ -9,6 +9,7 @@ import com.example.shire.domain.model.CurrencyOption
 import com.example.shire.domain.model.DateFormatOption
 import com.example.shire.domain.model.LanguageOption
 import com.example.shire.domain.model.Preferences
+import com.example.shire.domain.model.TextSizeOption
 import com.example.shire.domain.model.ThemeOption
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -29,6 +30,7 @@ class ProfilePreferencesRepositoryImpl @Inject constructor(
         val currency = stringPreferencesKey("profile_currency")
         val dateFormat = stringPreferencesKey("profile_date_format")
         val theme = stringPreferencesKey("profile_theme")
+        val textSize = stringPreferencesKey("profile_text_size")
         val tripReminders = booleanPreferencesKey("profile_trip_reminders")
         val weeklySummary = booleanPreferencesKey("profile_weekly_summary")
         val termsAccepted = booleanPreferencesKey("profile_terms_accepted")
@@ -49,6 +51,9 @@ class ProfilePreferencesRepositoryImpl @Inject constructor(
                 theme = preferences[Keys.theme]
                     ?.toThemeOptionOrDefault()
                     ?: ThemeOption.LIGHT,
+                textSize = preferences[Keys.textSize]
+                    ?.toTextSizeOptionOrDefault()
+                    ?: TextSizeOption.NORMAL,
                 tripRemindersEnabled = preferences[Keys.tripReminders] ?: true,
                 weeklySummaryEnabled = preferences[Keys.weeklySummary] ?: false,
                 termsAccepted = preferences[Keys.termsAccepted]
@@ -77,6 +82,12 @@ class ProfilePreferencesRepositoryImpl @Inject constructor(
     override suspend fun setTheme(theme: ThemeOption) {
         context.profileDataStore.edit { preferences ->
             preferences[Keys.theme] = theme.id
+        }
+    }
+
+    override suspend fun setTextSize(textSize: TextSizeOption) {
+        context.profileDataStore.edit { preferences ->
+            preferences[Keys.textSize] = textSize.id
         }
     }
 
@@ -113,4 +124,8 @@ private fun String.toDateFormatOptionOrDefault(): DateFormatOption {
 
 private fun String.toThemeOptionOrDefault(): ThemeOption {
     return ThemeOption.entries.firstOrNull { it.id == this } ?: ThemeOption.LIGHT
+}
+
+private fun String.toTextSizeOptionOrDefault(): TextSizeOption {
+    return TextSizeOption.entries.firstOrNull { it.id == this } ?: TextSizeOption.NORMAL
 }
