@@ -8,42 +8,50 @@ import javax.inject.Singleton
 @Singleton
 class CarRepositoryImpl @Inject constructor() : CarRepository {
 
-    // Listas mutables para almacenar datos en memoria
-    private val Cars = mutableListOf<Car>()
+    private val cars = mutableListOf<Car>()
+
+    init {
+        cars.add(
+            Car(
+                id = 301,
+                model = "Peugeot 208",
+                type = "Compact",
+                pricePerDay = 45.0,
+                imageUrl = "https://example.com/peugeot.jpg",
+                transmission = "Manual",
+                seats = 5,
+                features = listOf("AC", "Bluetooth")
+            )
+        )
+    }
+
     override fun getCar(carId: Int): Car {
-        TODO("Not yet implemented")
+        return cars.first { it.id == carId }
     }
 
     override fun getCars(): List<Car> {
-        // Asignamos a cada Car las subtareas correspondientes
-        return Cars.map { Car ->
-            Car.copy(0)
-        }
+        return cars
     }
 
     override fun getUserCars(user: User): List<Car> {
-        TODO("Not yet implemented")
+        return cars
     }
 
-    override fun addCar(Car: Car): Car {
-        // Generamos un id simple basado en el tamaño actual
-        val newCar = Car.copy(id = Cars.size + 1)
-        Cars.add(newCar)
-        return newCar
+    override fun addCar(car: Car): Car {
+        cars.add(car)
+        return car
     }
 
     override fun deleteCar(carId: Int): Boolean {
-        Cars.removeAll { it.id == carId }
-        // También eliminamos sus subtareas
-        return true
+        return cars.removeAll { it.id == carId }
     }
 
     override fun updateCar(car: Car): Boolean {
-        // Buscar la tarea por su id y actualizarla
-        val index = Cars.indexOfFirst { it.id == car.id }
+        val index = cars.indexOfFirst { it.id == car.id }
         if (index != -1) {
-            Cars[index] = car
+            cars[index] = car
+            return true
         }
-        return true
+        return false
     }
 }

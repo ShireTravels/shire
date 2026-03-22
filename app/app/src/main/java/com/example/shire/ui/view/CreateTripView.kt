@@ -1,6 +1,7 @@
 package com.example.shire.ui.view
 
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -19,87 +20,13 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.shire.ui.components.SectionTitle
 import com.example.shire.ui.components.ShireButton
 import com.example.shire.ui.components.ShireTextField
 import com.example.shire.ui.components.StepProgressBar
 import com.example.shire.ui.theme.ShireTheme
-
-// ──────────────────────────────── Data Models ────────────────────────────────
-
-data class MockHotel(
-    val name: String, val location: String, val rating: String,
-    val price: String, val description: String, val amenities: List<String>
-)
-
-data class MockFlight(
-    val airline: String, val route: String, val departure: String,
-    val arrival: String, val price: String, val duration: String, val stops: String
-)
-
-data class MockCar(
-    val model: String, val type: String, val pricePerDay: String,
-    val transmission: String, val seats: String, val features: List<String>
-)
-
-data class MockSpot(
-    val name: String, val category: String, val rating: String,
-    val description: String, val hours: String, val price: String
-)
-
-// ──────────────────────────────── Mock Data ──────────────────────────────────
-
-private val mockHotels = listOf(
-    MockHotel("Hotel Plaza", "Barcelona, España", "4.5/5", "120€/noche",
-        "Hotel de lujo situado en el corazón de Barcelona con vistas al mar Mediterráneo.",
-        listOf("Wi-Fi", "Piscina", "Spa", "Restaurante", "Parking")),
-    MockHotel("Gran Vía Resort", "Madrid, España", "4.2/5", "95€/noche",
-        "Resort moderno en plena Gran Vía con acceso a las mejores tiendas y teatros.",
-        listOf("Wi-Fi", "Gimnasio", "Bar en la azotea", "Room Service")),
-    MockHotel("Sea View Inn", "Costa Brava, España", "4.8/5", "150€/noche",
-        "Hotel boutique frente al mar con habitaciones panorámicas y playa privada.",
-        listOf("Wi-Fi", "Playa privada", "Restaurante", "Kayak", "Snorkel")),
-    MockHotel("Montaña Lodge", "Pirineos, España", "4.6/5", "110€/noche",
-        "Lodge acogedor en los Pirineos, ideal para senderismo y actividades de montaña.",
-        listOf("Wi-Fi", "Chimenea", "Restaurante", "Rutas guiadas"))
-)
-
-private val mockFlights = listOf(
-    MockFlight("Iberia", "BCN → TYO", "09:00", "22:30", "420€",
-        "13h 30min", "1 escala (Frankfurt)"),
-    MockFlight("Vueling", "MAD → BCN", "15:30", "16:45", "85€",
-        "1h 15min", "Directo"),
-    MockFlight("Ryanair", "BCN → ROM", "07:00", "09:15", "45€",
-        "2h 15min", "Directo"),
-    MockFlight("Air Europa", "BCN → NYC", "11:00", "15:30", "380€",
-        "8h 30min", "Directo")
-)
-
-private val mockCars = listOf(
-    MockCar("Toyota RAV4", "SUV", "55€/día",
-        "Automático", "5 plazas", listOf("GPS", "Bluetooth", "Cámara trasera", "A/C")),
-    MockCar("Fiat 500", "Económico", "25€/día",
-        "Manual", "4 plazas", listOf("Bluetooth", "USB", "A/C")),
-    MockCar("Tesla Model 3", "Eléctrico Premium", "89€/día",
-        "Automático", "5 plazas", listOf("Autopilot", "GPS", "Carga rápida", "Premium Audio")),
-    MockCar("VW Transporter", "Furgoneta", "70€/día",
-        "Manual", "9 plazas", listOf("GPS", "A/C", "Gran maletero"))
-)
-
-private val mockSpots = listOf(
-    MockSpot("Templo Senso-ji", "Templo", "4.7/5",
-        "El templo budista más antiguo de Tokio, situado en Asakusa. Incluye la famosa puerta Kaminarimon.",
-        "06:00 - 17:00", "Gratis"),
-    MockSpot("Torre Eiffel", "Monumento", "4.6/5",
-        "Icono de París con vistas panorámicas de la ciudad desde sus tres niveles.",
-        "09:30 - 23:45", "26€"),
-    MockSpot("Sagrada Familia", "Basílica", "4.8/5",
-        "Obra maestra de Gaudí en Barcelona, patrimonio de la humanidad.",
-        "09:00 - 20:00", "26€"),
-    MockSpot("Mercado de la Boquería", "Mercado", "4.5/5",
-        "El mercado gastronómico más famoso de Barcelona con productos frescos y tapas.",
-        "08:00 - 20:30", "Gratis")
-)
+import com.example.shire.ui.viewmodel.CreateTripViewModel
 
 // ──────────────────────────────── Main Screen ────────────────────────────────
 
@@ -107,56 +34,11 @@ private val mockSpots = listOf(
 @Composable
 fun CreateTripScreen(
     onNavigateUp: () -> Unit,
-    onNavigate: (String) -> Unit
+    onNavigate: (String) -> Unit,
+    viewModel: CreateTripViewModel = hiltViewModel()
 ) {
     var currentStep by remember { mutableIntStateOf(0) }
     val stepLabels = listOf("Destino", "Hotel", "Vuelo", "Coche", "Lugares")
-
-    // --- Destination step state ---
-    var tripDestination by remember { mutableStateOf("") }
-    var tripStartDate by remember { mutableStateOf("") }
-    var tripEndDate by remember { mutableStateOf("") }
-    var numAdults by remember { mutableIntStateOf(2) }
-    var numChildren by remember { mutableIntStateOf(0) }
-
-    // Detail dialog state
-    var selectedItem by remember { mutableStateOf<Any?>(null) }
-
-    // Detail dialog
-    if (selectedItem != null) {
-        AlertDialog(
-            onDismissRequest = { selectedItem = null },
-            confirmButton = {
-                TextButton(onClick = { selectedItem = null }) {
-                    Text("Cerrar")
-                }
-            },
-            title = {
-                Text(
-                    text = when (val item = selectedItem) {
-                        is MockHotel -> item.name
-                        is MockFlight -> "${item.airline} · ${item.route}"
-                        is MockCar -> item.model
-                        is MockSpot -> item.name
-                        else -> ""
-                    },
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            text = {
-                Column {
-                    when (val item = selectedItem) {
-                        is MockHotel -> HotelDetailContent(item)
-                        is MockFlight -> FlightDetailContent(item)
-                        is MockCar -> CarDetailContent(item)
-                        is MockSpot -> SpotDetailContent(item)
-                    }
-                }
-            },
-            shape = RoundedCornerShape(24.dp)
-        )
-    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -193,14 +75,14 @@ fun CreateTripScreen(
             }
 
             // Planning date info banner (shown on steps after Destino)
-            if (currentStep > 0 && (tripDestination.isNotBlank() || tripStartDate.isNotBlank())) {
+            if (currentStep > 0 && (viewModel.tripDestination.isNotBlank() || viewModel.tripStartDate.isNotBlank())) {
                 item {
                     TripInfoBanner(
-                        destination = tripDestination,
-                        dates = if (tripStartDate.isNotBlank() && tripEndDate.isNotBlank())
-                            "$tripStartDate → $tripEndDate" else tripStartDate,
-                        travelers = "$numAdults adultos" +
-                                if (numChildren > 0) " · $numChildren niños" else ""
+                        destination = viewModel.tripDestination,
+                        dates = if (viewModel.tripStartDate.isNotBlank() && viewModel.tripEndDate.isNotBlank())
+                            "${viewModel.tripStartDate} → ${viewModel.tripEndDate}" else viewModel.tripStartDate,
+                        travelers = "${viewModel.numAdults} adultos" +
+                                if (viewModel.numChildren > 0) " · ${viewModel.numChildren} niños" else ""
                     )
                 }
             }
@@ -224,77 +106,142 @@ fun CreateTripScreen(
                 0 -> {
                     item {
                         DestinationStepContent(
-                            destination = tripDestination,
-                            onDestinationChange = { tripDestination = it },
-                            startDate = tripStartDate,
-                            onStartDateChange = { tripStartDate = it },
-                            endDate = tripEndDate,
-                            onEndDateChange = { tripEndDate = it },
-                            adults = numAdults,
-                            onAdultsChange = { numAdults = it },
-                            children = numChildren,
-                            onChildrenChange = { numChildren = it }
+                            destination = viewModel.tripDestination,
+                            availableDestinations = viewModel.availableDestinations,
+                            onDestinationChange = { viewModel.tripDestination = it },
+                            startDate = viewModel.tripStartDate,
+                            onStartDateChange = { viewModel.tripStartDate = it },
+                            endDate = viewModel.tripEndDate,
+                            onEndDateChange = { viewModel.tripEndDate = it },
+                            minStartDateMillis = viewModel.getMinStartDateMillis(),
+                            minEndDateMillis = viewModel.getMinEndDateMillis(),
+                            adults = viewModel.numAdults,
+                            onAdultsChange = { viewModel.numAdults = it },
+                            children = viewModel.numChildren,
+                            onChildrenChange = { viewModel.numChildren = it }
                         )
                     }
                 }
                 1 -> {
                     item { StepSubtitle("Hoteles disponibles") }
-                    items(mockHotels) { hotel ->
-                        BrowseableCard(
+                    items(viewModel.hotels) { hotel ->
+                        SelectableCard(
                             icon = Icons.Default.Hotel,
                             iconTint = Color(0xFFD84315),
                             iconBg = Color(0xFFFBE9E7),
                             title = hotel.name,
-                            subtitle = hotel.location,
-                            trailing = hotel.price,
-                            badge = hotel.rating,
-                            onClick = { onNavigate("hotel_details") }
+                            subtitle = "${hotel.location} · ${hotel.rating}⭐",
+                            trailing = "${hotel.price}€/nit",
+                            badge = hotel.amenities.take(3).joinToString(", "),
+                            isSelected = viewModel.selectedHotel == hotel,
+                            onClick = {
+                                viewModel.selectedHotel = if (viewModel.selectedHotel == hotel) null else hotel
+                            }
                         )
                     }
                 }
                 2 -> {
                     item { StepSubtitle("Vuelos disponibles") }
-                    items(mockFlights) { flight ->
-                        BrowseableCard(
+                    items(viewModel.flights) { flight ->
+                        SelectableCard(
                             icon = Icons.Default.Flight,
                             iconTint = Color(0xFF1976D2),
                             iconBg = Color(0xFFE3F2FD),
-                            title = "${flight.airline} · ${flight.route}",
-                            subtitle = "${flight.departure} → ${flight.arrival} · ${flight.duration}",
-                            trailing = flight.price,
-                            badge = flight.stops,
-                            onClick = { null }
+                            title = "${flight.company} · ${flight.flightNumber}",
+                            subtitle = "${flight.departureCity} → ${flight.arrivalCity} · Terminal ${flight.terminal}",
+                            trailing = "${flight.price}€",
+                            badge = flight.type,
+                            isSelected = viewModel.selectedFlight == flight,
+                            onClick = {
+                                viewModel.selectedFlight = if (viewModel.selectedFlight == flight) null else flight
+                            }
                         )
                     }
                 }
                 3 -> {
                     item { StepSubtitle("Coches disponibles") }
-                    items(mockCars) { car ->
-                        BrowseableCard(
+                    items(viewModel.cars) { car ->
+                        SelectableCard(
                             icon = Icons.Default.DirectionsCar,
                             iconTint = Color(0xFF388E3C),
                             iconBg = Color(0xFFE8F5E9),
                             title = car.model,
                             subtitle = "${car.type} · ${car.transmission}",
-                            trailing = car.pricePerDay,
-                            badge = car.seats,
-                            onClick = { null }
+                            trailing = "${car.pricePerDay}€/día",
+                            badge = "${car.seats} plazas",
+                            isSelected = viewModel.selectedCar == car,
+                            onClick = {
+                                viewModel.selectedCar = if (viewModel.selectedCar == car) null else car
+                            }
                         )
                     }
                 }
                 4 -> {
                     item { StepSubtitle("Lugares para visitar") }
-                    items(mockSpots) { spot ->
-                        BrowseableCard(
-                            icon = Icons.Default.Place,
-                            iconTint = Color(0xFFC2185B),
-                            iconBg = Color(0xFFFCE4EC),
-                            title = spot.name,
-                            subtitle = "${spot.category} · ${spot.hours}",
-                            trailing = spot.price,
-                            badge = spot.rating,
-                            onClick = { null }
-                        )
+                    items(viewModel.places) { place ->
+                        val isSelected = viewModel.selectedPlaces.containsKey(place)
+                        Column {
+                            SelectableCard(
+                                icon = Icons.Default.Place,
+                                iconTint = Color(0xFFC2185B),
+                                iconBg = Color(0xFFFCE4EC),
+                                title = place.name,
+                                subtitle = "${place.location} · ${place.type}",
+                                trailing = if (place.price == 0.0) "Gratis" else "${place.price}€",
+                                badge = "${place.rating}⭐",
+                                isSelected = isSelected,
+                                onClick = { viewModel.togglePlaceSelection(place) }
+                            )
+
+                            if (isSelected) {
+                                val tripDays = viewModel.computeTripDays()
+                                val selectedDay = viewModel.selectedPlaces[place] ?: 1
+
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 32.dp, vertical = 4.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "Día de visita",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        FilledIconButton(
+                                            onClick = { if (selectedDay > 1) viewModel.updatePlaceDay(place, selectedDay - 1) },
+                                            enabled = selectedDay > 1,
+                                            modifier = Modifier.size(32.dp),
+                                            colors = IconButtonDefaults.filledIconButtonColors(
+                                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                            )
+                                        ) {
+                                            Icon(Icons.Default.Remove, contentDescription = "Día anterior", modifier = Modifier.size(16.dp))
+                                        }
+                                        Text(
+                                            text = "DÍA $selectedDay",
+                                            style = MaterialTheme.typography.labelLarge,
+                                            fontWeight = FontWeight.Bold,
+                                            modifier = Modifier.padding(horizontal = 12.dp)
+                                        )
+                                        FilledIconButton(
+                                            onClick = { if (selectedDay < tripDays) viewModel.updatePlaceDay(place, selectedDay + 1) },
+                                            enabled = selectedDay < tripDays,
+                                            modifier = Modifier.size(32.dp),
+                                            colors = IconButtonDefaults.filledIconButtonColors(
+                                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                            )
+                                        ) {
+                                            Icon(Icons.Default.Add, contentDescription = "Día siguiente", modifier = Modifier.size(16.dp))
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -308,8 +255,14 @@ fun CreateTripScreen(
                     onPrevious = { if (currentStep > 0) currentStep-- },
                     onNext = { if (currentStep < stepLabels.size - 1) currentStep++ },
                     onSkip = { if (currentStep < stepLabels.size - 1) currentStep++ },
-                    onAddDestination = { currentStep = 0 },
-                    onFinish = { onNavigate("trip_details/1") }
+                    onAddDestination = {
+                        viewModel.addCurrentDestination()
+                        currentStep = 0
+                    },
+                    onFinish = {
+                        val newId = viewModel.createTrip()
+                        onNavigate("trip_details/$newId")
+                    }
                 )
                 Spacer(modifier = Modifier.height(32.dp))
             }
@@ -317,10 +270,10 @@ fun CreateTripScreen(
     }
 }
 
-// ─────────────────────────── Browseable Card ─────────────────────────────────
+// ─────────────────────────── Selectable Card ─────────────────────────────────
 
 @Composable
-private fun BrowseableCard(
+private fun SelectableCard(
     icon: ImageVector,
     iconTint: Color,
     iconBg: Color,
@@ -328,6 +281,7 @@ private fun BrowseableCard(
     subtitle: String,
     trailing: String,
     badge: String,
+    isSelected: Boolean,
     onClick: () -> Unit
 ) {
     Card(
@@ -336,7 +290,13 @@ private fun BrowseableCard(
             .padding(horizontal = 16.dp, vertical = 6.dp)
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected)
+                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+            else
+                MaterialTheme.colorScheme.surface
+        ),
+        border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
@@ -386,7 +346,7 @@ private fun BrowseableCard(
                 }
             }
 
-            // Price
+            // Price + selection indicator
             Column(horizontalAlignment = Alignment.End) {
                 Text(
                     text = trailing,
@@ -395,126 +355,38 @@ private fun BrowseableCard(
                     color = MaterialTheme.colorScheme.primary
                 )
                 Spacer(modifier = Modifier.height(4.dp))
-                Icon(
-                    Icons.Default.ChevronRight,
-                    contentDescription = "Ver detalles",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(20.dp)
-                )
+                if (isSelected) {
+                    Icon(
+                        Icons.Default.CheckCircle,
+                        contentDescription = "Seleccionado",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp)
+                    )
+                } else {
+                    Icon(
+                        Icons.Default.RadioButtonUnchecked,
+                        contentDescription = "No seleccionado",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
             }
-        }
-    }
-}
-
-// ──────────────────────── Detail Bottom Sheet Contents ────────────────────────
-
-@Composable
-private fun ColumnScope.HotelDetailContent(hotel: MockHotel) {
-    DetailHeader(Icons.Default.Hotel, Color(0xFFD84315), Color(0xFFFBE9E7), hotel.name)
-    DetailRow("Ubicación", hotel.location)
-    DetailRow("Valoración", hotel.rating)
-    DetailRow("Precio", hotel.price)
-    Spacer(modifier = Modifier.height(12.dp))
-    Text(hotel.description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-    Spacer(modifier = Modifier.height(16.dp))
-    Text("Servicios", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-    Spacer(modifier = Modifier.height(8.dp))
-    ChipRow(hotel.amenities)
-}
-
-@Composable
-private fun ColumnScope.FlightDetailContent(flight: MockFlight) {
-    DetailHeader(Icons.Default.Flight, Color(0xFF1976D2), Color(0xFFE3F2FD), "${flight.airline} · ${flight.route}")
-    DetailRow("Salida", flight.departure)
-    DetailRow("Llegada", flight.arrival)
-    DetailRow("Duración", flight.duration)
-    DetailRow("Escalas", flight.stops)
-    DetailRow("Precio", flight.price)
-}
-
-@Composable
-private fun ColumnScope.CarDetailContent(car: MockCar) {
-    DetailHeader(Icons.Default.DirectionsCar, Color(0xFF388E3C), Color(0xFFE8F5E9), car.model)
-    DetailRow("Tipo", car.type)
-    DetailRow("Transmisión", car.transmission)
-    DetailRow("Plazas", car.seats)
-    DetailRow("Precio", car.pricePerDay)
-    Spacer(modifier = Modifier.height(16.dp))
-    Text("Características", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-    Spacer(modifier = Modifier.height(8.dp))
-    ChipRow(car.features)
-}
-
-@Composable
-private fun ColumnScope.SpotDetailContent(spot: MockSpot) {
-    DetailHeader(Icons.Default.Place, Color(0xFFC2185B), Color(0xFFFCE4EC), spot.name)
-    DetailRow("Categoría", spot.category)
-    DetailRow("Valoración", spot.rating)
-    DetailRow("Horario", spot.hours)
-    DetailRow("Precio", spot.price)
-    Spacer(modifier = Modifier.height(12.dp))
-    Text(spot.description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-}
-
-// ────────────────────────── Detail Helper Composables ─────────────────────────
-
-@Composable
-private fun DetailHeader(icon: ImageVector, tint: Color, bg: Color, title: String) {
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 16.dp)) {
-        Surface(modifier = Modifier.size(52.dp), shape = RoundedCornerShape(14.dp), color = bg) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(28.dp))
-            }
-        }
-        Spacer(modifier = Modifier.width(16.dp))
-        Text(
-            text = title,
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-    }
-    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-    Spacer(modifier = Modifier.height(12.dp))
-}
-
-@Composable
-private fun DetailRow(label: String, value: String) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
-    }
-}
-
-@Composable
-private fun ChipRow(items: List<String>) {
-    @OptIn(ExperimentalLayoutApi::class)
-    FlowRow(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        items.forEach { item ->
-            SuggestionChip(
-                onClick = {},
-                label = { Text(item, style = MaterialTheme.typography.labelMedium) },
-                shape = RoundedCornerShape(20.dp)
-            )
         }
     }
 }
 
 // ─────────────────────── Destination Step Content ────────────────────────────
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DestinationStepContent(
-    destination: String, onDestinationChange: (String) -> Unit,
+    destination: String, 
+    availableDestinations: List<String>,
+    onDestinationChange: (String) -> Unit,
     startDate: String, onStartDateChange: (String) -> Unit,
     endDate: String, onEndDateChange: (String) -> Unit,
+    minStartDateMillis: Long?,
+    minEndDateMillis: Long?,
     adults: Int, onAdultsChange: (Int) -> Unit,
     children: Int, onChildrenChange: (Int) -> Unit
 ) {
@@ -522,7 +394,7 @@ private fun DestinationStepContent(
     // Estados para controlar la visibilidad de los calendarios
     var showStartDatePicker by remember { mutableStateOf(false) }
     var showEndDatePicker by remember { mutableStateOf(false) }
-
+    var expanded by remember { mutableStateOf(false) }
 
     Surface(
         modifier = Modifier
@@ -537,13 +409,53 @@ private fun DestinationStepContent(
             modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            ShireTextField(
-                value = destination,
-                onValueChange = onDestinationChange,
-                label = "Destino",
-                placeholder = "País, ciudad o región",
-                leadingIcon = Icons.Default.Search
-            )
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = !expanded }
+            ) {
+                OutlinedTextField(
+                    value = destination,
+                    onValueChange = {
+                        onDestinationChange(it)
+                        expanded = true
+                    },
+                    label = { Text("Destino", style = MaterialTheme.typography.bodyMedium) },
+                    placeholder = { Text("País, ciudad o región", style = MaterialTheme.typography.bodyMedium) },
+                    leadingIcon = {
+                        Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    },
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                    },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    modifier = Modifier.menuAnchor().fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                val filteredDestinations = availableDestinations.filter {
+                    it.contains(destination, ignoreCase = true)
+                }
+
+                ExposedDropdownMenu(
+                    expanded = expanded && filteredDestinations.isNotEmpty(),
+                    onDismissRequest = { expanded = false }
+                ) {
+                    filteredDestinations.forEach { selectionOption ->
+                        DropdownMenuItem(
+                            text = { Text(selectionOption) },
+                            onClick = {
+                                onDestinationChange(selectionOption)
+                                expanded = false
+                            }
+                        )
+                    }
+                }
+            }
 
             Text(
                 text = "Fechas del viaje",
@@ -559,8 +471,8 @@ private fun DestinationStepContent(
                     placeholder = "dd/mm/aaaa",
                     modifier = Modifier.weight(1f),
                     leadingIcon = Icons.Default.DateRange,
-                    enabled = false, // Evita que se abra el teclado
-                    onClick = { showStartDatePicker = true } // Abre el calendario
+                    enabled = false,
+                    onClick = { showStartDatePicker = true }
                 )
                 ShireTextField(
                     value = endDate,
@@ -569,17 +481,16 @@ private fun DestinationStepContent(
                     placeholder = "dd/mm/aaaa",
                     modifier = Modifier.weight(1f),
                     leadingIcon = Icons.Default.DateRange,
-                    enabled = false, // Evita que se abra el teclado
-                    onClick = { showEndDatePicker = true } // Abre el calendario
+                    enabled = false,
+                    onClick = { showEndDatePicker = true }
                 )
-
-                // --- LÓGICA DE LOS DIÁLOGOS DE FECHAS ---
 
                 if (showStartDatePicker) {
                     ShireDatePickerDialog(
+                        minDateMillis = minStartDateMillis,
                         onDateSelected = { fecha ->
-                            onStartDateChange(fecha) // Actualiza el estado de la fecha de ida
-                            showStartDatePicker = false // Cierra el calendario
+                            onStartDateChange(fecha)
+                            showStartDatePicker = false
                         },
                         onDismiss = { showStartDatePicker = false }
                     )
@@ -587,9 +498,10 @@ private fun DestinationStepContent(
 
                 if (showEndDatePicker) {
                     ShireDatePickerDialog(
+                        minDateMillis = minEndDateMillis,
                         onDateSelected = { fecha ->
-                            onEndDateChange(fecha) // Actualiza el estado de la fecha de vuelta
-                            showEndDatePicker = false // Cierra el calendario
+                            onEndDateChange(fecha)
+                            showEndDatePicker = false
                         },
                         onDismiss = { showEndDatePicker = false }
                     )
@@ -843,13 +755,21 @@ private fun NavigationButtons(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShireDatePickerDialog(
+    minDateMillis: Long? = null,
     onDateSelected: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val datePickerState = rememberDatePickerState()
+    val datePickerState = rememberDatePickerState(
+        selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                return minDateMillis == null || utcTimeMillis >= minDateMillis
+            }
+        }
+    )
     val selectedDate = datePickerState.selectedDateMillis?.let {
         val date = java.util.Date(it)
         val format = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault())
+        format.timeZone = java.util.TimeZone.getTimeZone("UTC")
         format.format(date)
     } ?: ""
 

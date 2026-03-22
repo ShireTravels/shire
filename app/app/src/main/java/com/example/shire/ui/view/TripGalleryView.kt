@@ -24,24 +24,31 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.shire.ui.theme.ShireTheme
+import com.example.shire.ui.viewmodel.TripGalleryViewModel
 
-data class GalleryPhoto(val id: Int, val color: Color, val isTop: Boolean = false)
+data class GalleryPhoto(val url: String, val color: Color)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TripGalleryScreen(tripId: String, onNavigateUp: () -> Unit) {
-    val photos = listOf(
-        GalleryPhoto(1, Color(0xFFFF4081), isTop = true),
-        GalleryPhoto(2, Color(0xFF4FC3F7), isTop = false),
-        GalleryPhoto(3, Color(0xFFFFB74D), isTop = false),
-        GalleryPhoto(4, Color(0xFFF06292), isTop = false),
-        GalleryPhoto(5, Color(0xFFBA68C8), isTop = false),
-        GalleryPhoto(6, Color(0xFF64B5F6), isTop = false),
-        GalleryPhoto(7, Color(0xFFFF8A65), isTop = false),
-        GalleryPhoto(8, Color(0xFF81C784), isTop = false),
-        GalleryPhoto(9, Color(0xFFAED581), isTop = false)
-    )
+fun TripGalleryScreen(
+    tripId: String,
+    onNavigateUp: () -> Unit,
+    viewModel: TripGalleryViewModel = hiltViewModel()
+) {
+    val trip by viewModel.trip.collectAsState()
+    
+    val photos = trip?.gallery?.mapIndexed { index, url ->
+        // Generate a stable color based on the URL hash
+        val colorInt = android.graphics.Color.HSVToColor(floatArrayOf((url.hashCode() % 360).toFloat(), 0.5f, 0.9f))
+        GalleryPhoto(url = url, color = Color(colorInt))
+    } ?: emptyList()
+
+    var showAddDialog by remember { mutableStateOf(false) }
+    var photoUrlToAdd by remember { mutableStateOf("") }
+    
+    var showWatchDialog by remember { mutableStateOf<GalleryPhoto?>(null) }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -50,8 +57,8 @@ fun TripGalleryScreen(tripId: String, onNavigateUp: () -> Unit) {
             TopAppBar(
                 title = {
                     Column(verticalArrangement = Arrangement.Center) {
-                        Text("Tokyo Adventure", fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                        Text("9 fotos · 234 MB", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(trip?.title ?: "Galería", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                        Text("${photos.size} fotos", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 },
                 navigationIcon = {
@@ -61,7 +68,7 @@ fun TripGalleryScreen(tripId: String, onNavigateUp: () -> Unit) {
                 },
                 actions = {
                     Button(
-                        onClick = { /* TODO Add photos */ },
+                        onClick = { showAddDialog = true },
                         shape = RoundedCornerShape(20.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF29B6F6)),
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
@@ -137,7 +144,11 @@ fun TripGalleryScreen(tripId: String, onNavigateUp: () -> Unit) {
                 modifier = Modifier.weight(1f)
             ) {
                 items(photos.size) { index ->
-                    GalleryPhotoCard(photo = photos[index])
+                    GalleryPhotoCard(
+                        photo = photos[index],
+                        onClick = { showWatchDialog = photos[index] },
+                        onRemove = { viewModel.removePhoto(photos[index].url) }
+                    )
                 }
                 
                 // Add new placeholder card at the end
@@ -146,7 +157,7 @@ fun TripGalleryScreen(tripId: String, onNavigateUp: () -> Unit) {
                         modifier = Modifier
                             .aspectRatio(1f)
                             .clip(RoundedCornerShape(12.dp))
-                            .clickable { }
+                            .clickable { showAddDialog = true }
                     ) {
                         // Drawing dashed border manually
                         Box(
@@ -185,47 +196,96 @@ fun TripGalleryScreen(tripId: String, onNavigateUp: () -> Unit) {
             }
         }
     }
+
+    if (showAddDialog) {
+        AlertDialog(
+            onDismissRequest = { showAddDialog = false },
+            title = { Text("Añadir Foto") },
+            text = {
+                OutlinedTextField(
+                    value = photoUrlToAdd,
+                    onValueChange = { photoUrlToAdd = it },
+                    label = { Text("URL de la imagen") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    if (photoUrlToAdd.isNotBlank()) {
+                        viewModel.addPhoto(photoUrlToAdd)
+                        photoUrlToAdd = ""
+                    }
+                    showAddDialog = false
+                }) {
+                    Text("Añadir")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAddDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+
+    if (showWatchDialog != null) {
+        AlertDialog(
+            onDismissRequest = { showWatchDialog = null },
+            confirmButton = {
+                TextButton(onClick = { showWatchDialog = null }) { Text("Cerrar") }
+            },
+            text = {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(1f)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(showWatchDialog!!.color),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "PREVIEW",
+                            color = Color.White,
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = showWatchDialog!!.url,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        )
+    }
 }
 
 @Composable
-fun GalleryPhotoCard(photo: GalleryPhoto) {
+fun GalleryPhotoCard(photo: GalleryPhoto, onClick: () -> Unit, onRemove: () -> Unit) {
     Box(
         modifier = Modifier
             .aspectRatio(1f)
             .clip(RoundedCornerShape(12.dp))
             .background(photo.color)
-            .clickable { }
+            .clickable { onClick() }
     ) {
         // Red Close Icon
         Box(
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(4.dp)
-                .size(20.dp)
-                .background(Color.Red, CircleShape)
-                .clickable { },
+                .size(24.dp)
+                .background(Color.Red.copy(alpha = 0.8f), CircleShape)
+                .clickable { onRemove() },
             contentAlignment = Alignment.Center
         ) {
             Icon(imageVector = Icons.Default.Close, contentDescription = "Delete", tint = Color.White, modifier = Modifier.size(12.dp))
         }
 
-        // Top Badge
-        if (photo.isTop) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(6.dp)
-                    .background(Color(0xFFFF9800), RoundedCornerShape(4.dp))
-                    .padding(horizontal = 4.dp, vertical = 2.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(imageVector = Icons.Default.Star, contentDescription = null, tint = Color.White, modifier = Modifier.size(8.dp))
-                    Spacer(modifier = Modifier.width(2.dp))
-                    Text(text = "TOP", color = Color.White, fontSize = 8.sp, fontWeight = FontWeight.Bold)
-                }
-            }
-        }
     }
 }
 

@@ -10,7 +10,7 @@ data class Trip(
     var hotel: HashMap<Int, Int>, //num dia / id hotel
     var flight: HashMap<Int, Int>,
     var car: HashMap<Int, Int>,
-    var places: HashMap<Int, Int>,
+    var places: HashMap<Int, MutableList<Int>>,
     var gallery: LinkedList<String>,
     var notes: String
 )

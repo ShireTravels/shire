@@ -5,25 +5,31 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Flight
 import androidx.compose.material.icons.filled.Hotel
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.shire.ui.theme.ShireTheme
+import com.example.shire.ui.viewmodel.TripsDetailsViewModel
 
+data class BudgetDay(val day: Int, val total: Double, val items: List<Pair<String, Double>>)
 data class ItineraryItem(
     val time: String,
     val title: String,
@@ -41,26 +47,83 @@ data class ItineraryDay(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TripDetailsScreen(tripId: String, onNavigateUp: () -> Unit, onNavigate: (String) -> Unit) {
+fun TripDetailsScreen(
+    tripId: String, 
+    onNavigateUp: () -> Unit, 
+    onNavigate: (String) -> Unit,
+    viewModel: TripsDetailsViewModel = hiltViewModel()
+) {
     var selectedTabIndex by remember { mutableStateOf(0) }
-    val tabs = listOf("Itinerario", "Galería", "Presupuesto", "Notas")
+    val tabs = listOf("Itinerario", "Galería", "Presupuesto")
 
-    val itinerary = listOf(
-        ItineraryDay(
-            "DÍA 1 - 10 MAR",
-            listOf(
-                ItineraryItem("08:00", "Vuelo BCN → NRT", "Vueling VY7182 · Terminal 1", "420€", Icons.Default.Flight, Color(0xFF1976D2), Color(0xFFE3F2FD)),
-                ItineraryItem("22:30", "Check-in · Shinjuku Hotel", "Shinjuku, Tokyo · 8k", "95€/nit", Icons.Default.Hotel, Color(0xFFD84315), Color(0xFFFBE9E7))
-            )
-        ),
-        ItineraryDay(
-            "DÍA 2 - 11 MAR",
-            listOf(
-                ItineraryItem("09:00", "Templo Senso-ji", "Asakusa · 2h visita", "Gratis", Icons.Default.Place, Color(0xFFC2185B), Color(0xFFFCE4EC)),
-                ItineraryItem("13:00", "Ramen Ippudo", "Shibuya · Reserva hecha", "18€", Icons.Default.Restaurant, Color(0xFFFBC02D), Color(0xFFFFF9C4))
-            )
-        )
-    )
+    val trip = viewModel.getTrip(tripId.toIntOrNull() ?: 0)
+
+    val itinerary = remember(trip) {
+        if (trip == null) return@remember emptyList<ItineraryDay>()
+
+        // Pre-compute first and last day per hotel to show Check-in / Check-out only once
+        val hotelFirstDay = mutableMapOf<Int, Int>()
+        val hotelLastDay = mutableMapOf<Int, Int>()
+        trip.hotel.forEach { (day, hotelId) ->
+            hotelFirstDay[hotelId] = minOf(hotelFirstDay[hotelId] ?: day, day)
+            hotelLastDay[hotelId] = maxOf(hotelLastDay[hotelId] ?: day, day)
+        }
+
+        // The checkout day is the day AFTER the last hotel night
+        val checkoutDay = hotelLastDay.mapValues { (_, lastDay) -> lastDay + 1 }
+
+        val maxDay = listOf(
+            trip.hotel.keys.maxOrNull() ?: 0,
+            trip.flight.keys.maxOrNull() ?: 0,
+            trip.car.keys.maxOrNull() ?: 0,
+            trip.places.keys.maxOrNull() ?: 0,
+            checkoutDay.values.maxOrNull() ?: 0
+        ).maxOrNull() ?: 0
+
+        val days = mutableListOf<ItineraryDay>()
+
+        for (day in 1..maxDay) {
+            val items = mutableListOf<ItineraryItem>()
+
+            trip.flight[day]?.let { id ->
+                viewModel.getFlight(id)?.let { flight ->
+                    items.add(ItineraryItem("08:00", "Vuelo ${flight.flightNumber}", "${flight.departureCity} → ${flight.arrivalCity} · Terminal ${flight.terminal}", "${flight.price}€", Icons.Default.Flight, Color(0xFF1976D2), Color(0xFFE3F2FD)))
+                }
+            }
+
+            // Show Check-in only on the first day of the hotel stay
+            trip.hotel[day]?.let { hotelId ->
+                if (hotelFirstDay[hotelId] == day) {
+                    viewModel.getHotel(hotelId)?.let { hotel ->
+                        items.add(ItineraryItem("14:00", "Check-in · ${hotel.name}", "${hotel.location} · ${hotel.rating}⭐", "${hotel.price}€/nit", Icons.Default.Hotel, Color(0xFFD84315), Color(0xFFFBE9E7)))
+                    }
+                }
+            }
+
+            // Show Check-out on the day after the last hotel night
+            checkoutDay.forEach { (hotelId, coDay) ->
+                if (coDay == day) {
+                    viewModel.getHotel(hotelId)?.let { hotel ->
+                        items.add(ItineraryItem("12:00", "Check-out · ${hotel.name}", "${hotel.location} · ${hotel.rating}⭐", "", Icons.Default.Hotel, Color(0xFFD84315), Color(0xFFFBE9E7)))
+                    }
+                }
+            }
+
+            trip.places[day]?.forEachIndexed { index, id ->
+                viewModel.getPlace(id)?.let { place ->
+                    val hour = 16 + index * 2
+                    val timeString = "${hour.toString().padStart(2, '0')}:00"
+                    items.add(ItineraryItem(timeString, place.name, "${place.location} · ${place.type}", if (place.price == 0.0) "Gratis" else "${place.price}€", Icons.Default.Place, Color(0xFFC2185B), Color(0xFFFCE4EC)))
+                }
+            }
+
+            if (items.isNotEmpty()) {
+                items.sortBy { it.time }
+                days.add(ItineraryDay("DÍA $day", items))
+            }
+        }
+        days
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -71,6 +134,15 @@ fun TripDetailsScreen(tripId: String, onNavigateUp: () -> Unit, onNavigate: (Str
                 navigationIcon = {
                     IconButton(onClick = onNavigateUp) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = {
+                        val id = tripId.toIntOrNull() ?: 0
+                        viewModel.deleteTrip(id)
+                        onNavigateUp()
+                    }) {
+                        Icon(Icons.Default.Delete, contentDescription = "Eliminar Viaje", tint = MaterialTheme.colorScheme.error)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -106,14 +178,14 @@ fun TripDetailsScreen(tripId: String, onNavigateUp: () -> Unit, onNavigate: (Str
                             .padding(24.dp)
                     ) {
                         Text(
-                            text = "Aventura en Tokio",
+                            text = trip?.title ?: "Viaje no encontrado",
                             color = Color.White,
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "10 Mar - 18 Mar • 8 noches",
+                            text = trip?.dates ?: "",
                             color = Color.White.copy(alpha = 0.8f),
                             style = MaterialTheme.typography.bodyMedium
                         )
@@ -133,11 +205,11 @@ fun TripDetailsScreen(tripId: String, onNavigateUp: () -> Unit, onNavigate: (Str
                             .padding(vertical = 16.dp, horizontal = 24.dp),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        StatItem("8", "NOCHES")
+                        StatItem(trip?.hotel?.size?.toString() ?: "0", "NOCHES")
                         VerticalDivider(modifier = Modifier.height(40.dp))
-                        StatItem("1.240€", "PRESUPUESTO")
+                        StatItem("${trip?.price ?: "0"}€", "PRESUPUESTO")
                         VerticalDivider(modifier = Modifier.height(40.dp))
-                        StatItem("14", "ACTIVIDADES")
+                        StatItem(trip?.places?.size?.toString() ?: "0", "ACTIVIDADES")
                     }
                 }
             }
@@ -196,10 +268,78 @@ fun TripDetailsScreen(tripId: String, onNavigateUp: () -> Unit, onNavigate: (Str
                     }
                     item { Spacer(modifier = Modifier.height(16.dp)) }
                 }
-                
                 item {
                     Spacer(modifier = Modifier.height(80.dp))
                 }
+            }
+
+            // Budget Content
+            if (selectedTabIndex == 2 && trip != null) {
+                val maxBudgetDay = listOf(
+                    trip.hotel.keys.maxOrNull() ?: 0,
+                    trip.flight.keys.maxOrNull() ?: 0,
+                    trip.car.keys.maxOrNull() ?: 0,
+                    trip.places.keys.maxOrNull() ?: 0
+                ).maxOrNull() ?: 0
+
+                val budgetDays = mutableListOf<BudgetDay>()
+                var overallSpent = 0.0
+
+                for (day in 1..maxBudgetDay) {
+                    var dayTotal = 0.0
+                    val dayItems = mutableListOf<Pair<String, Double>>()
+
+                    trip.flight[day]?.let { id ->
+                        viewModel.getFlight(id)?.let { flight ->
+                            dayTotal += flight.price
+                            dayItems.add("Vuelo a ${flight.arrivalCity}" to flight.price)
+                        }
+                    }
+                    trip.hotel[day]?.let { id ->
+                        viewModel.getHotel(id)?.let { hotel ->
+                            dayTotal += hotel.price
+                            dayItems.add(hotel.name to hotel.price)
+                        }
+                    }
+                    trip.car[day]?.let { id ->
+                        viewModel.getCar(id)?.let { car ->
+                            dayTotal += car.pricePerDay
+                            dayItems.add(car.model to car.pricePerDay)
+                        }
+                    }
+                    trip.places[day]?.forEach { id ->
+                        viewModel.getPlace(id)?.let { place ->
+                            dayTotal += place.price
+                            dayItems.add(place.name to place.price)
+                        }
+                    }
+
+                    overallSpent += dayTotal
+                    if (dayItems.isNotEmpty()) {
+                        budgetDays.add(BudgetDay(day, dayTotal, dayItems))
+                    }
+                }
+
+                item {
+                    BudgetOverviewCard(totalSpent = overallSpent, totalBudget = trip.price)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Desglose por Día",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier.padding(horizontal = 24.dp)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                items(budgetDays) { budgetDay ->
+                    Box(modifier = Modifier.padding(horizontal = 24.dp)) {
+                        BudgetDayCard(budgetDay)
+                    }
+                }
+
+                item { Spacer(modifier = Modifier.height(80.dp)) }
             }
         }
     }
@@ -274,6 +414,79 @@ fun ItineraryItemRow(item: ItineraryItem) {
                 fontWeight = FontWeight.SemiBold, 
                 color = MaterialTheme.colorScheme.secondary
             )
+        }
+    }
+}
+
+@Composable
+fun BudgetOverviewCard(totalSpent: Double, totalBudget: Double) {
+    val percentage = if (totalBudget > 0) (totalSpent / totalBudget).toFloat() else 0f
+    val progressColor = if (percentage > 1f) Color.Red else Color(0xFF4CAF50)
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 16.dp, horizontal = 24.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text("Presupuesto Estimado", style = MaterialTheme.typography.labelMedium)
+            Text("${totalBudget}€", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text("Gastado: ${totalSpent}€", style = MaterialTheme.typography.bodyMedium)
+                if (totalSpent > totalBudget) {
+                    Text("¡Excedido!", color = Color.Red, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                } else {
+                    Text("Restante: ${totalBudget - totalSpent}€", style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            LinearProgressIndicator(
+                progress = { minOf(percentage, 1f) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp)),
+                color = progressColor,
+                trackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f),
+            )
+        }
+    }
+}
+
+@Composable
+fun BudgetDayCard(budgetDay: BudgetDay) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("DÍA ${budgetDay.day}", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                Text("${budgetDay.total}€", fontWeight = FontWeight.Bold)
+            }
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            budgetDay.items.forEach { (name, price) ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(name, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(if (price == 0.0) "Gratis" else "${price}€", style = MaterialTheme.typography.bodyMedium)
+                }
+            }
         }
     }
 }
