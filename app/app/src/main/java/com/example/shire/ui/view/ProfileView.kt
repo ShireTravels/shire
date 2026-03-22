@@ -115,57 +115,6 @@ fun ProfileScreen(
                 )
             }
 
-            // Idioma y Región
-            item {
-                PreferenceSectionTitle(stringResource(id = R.string.language_region_section))
-                PreferenceCard {
-                    val prefs = preferences
-                    if (prefs != null) {
-                        PreferenceChoiceItem(
-                            icon = Icons.Default.Language,
-                            iconTint = MaterialTheme.colorScheme.primary,
-                            iconBg = MaterialTheme.colorScheme.primaryContainer,
-                            title = stringResource(id = R.string.language_label),
-                            subtitle = stringResource(id = R.string.interface_language_desc),
-                            value = prefs.language.label,
-                            options = viewModel.languageOptions.map { it.label },
-                            onOptionSelected = { label ->
-                                viewModel.languageOptions.find { it.label == label }
-                                    ?.let(viewModel::updateLanguage)
-                            }
-                        )
-                        HorizontalDivider(modifier = Modifier.padding(start = 56.dp), color = MaterialTheme.colorScheme.outlineVariant)
-                        PreferenceChoiceItem(
-                            icon = Icons.Default.AttachMoney,
-                            iconTint = MaterialTheme.colorScheme.secondary,
-                            iconBg = MaterialTheme.colorScheme.secondaryContainer,
-                            title = stringResource(id = R.string.currency_label),
-                            subtitle = stringResource(id = R.string.budget_currency_desc),
-                            value = prefs.currency.label,
-                            options = viewModel.currencyOptions.map { it.label },
-                            onOptionSelected = { label ->
-                                viewModel.currencyOptions.find { it.label == label }
-                                    ?.let(viewModel::updateCurrency)
-                            }
-                        )
-                        HorizontalDivider(modifier = Modifier.padding(start = 56.dp), color = MaterialTheme.colorScheme.outlineVariant)
-                        PreferenceChoiceItem(
-                            icon = Icons.Default.DateRange,
-                            iconTint = MaterialTheme.colorScheme.tertiary,
-                            iconBg = MaterialTheme.colorScheme.tertiaryContainer,
-                            title = stringResource(id = R.string.date_format_label),
-                            subtitle = "",
-                            value = prefs.dateFormat.label,
-                            options = viewModel.dateFormatOptions.map { it.label },
-                            onOptionSelected = { label ->
-                                viewModel.dateFormatOptions.find { it.label == label }
-                                    ?.let(viewModel::updateDateFormat)
-                            }
-                        )
-                    }
-                }
-            }
-
             // Apariencia
             item {
                 PreferenceSectionTitle(stringResource(id = R.string.appearance_section))
