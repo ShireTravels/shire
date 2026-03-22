@@ -17,4 +17,5 @@ interface ProfilePreferencesRepository {
     suspend fun setTheme(theme: ThemeOption)
     suspend fun setTripRemindersEnabled(enabled: Boolean)
     suspend fun setWeeklySummaryEnabled(enabled: Boolean)
+    suspend fun setTermsAccepted(accepted: Boolean)
 }

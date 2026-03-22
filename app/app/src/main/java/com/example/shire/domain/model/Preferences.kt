@@ -36,5 +36,6 @@ data class Preferences(
     val dateFormat: DateFormatOption,
     val theme: ThemeOption,
     val tripRemindersEnabled: Boolean,
-    val weeklySummaryEnabled: Boolean
+    val weeklySummaryEnabled: Boolean,
+    val termsAccepted: Boolean?
 )

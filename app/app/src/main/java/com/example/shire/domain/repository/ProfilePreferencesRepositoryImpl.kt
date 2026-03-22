@@ -31,6 +31,7 @@ class ProfilePreferencesRepositoryImpl @Inject constructor(
         val theme = stringPreferencesKey("profile_theme")
         val tripReminders = booleanPreferencesKey("profile_trip_reminders")
         val weeklySummary = booleanPreferencesKey("profile_weekly_summary")
+        val termsAccepted = booleanPreferencesKey("profile_terms_accepted")
     }
 
     override val profilePreferencesFlow: Flow<Preferences> = context.profileDataStore.data
@@ -49,7 +50,8 @@ class ProfilePreferencesRepositoryImpl @Inject constructor(
                     ?.toThemeOptionOrDefault()
                     ?: ThemeOption.LIGHT,
                 tripRemindersEnabled = preferences[Keys.tripReminders] ?: true,
-                weeklySummaryEnabled = preferences[Keys.weeklySummary] ?: false
+                weeklySummaryEnabled = preferences[Keys.weeklySummary] ?: false,
+                termsAccepted = preferences[Keys.termsAccepted]
             )
         }
         .distinctUntilChanged()
@@ -87,6 +89,12 @@ class ProfilePreferencesRepositoryImpl @Inject constructor(
     override suspend fun setWeeklySummaryEnabled(enabled: Boolean) {
         context.profileDataStore.edit { preferences ->
             preferences[Keys.weeklySummary] = enabled
+        }
+    }
+
+    override suspend fun setTermsAccepted(accepted: Boolean) {
+        context.profileDataStore.edit { preferences ->
+            preferences[Keys.termsAccepted] = accepted
         }
     }
 }

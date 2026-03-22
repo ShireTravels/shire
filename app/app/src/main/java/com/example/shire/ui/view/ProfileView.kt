@@ -18,10 +18,19 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.shire.domain.model.ThemeOption
 import com.example.shire.ui.theme.ShireTheme
+import com.example.shire.ui.viewmodel.ProfileViewModel
 
 @Composable
-fun ProfileScreen(onNavigate: (String) -> Unit) {
+fun ProfileScreen(
+    onNavigate: (String) -> Unit,
+    viewModel: ProfileViewModel = hiltViewModel()
+) {
+    val preferences by viewModel.preferences.collectAsStateWithLifecycle()
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background
@@ -66,11 +75,50 @@ fun ProfileScreen(onNavigate: (String) -> Unit) {
             item {
                 PreferenceSectionTitle("IDIOMA Y REGIÓN")
                 PreferenceCard {
-                    PreferenceChoiceItem(Icons.Default.Language, MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.primaryContainer, "Idioma", "Idioma de la interfaz", "es Español")
-                    HorizontalDivider(modifier = Modifier.padding(start = 56.dp), color = MaterialTheme.colorScheme.outlineVariant)
-                    PreferenceChoiceItem(Icons.Default.AttachMoney, MaterialTheme.colorScheme.secondary, MaterialTheme.colorScheme.secondaryContainer, "Moneda", "Para presupuestos", "EUR (€)")
-                    HorizontalDivider(modifier = Modifier.padding(start = 56.dp), color = MaterialTheme.colorScheme.outlineVariant)
-                    PreferenceChoiceItem(Icons.Default.DateRange, MaterialTheme.colorScheme.tertiary, MaterialTheme.colorScheme.tertiaryContainer, "Formato fecha", "", "DD/MM")
+                    val prefs = preferences
+                    if (prefs != null) {
+                        PreferenceChoiceItem(
+                            icon = Icons.Default.Language,
+                            iconTint = MaterialTheme.colorScheme.primary,
+                            iconBg = MaterialTheme.colorScheme.primaryContainer,
+                            title = "Idioma",
+                            subtitle = "Idioma de la interfaz",
+                            value = prefs.language.label,
+                            options = viewModel.languageOptions.map { it.label },
+                            onOptionSelected = { label ->
+                                viewModel.languageOptions.find { it.label == label }
+                                    ?.let(viewModel::updateLanguage)
+                            }
+                        )
+                        HorizontalDivider(modifier = Modifier.padding(start = 56.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                        PreferenceChoiceItem(
+                            icon = Icons.Default.AttachMoney,
+                            iconTint = MaterialTheme.colorScheme.secondary,
+                            iconBg = MaterialTheme.colorScheme.secondaryContainer,
+                            title = "Moneda",
+                            subtitle = "Para presupuestos",
+                            value = prefs.currency.label,
+                            options = viewModel.currencyOptions.map { it.label },
+                            onOptionSelected = { label ->
+                                viewModel.currencyOptions.find { it.label == label }
+                                    ?.let(viewModel::updateCurrency)
+                            }
+                        )
+                        HorizontalDivider(modifier = Modifier.padding(start = 56.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                        PreferenceChoiceItem(
+                            icon = Icons.Default.DateRange,
+                            iconTint = MaterialTheme.colorScheme.tertiary,
+                            iconBg = MaterialTheme.colorScheme.tertiaryContainer,
+                            title = "Formato fecha",
+                            subtitle = "",
+                            value = prefs.dateFormat.label,
+                            options = viewModel.dateFormatOptions.map { it.label },
+                            onOptionSelected = { label ->
+                                viewModel.dateFormatOptions.find { it.label == label }
+                                    ?.let(viewModel::updateDateFormat)
+                            }
+                        )
+                    }
                 }
             }
 
@@ -78,11 +126,31 @@ fun ProfileScreen(onNavigate: (String) -> Unit) {
             item {
                 PreferenceSectionTitle("APARIENCIA")
                 PreferenceCard {
-                    var isDarkMode by remember { mutableStateOf(false) }
-                    
-                    PreferenceSwitchItem(Icons.Default.DarkMode, MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.primaryContainer, "Modo oscuro", "Tema de la aplicación", isDarkMode) { isDarkMode = it }
-                    HorizontalDivider(modifier = Modifier.padding(start = 56.dp), color = MaterialTheme.colorScheme.outlineVariant)
-                    PreferenceChoiceItem(Icons.Default.FormatSize, MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.primaryContainer, "Tamaño de texto", "Ajuste de accesibilidad", "Normal")
+                    val prefs = preferences
+                    if (prefs != null) {
+                        PreferenceSwitchItem(
+                            icon = Icons.Default.DarkMode,
+                            iconTint = MaterialTheme.colorScheme.primary,
+                            iconBg = MaterialTheme.colorScheme.primaryContainer,
+                            title = "Modo oscuro",
+                            subtitle = "Tema de la aplicación",
+                            checked = prefs.theme == ThemeOption.DARK,
+                            onCheckedChange = { enabled ->
+                                viewModel.updateTheme(
+                                    if (enabled) ThemeOption.DARK else ThemeOption.LIGHT
+                                )
+                            }
+                        )
+                        HorizontalDivider(modifier = Modifier.padding(start = 56.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                        PreferenceValueItem(
+                            icon = Icons.Default.FormatSize,
+                            iconTint = MaterialTheme.colorScheme.primary,
+                            iconBg = MaterialTheme.colorScheme.primaryContainer,
+                            title = "Tamaño de texto",
+                            subtitle = "Ajuste de accesibilidad",
+                            value = "Normal"
+                        )
+                    }
                 }
             }
 
@@ -90,12 +158,28 @@ fun ProfileScreen(onNavigate: (String) -> Unit) {
             item {
                 PreferenceSectionTitle("NOTIFICACIONES")
                 PreferenceCard {
-                    var notifications1 by remember { mutableStateOf(true) }
-                    var notifications2 by remember { mutableStateOf(false) }
-                    
-                    PreferenceSwitchItem(Icons.Default.Notifications, MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.primaryContainer, "Recordatorios de viaje", "Aviso 24h antes del vuelo", notifications1) { notifications1 = it }
-                    HorizontalDivider(modifier = Modifier.padding(start = 56.dp), color = MaterialTheme.colorScheme.outlineVariant)
-                    PreferenceSwitchItem(Icons.Default.Email, MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.primaryContainer, "Resumen semanal", "Email con próximos viajes", notifications2) { notifications2 = it }
+                    val prefs = preferences
+                    if (prefs != null) {
+                        PreferenceSwitchItem(
+                            icon = Icons.Default.Notifications,
+                            iconTint = MaterialTheme.colorScheme.primary,
+                            iconBg = MaterialTheme.colorScheme.primaryContainer,
+                            title = "Recordatorios de viaje",
+                            subtitle = "Aviso 24h antes del vuelo",
+                            checked = prefs.tripRemindersEnabled,
+                            onCheckedChange = viewModel::updateTripReminders
+                        )
+                        HorizontalDivider(modifier = Modifier.padding(start = 56.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                        PreferenceSwitchItem(
+                            icon = Icons.Default.Email,
+                            iconTint = MaterialTheme.colorScheme.primary,
+                            iconBg = MaterialTheme.colorScheme.primaryContainer,
+                            title = "Resumen semanal",
+                            subtitle = "Email con próximos viajes",
+                            checked = prefs.weeklySummaryEnabled,
+                            onCheckedChange = viewModel::updateWeeklySummary
+                        )
+                    }
                 }
             }
             
@@ -142,11 +226,70 @@ fun PreferenceSectionTitle(title: String) {
 }
 
 @Composable
-fun PreferenceChoiceItem(icon: ImageVector, iconTint: Color, iconBg: Color, title: String, subtitle: String, value: String) {
+fun PreferenceChoiceItem(
+    icon: ImageVector,
+    iconTint: Color,
+    iconBg: Color,
+    title: String,
+    subtitle: String,
+    value: String,
+    options: List<String>,
+    onOptionSelected: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Box(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { expanded = true }
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            PreferenceIcon(icon, iconTint, iconBg)
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+                if (subtitle.isNotEmpty()) {
+                    Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(value, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+                Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.align(Alignment.BottomEnd)
+        ) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(option) },
+                    onClick = {
+                        onOptionSelected(option)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun PreferenceValueItem(
+    icon: ImageVector,
+    iconTint: Color,
+    iconBg: Color,
+    title: String,
+    subtitle: String,
+    value: String
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { }
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -158,10 +301,7 @@ fun PreferenceChoiceItem(icon: ImageVector, iconTint: Color, iconBg: Color, titl
                 Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(value, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
-            Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
+        Text(value, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
     }
 }
 

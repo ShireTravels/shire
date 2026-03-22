@@ -22,7 +22,15 @@ fun AppNavigation() {
     val currentRoute = navBackStackEntry?.destination?.route
 
     val navigateAction: (String) -> Unit = { route ->
-        if (route == "hotel_details" || route.startsWith("trip_details") || route == "create_trip") {
+        val isChildRoute =
+            route == "hotel_details" ||
+                route.startsWith("trip_details") ||
+                route.startsWith("trip_gallery") ||
+                route == "create_trip" ||
+                route == "about" ||
+                route == "terms"
+
+        if (isChildRoute) {
             // Standard navigation for child screens
             navController.navigate(route)
         } else {

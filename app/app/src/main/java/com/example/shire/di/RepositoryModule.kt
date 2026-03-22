@@ -18,6 +18,8 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
+//cuando un ViewModel pide la interfaz, Hilt sabe qué debe inyectar
+
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {
