@@ -1,13 +1,7 @@
 package com.example.shire.domain.repository
 
 import androidx.compose.runtime.mutableStateListOf
-import com.example.shire.domain.model.Car
-import com.example.shire.domain.model.Flight
-import com.example.shire.domain.model.Hotel
-import com.example.shire.domain.model.Place
 import com.example.shire.domain.model.Trip
-import com.example.shire.domain.model.User
-import java.util.Date
 import javax.inject.Inject
 import javax.inject.Singleton
 
