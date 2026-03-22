@@ -96,11 +96,11 @@ fun AboutScreen(onNavigateUp: () -> Unit) {
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
 
-                    TeamMember("AC", "Arnau Cribillers", "Kotlin developer", Color(0xFFFF9800))
+                    TeamMember("VD", "Vitor Da Silva", "Scrum Master", Color(0xFF4CAF50))
                     Spacer(modifier = Modifier.height(16.dp))
                     TeamMember("PL", "Paul Lázaro", "Good guy", Color(0xFF9C27B0))
                     Spacer(modifier = Modifier.height(16.dp))
-                    TeamMember("VD", "Vitor Da Silva", "Scrum Master", Color(0xFF4CAF50))
+                    TeamMember("AC", "Arnau Cribillers", "love coding", Color(0xFFFF9800))
                 }
                 Spacer(modifier = Modifier.height(48.dp))
             }
