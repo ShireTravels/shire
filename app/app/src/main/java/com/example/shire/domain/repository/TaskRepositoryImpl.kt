@@ -42,7 +42,7 @@ class TripRepositoryImpl @Inject constructor(
                     hotel = hashMapOf(1 to hotelParis.id, 2 to hotelParis.id, 3 to hotelParis.id),
                     flight = hashMapOf(1 to flightToParis.id),
                     car = hashMapOf(1 to carParis.id, 2 to carParis.id, 3 to carParis.id),
-                    places = hashMapOf(1 to placeLouvre.id),
+                    places = hashMapOf(1 to mutableListOf(placeLouvre.id)),
                     gallery = java.util.LinkedList(listOf("https://example.com/paris1.jpg", "https://example.com/paris2.jpg")),
                     notes = "Llevar ropa de abrigo y reservar entradas al Louvre."
                 ),
@@ -54,7 +54,7 @@ class TripRepositoryImpl @Inject constructor(
                     hotel = hashMapOf(1 to hotelRome.id, 2 to hotelRome.id),
                     flight = hashMapOf(1 to flightToRome.id),
                     car = hashMapOf(),
-                    places = hashMapOf(1 to placeColiseum.id, 2 to placeColiseum.id),
+                    places = hashMapOf(1 to mutableListOf(placeColiseum.id), 2 to mutableListOf(placeColiseum.id)),
                     gallery = java.util.LinkedList(listOf("https://example.com/roma1.jpg")),
                     notes = "Probar la pizza en Trastevere."
                 )

@@ -38,6 +38,32 @@ class PlaceRepositoryImpl @Inject constructor() : PlaceRepository {
                 price = 20.0
             )
         )
+        places.add(
+            Place(
+                id = 420,
+                name = "Mount Fuji",
+                location = "Japan",
+                type = "Nature",
+                rating = 5.0f,
+                imageUrl = "https://example.com/fuji.jpg",
+                openHour = dateValue,
+                closeHour = dateValue,
+                price = 0.0
+            )
+        )
+        places.add(
+            Place(
+                id = 430,
+                name = "Uffizi Gallery",
+                location = "Italy",
+                type = "Museum",
+                rating = 4.9f,
+                imageUrl = "https://example.com/uffizi.jpg",
+                openHour = dateValue,
+                closeHour = dateValue,
+                price = 25.0
+            )
+        )
     }
 
     override fun getPlace(placeId: Int): Place {

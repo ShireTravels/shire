@@ -5,17 +5,20 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Flight
 import androidx.compose.material.icons.filled.Hotel
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -26,6 +29,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.shire.ui.theme.ShireTheme
 import com.example.shire.ui.viewmodel.TripsDetailsViewModel
 
+data class BudgetDay(val day: Int, val total: Double, val items: List<Pair<String, Double>>)
 data class ItineraryItem(
     val time: String,
     val title: String,
@@ -50,7 +54,7 @@ fun TripDetailsScreen(
     viewModel: TripsDetailsViewModel = hiltViewModel()
 ) {
     var selectedTabIndex by remember { mutableStateOf(0) }
-    val tabs = listOf("Itinerario", "Galería", "Presupuesto", "Notas")
+    val tabs = listOf("Itinerario", "Galería", "Presupuesto")
 
     val trip = viewModel.getTrip(tripId.toIntOrNull() ?: 0)
 
@@ -105,13 +109,16 @@ fun TripDetailsScreen(
                 }
             }
 
-            trip.places[day]?.let { id ->
+            trip.places[day]?.forEachIndexed { index, id ->
                 viewModel.getPlace(id)?.let { place ->
-                    items.add(ItineraryItem("16:00", place.name, "${place.location} · ${place.type}", if (place.price == 0.0) "Gratis" else "${place.price}€", Icons.Default.Place, Color(0xFFC2185B), Color(0xFFFCE4EC)))
+                    val hour = 16 + index * 2
+                    val timeString = "${hour.toString().padStart(2, '0')}:00"
+                    items.add(ItineraryItem(timeString, place.name, "${place.location} · ${place.type}", if (place.price == 0.0) "Gratis" else "${place.price}€", Icons.Default.Place, Color(0xFFC2185B), Color(0xFFFCE4EC)))
                 }
             }
 
             if (items.isNotEmpty()) {
+                items.sortBy { it.time }
                 days.add(ItineraryDay("DÍA $day", items))
             }
         }
@@ -127,6 +134,15 @@ fun TripDetailsScreen(
                 navigationIcon = {
                     IconButton(onClick = onNavigateUp) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = {
+                        val id = tripId.toIntOrNull() ?: 0
+                        viewModel.deleteTrip(id)
+                        onNavigateUp()
+                    }) {
+                        Icon(Icons.Default.Delete, contentDescription = "Eliminar Viaje", tint = MaterialTheme.colorScheme.error)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -252,10 +268,78 @@ fun TripDetailsScreen(
                     }
                     item { Spacer(modifier = Modifier.height(16.dp)) }
                 }
-                
                 item {
                     Spacer(modifier = Modifier.height(80.dp))
                 }
+            }
+
+            // Budget Content
+            if (selectedTabIndex == 2 && trip != null) {
+                val maxBudgetDay = listOf(
+                    trip.hotel.keys.maxOrNull() ?: 0,
+                    trip.flight.keys.maxOrNull() ?: 0,
+                    trip.car.keys.maxOrNull() ?: 0,
+                    trip.places.keys.maxOrNull() ?: 0
+                ).maxOrNull() ?: 0
+
+                val budgetDays = mutableListOf<BudgetDay>()
+                var overallSpent = 0.0
+
+                for (day in 1..maxBudgetDay) {
+                    var dayTotal = 0.0
+                    val dayItems = mutableListOf<Pair<String, Double>>()
+
+                    trip.flight[day]?.let { id ->
+                        viewModel.getFlight(id)?.let { flight ->
+                            dayTotal += flight.price
+                            dayItems.add("Vuelo a ${flight.arrivalCity}" to flight.price)
+                        }
+                    }
+                    trip.hotel[day]?.let { id ->
+                        viewModel.getHotel(id)?.let { hotel ->
+                            dayTotal += hotel.price
+                            dayItems.add(hotel.name to hotel.price)
+                        }
+                    }
+                    trip.car[day]?.let { id ->
+                        viewModel.getCar(id)?.let { car ->
+                            dayTotal += car.pricePerDay
+                            dayItems.add(car.model to car.pricePerDay)
+                        }
+                    }
+                    trip.places[day]?.forEach { id ->
+                        viewModel.getPlace(id)?.let { place ->
+                            dayTotal += place.price
+                            dayItems.add(place.name to place.price)
+                        }
+                    }
+
+                    overallSpent += dayTotal
+                    if (dayItems.isNotEmpty()) {
+                        budgetDays.add(BudgetDay(day, dayTotal, dayItems))
+                    }
+                }
+
+                item {
+                    BudgetOverviewCard(totalSpent = overallSpent, totalBudget = trip.price)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Desglose por Día",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier.padding(horizontal = 24.dp)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                items(budgetDays) { budgetDay ->
+                    Box(modifier = Modifier.padding(horizontal = 24.dp)) {
+                        BudgetDayCard(budgetDay)
+                    }
+                }
+
+                item { Spacer(modifier = Modifier.height(80.dp)) }
             }
         }
     }
@@ -330,6 +414,79 @@ fun ItineraryItemRow(item: ItineraryItem) {
                 fontWeight = FontWeight.SemiBold, 
                 color = MaterialTheme.colorScheme.secondary
             )
+        }
+    }
+}
+
+@Composable
+fun BudgetOverviewCard(totalSpent: Double, totalBudget: Double) {
+    val percentage = if (totalBudget > 0) (totalSpent / totalBudget).toFloat() else 0f
+    val progressColor = if (percentage > 1f) Color.Red else Color(0xFF4CAF50)
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 16.dp, horizontal = 24.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text("Presupuesto Estimado", style = MaterialTheme.typography.labelMedium)
+            Text("${totalBudget}€", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text("Gastado: ${totalSpent}€", style = MaterialTheme.typography.bodyMedium)
+                if (totalSpent > totalBudget) {
+                    Text("¡Excedido!", color = Color.Red, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                } else {
+                    Text("Restante: ${totalBudget - totalSpent}€", style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            LinearProgressIndicator(
+                progress = { minOf(percentage, 1f) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp)),
+                color = progressColor,
+                trackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f),
+            )
+        }
+    }
+}
+
+@Composable
+fun BudgetDayCard(budgetDay: BudgetDay) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("DÍA ${budgetDay.day}", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                Text("${budgetDay.total}€", fontWeight = FontWeight.Bold)
+            }
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            budgetDay.items.forEach { (name, price) ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(name, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(if (price == 0.0) "Gratis" else "${price}€", style = MaterialTheme.typography.bodyMedium)
+                }
+            }
         }
     }
 }

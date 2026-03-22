@@ -21,4 +21,6 @@ class TripsDetailsViewModel @Inject constructor(
     fun getFlight(id: Int): Flight? = runCatching { flightRepository.getFlight(id) }.getOrNull()
     fun getCar(id: Int): Car? = runCatching { carRepository.getCar(id) }.getOrNull()
     fun getPlace(id: Int): Place? = runCatching { placeRepository.getPlace(id) }.getOrNull()
+
+    fun deleteTrip(tripId: Int): Boolean = tripRepository.deleteTrip(tripId)
 }

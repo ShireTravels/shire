@@ -35,6 +35,30 @@ class HotelRepositoryImpl @Inject constructor() : HotelRepository {
                 price = 150.0
             )
         )
+        hotels.add(
+            Hotel(
+                id = 110,
+                name = "Tokyo Grand",
+                location = "Japan",
+                rating = 4.9f,
+                imageUrl = "https://example.com/tokyogrand.jpg",
+                amenities = listOf("WiFi", "Onsen", "Breakfast"),
+                description = "Authentic Japanese experience in the heart of Tokyo.",
+                price = 200.0
+            )
+        )
+        hotels.add(
+            Hotel(
+                id = 115,
+                name = "Milan Central Hotel",
+                location = "Italy",
+                rating = 4.6f,
+                imageUrl = "https://example.com/milancentral.jpg",
+                amenities = listOf("WiFi", "Gym"),
+                description = "Modern hotel near the fashion district.",
+                price = 180.0
+            )
+        )
     }
 
     override fun getHotel(hotelId: Int): Hotel {

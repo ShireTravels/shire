@@ -43,6 +43,36 @@ class FlightRepositoryImpl @Inject constructor() : FlightRepository {
                 price = 90.0
             )
         )
+        flights.add(
+            Flight(
+                id = 210,
+                flightNumber = "JL405",
+                company = "Japan Airlines",
+                departureCity = "Madrid",
+                arrivalCity = "Japan",
+                departureDate = dateValue,
+                arrivalDate = dateValue,
+                terminal = 1,
+                gate = 55,
+                type = "Economy",
+                price = 650.0
+            )
+        )
+        flights.add(
+            Flight(
+                id = 215,
+                flightNumber = "AZ012",
+                company = "ITA Airways",
+                departureCity = "Madrid",
+                arrivalCity = "Italy",
+                departureDate = dateValue,
+                arrivalDate = dateValue,
+                terminal = 4,
+                gate = 40,
+                type = "Economy",
+                price = 110.0
+            )
+        )
     }
 
     override fun getFlight(flightId: Int): Flight {
