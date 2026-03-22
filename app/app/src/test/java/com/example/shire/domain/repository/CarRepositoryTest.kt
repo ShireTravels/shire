@@ -23,7 +23,7 @@ class CarRepositoryTest {
     fun testGetCar_existingId_returnsCar() {
         val car = carRepository.getCar(301)
         assertNotNull(car)
-        assertEquals("Toyota Corolla", car.model)
+        assertEquals("Peugeot 208", car.model)
     }
 
     @Test

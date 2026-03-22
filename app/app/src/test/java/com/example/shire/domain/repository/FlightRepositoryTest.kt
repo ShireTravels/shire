@@ -24,7 +24,7 @@ class FlightRepositoryTest {
     fun testGetFlight_existingId_returnsFlight() {
         val flight = flightRepository.getFlight(201)
         assertNotNull(flight)
-        assertEquals("AF123", flight.flightNumber)
+        assertEquals("AF1234", flight.flightNumber)
     }
 
     @Test
