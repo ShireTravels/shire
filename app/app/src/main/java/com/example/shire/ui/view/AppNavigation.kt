@@ -1,5 +1,6 @@
 package com.example.shire.ui.view
 
+import android.net.Uri
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -12,6 +13,8 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.navArgument
+import androidx.navigation.NavType
 import androidx.navigation.compose.rememberNavController
 import com.example.shire.ui.components.BottomNavBar
 
@@ -22,7 +25,15 @@ fun AppNavigation() {
     val currentRoute = navBackStackEntry?.destination?.route
 
     val navigateAction: (String) -> Unit = { route ->
-        if (route == "hotel_details" || route.startsWith("trip_details") || route == "create_trip") {
+        val isChildRoute =
+            route == "hotel_details" ||
+                route.startsWith("trip_details") ||
+                route.startsWith("trip_gallery") ||
+                route.startsWith("create_trip") ||
+                route == "about" ||
+                route == "terms"
+
+        if (isChildRoute) {
             // Standard navigation for child screens
             navController.navigate(route)
         } else {
@@ -86,10 +97,48 @@ fun AppNavigation() {
             composable("terms") {
                 TermsScreen(onNavigateUp = { navController.popBackStack() })
             }
-            composable("create_trip") {
+            composable(
+                route = "create_trip?destination={destination}&startDate={startDate}&endDate={endDate}&adults={adults}&children={children}",
+                arguments = listOf(
+                    navArgument("destination") {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = null
+                    },
+                    navArgument("startDate") {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = null
+                    },
+                    navArgument("endDate") {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = null
+                    },
+                    navArgument("adults") {
+                        type = NavType.IntType
+                        defaultValue = 2
+                    },
+                    navArgument("children") {
+                        type = NavType.IntType
+                        defaultValue = 0
+                    }
+                )
+            ) { backStackEntry ->
+                val destination = backStackEntry.arguments?.getString("destination")?.let(Uri::decode)
+                val startDate = backStackEntry.arguments?.getString("startDate")?.let(Uri::decode)
+                val endDate = backStackEntry.arguments?.getString("endDate")?.let(Uri::decode)
+                val adults = backStackEntry.arguments?.getInt("adults") ?: 2
+                val children = backStackEntry.arguments?.getInt("children") ?: 0
+
                 CreateTripScreen(
                     onNavigateUp = { navController.popBackStack() },
-                    onNavigate = navigateAction
+                    onNavigate = navigateAction,
+                    initialDestination = destination,
+                    initialStartDate = startDate,
+                    initialEndDate = endDate,
+                    initialAdults = adults,
+                    initialChildren = children
                 )
             }
         }
