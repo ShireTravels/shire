@@ -7,13 +7,13 @@ Aquest document defineix com col.laborem en el repositori i, especialment, l'est
 Fem servir una variant simple de Git Flow amb les branques seguents:
 
 - `main`: branca estable i preparable per entrega.
-- `develop`: branca d'integracio de treball diari.
+- `feature/fix/etc_nom-del-issue
 
 ## Flux de treball
 
 1. Actualitza `la teva branca` localment.
 3. Fes commits petits i descriptius.
-4. Obre una Pull Request (PR) cap a `develop`.
+4. Obre una Pull Request (PR) cap a `main`.
 5. Un altre membre revisa i aprova la PR.
 6. Quan passa revisio i CI, es fa merge.
 
@@ -21,7 +21,7 @@ Per incidencies critiques en produccio:
 
 1. Crea `hotfix/...` des de `main`.
 2. Fes la correccio minima necessaria.
-3. Obre PR cap a `main` i cap a `develop` (o mergeja `main` a `develop` despres).
+3. Obre PR cap a `main`
 
 ## Convencions de noms
 
@@ -33,7 +33,7 @@ Per incidencies critiques en produccio:
 
 ## Regles de merge
 
-- No es fa push directe a `main` ni a `develop`.
+- No es fa push directe a `main`
 - Tot canvi entra per PR.
 - La PR ha de tenir:
 	- descripcio clara del canvi
@@ -51,5 +51,5 @@ Recomanat usar Conventional Commits:
 ## Notes finals
 
 - Manteniu les branques curtes i enfocades.
-- Rebase o merge frequent de `develop` per evitar conflictes grans.
+- Rebase o merge frequent de `main` per evitar conflictes grans.
 - Esborreu branques de feature/fix un cop fusionades.
