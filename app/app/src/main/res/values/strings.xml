@@ -165,4 +165,16 @@
     <string name="terms_conditions_label">Términos y Condiciones</string>
     <string name="legal_privacy_desc">Legal y privacidad</string>
     <string name="screen_placeholder">Pantalla: %s</string>
+
+    <string name="login_title">Inicia sesion</string>
+    <string name="login_subtitle">Accede a tu cuenta o crea una nueva con email y password</string>
+    <string name="login_name_label">Nombre (opcional)</string>
+    <string name="login_email_label">Email</string>
+    <string name="login_password_label">Password</string>
+    <string name="login_button">Entrar</string>
+    <string name="login_helper">Usuario demo: demo@shire.local / 1234</string>
+    <string name="account_name_label">Cuenta</string>
+    <string name="account_email_label">Email</string>
+    <string name="account_data_subtitle">Datos de la sesion activa</string>
+    <string name="logout_button">Cerrar sesion</string>
 </resources>

@@ -16,6 +16,7 @@ import javax.inject.Singleton
 @Singleton
 class TripRepositoryImpl @Inject constructor(
     @ApplicationContext context: Context,
+    private val authRepository: AuthRepository,
     private val hotelRepository: HotelRepository,
     private val flightRepository: FlightRepository,
     private val carRepository: CarRepository,
@@ -79,9 +80,9 @@ class TripRepositoryImpl @Inject constructor(
         database.upsertUser(
             DbUser(
                 id = defaultUserId,
-                name = "Default User",
-                email = "default@shire.local",
-                passwordHash = "local",
+                name = "Demo User",
+                email = "demo@shire.local",
+                passwordHash = "1234",
                 createdAt = System.currentTimeMillis()
             )
         )
@@ -124,12 +125,14 @@ class TripRepositoryImpl @Inject constructor(
     }
 
     override fun getTrip(tripId: Int): Trip? {
+        val currentUserId = getCurrentUserId()
         Log.d("TripRepo", "Fetching trip with id: $tripId")
-        return database.getTripById(defaultUserId, tripId)?.toDomainTrip()
+        return database.getTripById(currentUserId, tripId)?.toDomainTrip()
     }
 
     override fun getTrips(): List<Trip> {
-        val trips = database.getTrips(defaultUserId).map { it.toDomainTrip() }
+        val currentUserId = getCurrentUserId()
+        val trips = database.getTrips(currentUserId).map { it.toDomainTrip() }
         Log.d("TripRepo", "Fetching all trips. Total trips: ${trips.size}")
         return trips
     }
@@ -142,7 +145,8 @@ class TripRepositoryImpl @Inject constructor(
     }
 
     override fun deleteTrip(tripId: Int): Boolean {
-        val deleted = database.deleteTrip(defaultUserId, tripId) > 0
+        val currentUserId = getCurrentUserId()
+        val deleted = database.deleteTrip(currentUserId, tripId) > 0
         if (!deleted) {
             Log.e("TripRepo", "Failed to delete trip: ID $tripId not found")
             return false
@@ -152,7 +156,8 @@ class TripRepositoryImpl @Inject constructor(
     }
 
     override fun updateTrip(trip: Trip): Boolean {
-        val exists = database.getTripById(defaultUserId, trip.id) != null
+        val currentUserId = getCurrentUserId()
+        val exists = database.getTripById(currentUserId, trip.id) != null
         if (exists) {
             database.insertTrip(trip.toDbTrip())
             Log.i("TripRepo", "Updated trip successfully (ID: ${trip.id})")
@@ -164,7 +169,7 @@ class TripRepositoryImpl @Inject constructor(
 
     private fun Trip.toDbTrip(): DbTrip = DbTrip(
         id = id,
-        userId = defaultUserId,
+        userId = getCurrentUserId(),
         title = title,
         startDate = startDate,
         endDate = endDate,
@@ -176,6 +181,8 @@ class TripRepositoryImpl @Inject constructor(
         gallery = gallery,
         description = description
     )
+
+    private fun getCurrentUserId(): Int = authRepository.getLoggedInUser()?.id ?: defaultUserId
 
     private fun DbTrip.toDomainTrip(): Trip = Trip(
         id = id,
