@@ -1,151 +1,98 @@
 package com.example.shire.db
 
 import android.content.Context
-import android.database.sqlite.SQLiteDatabase
-import android.database.sqlite.SQLiteOpenHelper
+import androidx.room.Room
 
-class db(context: Context) : SQLiteOpenHelper(context, DB_NAME, null, DB_VERSION), dbImpl {
+class db(context: Context) : dbImpl {
 
-	override fun onCreate(database: SQLiteDatabase) {
-		ALL_DB_TABLES.forEach { table ->
-			database.execSQL(table.createSql)
-		}
-	}
+	private val roomDb: ShireRoomDatabase = getOrCreateRoomDatabase(context.applicationContext)
 
-	override fun onUpgrade(database: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-		ALL_DB_TABLES.forEach { table ->
-			database.execSQL(table.dropSql)
-		}
-		onCreate(database)
-	}
+	override fun upsertUser(user: User): Long = roomDb.userDao().upsert(user)
 
-	override fun insertActivity(activity: Activity): Long {
-		return writableDatabase.insert(ActivityTable.tableName, null, ActivityTable.toContentValues(activity))
-	}
+	override fun getUserById(id: Int): User? = roomDb.userDao().getById(id)
 
-	override fun getActivitiesByTrip(tripId: Int): List<Activity> {
-		val result = mutableListOf<Activity>()
-		val cursor = readableDatabase.query(
-			ActivityTable.tableName,
-			null,
-			"trip_id = ?",
-			arrayOf(tripId.toString()),
-			null,
-			null,
-			"date ASC, time ASC"
-		)
+	override fun getUserByEmail(email: String): User? = roomDb.userDao().getByEmail(email)
 
-		cursor.use {
-			while (it.moveToNext()) {
-				result.add(ActivityTable.fromCursor(it))
-			}
-		}
+	override fun insertActivity(activity: Activity): Long = roomDb.activityDao().insert(activity)
 
-		return result
-	}
+	override fun getActivityById(id: Int): Activity? = roomDb.activityDao().getById(id)
 
-	override fun insertCar(car: Car): Long {
-		return writableDatabase.insert(CarTable.tableName, null, CarTable.toContentValues(car))
-	}
+	override fun getActivitiesByTrip(tripId: Int): List<Activity> = roomDb.activityDao().getByTripId(tripId)
 
-	override fun getCars(): List<Car> = queryAll(CarTable)
+	override fun deleteActivity(id: Int): Int = roomDb.activityDao().deleteById(id)
 
-	override fun insertFlight(flight: Flight): Long {
-		return writableDatabase.insert(FlightTable.tableName, null, FlightTable.toContentValues(flight))
-	}
+	override fun insertCar(car: Car): Long = roomDb.carDao().insert(car)
 
-	override fun getFlights(): List<Flight> = queryAll(FlightTable)
+	override fun getCarById(id: Int): Car? = roomDb.carDao().getById(id)
 
-	override fun insertHotel(hotel: Hotel): Long {
-		return writableDatabase.insert(HotelTable.tableName, null, HotelTable.toContentValues(hotel))
-	}
+	override fun getCars(): List<Car> = roomDb.carDao().getAll()
 
-	override fun getHotels(): List<Hotel> = queryAll(HotelTable)
+	override fun deleteCar(id: Int): Int = roomDb.carDao().deleteById(id)
 
-	override fun insertPlace(place: Place): Long {
-		return writableDatabase.insert(PlaceTable.tableName, null, PlaceTable.toContentValues(place))
-	}
+	override fun insertFlight(flight: Flight): Long = roomDb.flightDao().insert(flight)
 
-	override fun getPlaces(): List<Place> = queryAll(PlaceTable)
+	override fun getFlightById(id: Int): Flight? = roomDb.flightDao().getById(id)
 
-	override fun savePreferences(preferences: Preferences): Long {
-		return writableDatabase.insertWithOnConflict(
-			PreferencesTable.tableName,
-			null,
-			PreferencesTable.toContentValues(preferences),
-			SQLiteDatabase.CONFLICT_REPLACE
-		)
-	}
+	override fun getFlights(): List<Flight> = roomDb.flightDao().getAll()
 
-	override fun getPreferences(): Preferences? {
-		val cursor = readableDatabase.query(
-			PreferencesTable.tableName,
-			null,
-			"id = 1",
-			null,
-			null,
-			null,
-			null,
-			"1"
-		)
+	override fun deleteFlight(id: Int): Int = roomDb.flightDao().deleteById(id)
 
-		cursor.use {
-			return if (it.moveToFirst()) PreferencesTable.fromCursor(it) else null
-		}
-	}
+	override fun insertHotel(hotel: Hotel): Long = roomDb.hotelDao().insert(hotel)
 
-	override fun insertTrip(trip: Trip): Long {
-		return writableDatabase.insert(TripTable.tableName, null, TripTable.toContentValues(trip))
-	}
+	override fun getHotelById(id: Int): Hotel? = roomDb.hotelDao().getById(id)
 
-	override fun getTrips(): List<Trip> {
-		return queryAll(TripTable, orderBy = "start_date ASC")
-	}
+	override fun getHotels(): List<Hotel> = roomDb.hotelDao().getAll()
 
-	override fun getTripById(id: Int): Trip? {
-		val cursor = readableDatabase.query(
-			TripTable.tableName,
-			null,
-			"id = ?",
-			arrayOf(id.toString()),
-			null,
-			null,
-			null,
-			"1"
-		)
+	override fun deleteHotel(id: Int): Int = roomDb.hotelDao().deleteById(id)
 
-		cursor.use {
-			return if (it.moveToFirst()) TripTable.fromCursor(it) else null
-		}
-	}
+	override fun insertPlace(place: Place): Long = roomDb.placeDao().insert(place)
+
+	override fun getPlaceById(id: Int): Place? = roomDb.placeDao().getById(id)
+
+	override fun getPlaces(): List<Place> = roomDb.placeDao().getAll()
+
+	override fun deletePlace(id: Int): Int = roomDb.placeDao().deleteById(id)
+
+	override fun savePreferences(preferences: Preferences): Long = roomDb.preferencesDao().upsert(preferences)
+
+	override fun getPreferences(userId: Int): Preferences? = roomDb.preferencesDao().getByUserId(userId)
+
+	override fun insertTrip(trip: Trip): Long = roomDb.tripDao().insert(trip)
+
+	override fun getTrips(userId: Int): List<Trip> = roomDb.tripDao().getByUserId(userId)
+
+	override fun getTripById(userId: Int, id: Int): Trip? = roomDb.tripDao().getByUserIdAndTripId(userId, id)
+
+	override fun deleteTrip(userId: Int, id: Int): Int = roomDb.tripDao().deleteByUserIdAndTripId(userId, id)
 
 	override fun closeDb() {
-		close()
-	}
-
-	private fun <T> queryAll(table: DbTable<T>, orderBy: String? = null): List<T> {
-		val result = mutableListOf<T>()
-		val cursor = readableDatabase.query(
-			table.tableName,
-			null,
-			null,
-			null,
-			null,
-			null,
-			orderBy
-		)
-
-		cursor.use {
-			while (it.moveToNext()) {
-				result.add(table.fromCursor(it))
-			}
+		synchronized(db::class.java) {
+			roomDatabase?.close()
+			roomDatabase = null
 		}
-
-		return result
 	}
 
 	companion object {
 		private const val DB_NAME = "shire.db"
-		private const val DB_VERSION = 1
+		@Volatile
+		private var roomDatabase: ShireRoomDatabase? = null
+
+		private fun getOrCreateRoomDatabase(context: Context): ShireRoomDatabase {
+			return roomDatabase ?: synchronized(this) {
+				roomDatabase ?: Room.databaseBuilder(
+					context,
+					ShireRoomDatabase::class.java,
+					DB_NAME
+				)
+					.fallbackToDestructiveMigration()
+					.allowMainThreadQueries()
+					.build()
+					.also { roomDatabase = it }
+			}
+		}
+
+		fun initialize(context: Context) {
+			getOrCreateRoomDatabase(context.applicationContext).openHelper.writableDatabase
+		}
 	}
 }

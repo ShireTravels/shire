@@ -59,6 +59,7 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.core.splashscreen)
+    implementation(libs.androidx.appcompat)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -72,9 +73,21 @@ dependencies {
     "kapt"(libs.hilt.compiler)
     implementation ("androidx.hilt:hilt-navigation-compose:1.2.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
+    implementation("androidx.room:room-runtime:2.6.1")
+    implementation("androidx.room:room-ktx:2.6.1")
+    "kapt"("androidx.room:room-compiler:2.6.1")
+    // Room compiler uses sqlite-jdbc at kapt time; pin a newer build for Windows x86_64.
+    "kapt"("org.xerial:sqlite-jdbc:3.46.1.3")
 }
 
 // Allow references to generated code
 kapt {
     correctErrorTypes = false
+}
+
+val kaptTmpDir = rootProject.layout.projectDirectory.dir(".gradle/tmp").asFile.absolutePath
+
+tasks.withType<org.jetbrains.kotlin.gradle.internal.KaptWithoutKotlincTask>().configureEach {
+    kaptProcessJvmArgs.add("-Djava.io.tmpdir=$kaptTmpDir")
+    kaptProcessJvmArgs.add("-Dorg.sqlite.tmpdir=$kaptTmpDir")
 }
