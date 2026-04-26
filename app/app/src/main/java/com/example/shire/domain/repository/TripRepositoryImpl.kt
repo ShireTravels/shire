@@ -2,11 +2,14 @@ package com.example.shire.domain.repository
 
 import android.content.Context
 import android.util.Log
+import com.example.shire.db.Activity as DbActivity
 import com.example.shire.db.Trip as DbTrip
 import com.example.shire.db.User as DbUser
 import com.example.shire.db.db
 import com.example.shire.domain.model.Trip
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.time.LocalDate
+import java.time.LocalTime
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -25,6 +28,7 @@ class TripRepositoryImpl @Inject constructor(
     init {
         ensureDefaultUser()
         seedTripsIfNeeded()
+        seedActivitiesIfNeeded()
     }
 
     private fun seedTripsIfNeeded() {
@@ -81,6 +85,42 @@ class TripRepositoryImpl @Inject constructor(
                 createdAt = System.currentTimeMillis()
             )
         )
+    }
+
+    private fun seedActivitiesIfNeeded() {
+        if (database.getActivitiesByTrip(1).isNotEmpty() || database.getActivitiesByTrip(2).isNotEmpty()) return
+
+        listOf(
+            DbActivity(
+                id = 1,
+                tripId = 1,
+                title = "Visita al Louvre",
+                description = "Entrada reservada para las 10 AM",
+                date = LocalDate.of(2026, 4, 13),
+                time = LocalTime.of(10, 0),
+                price = 0.0
+            ),
+            DbActivity(
+                id = 2,
+                tripId = 1,
+                title = "Cena en la Torre Eiffel",
+                description = "Cena romantica en el restaurante de la torre",
+                date = LocalDate.of(2026, 4, 15),
+                time = LocalTime.of(21, 0),
+                price = 0.0
+            ),
+            DbActivity(
+                id = 3,
+                tripId = 2,
+                title = "Tour por el Coliseo",
+                description = "Visita guiada al Coliseo y Foro Romano",
+                date = LocalDate.of(2026, 5, 6),
+                time = LocalTime.of(9, 30),
+                price = 0.0
+            )
+        ).forEach { activity ->
+            database.insertActivity(activity)
+        }
     }
 
     override fun getTrip(tripId: Int): Trip? {
