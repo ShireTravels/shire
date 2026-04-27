@@ -28,12 +28,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.shire.ui.components.DestinationCard
 import com.example.shire.ui.components.DestinationStepContent
 import com.example.shire.ui.components.SectionTitle
 import com.example.shire.ui.components.ShireButton
 import com.example.shire.ui.components.ShireTextField
 import com.example.shire.ui.viewmodel.CreateTripViewModel
+import com.example.shire.ui.viewmodel.HomeViewModel
 
 data class PopularDestination(val city: String, val country: String, val imageRes: Int)
 data class HotelHighlight(val name: String, val city: String, val pricePerNight: String, val rating: String)
@@ -41,6 +43,8 @@ data class HotelHighlight(val name: String, val city: String, val pricePerNight:
 @Composable
 fun HomeScreen(onNavigate: (String) -> Unit) {
     val viewModel: CreateTripViewModel = hiltViewModel()
+    val homeViewModel: HomeViewModel = hiltViewModel()
+    val loggedInUser by homeViewModel.loggedInUser.collectAsStateWithLifecycle()
 
     val recommendedDestinations = listOf(
         PopularDestination("Barcelona", "España", 0),
@@ -102,6 +106,17 @@ fun HomeScreen(onNavigate: (String) -> Unit) {
                         }
 
                         Spacer(modifier = Modifier.height(12.dp))
+
+                        Text(
+                            text = stringResource(
+                                id = R.string.home_greeting,
+                                loggedInUser?.name?.ifBlank { "viajero" } ?: "viajero"
+                            ),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.95f)
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
 
                         Text(
                             text = stringResource(id = R.string.home_subtitle),

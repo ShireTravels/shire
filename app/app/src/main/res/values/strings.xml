@@ -51,6 +51,7 @@
     <string name="air_conditioning">Aire acondicionado</string>
 
     <string name="good_morning">Buenos días, Victor \uD83D\uDC4B</string>
+    <string name="home_greeting">Buenos días, %1$s \uD83D\uDC4B</string>
     <string name="your_trips">TUS VIAJES</string>
     <string name="active_itineraries">Itinerarios activos</string>
     <string name="view_history">Ver historial</string>
@@ -165,4 +166,26 @@
     <string name="terms_conditions_label">Términos y Condiciones</string>
     <string name="legal_privacy_desc">Legal y privacidad</string>
     <string name="screen_placeholder">Pantalla: %s</string>
+
+    <string name="login_title">Inicia sesion</string>
+    <string name="login_subtitle">Accede a tu cuenta o crea una nueva con email y password</string>
+    <string name="login_email_label">Email</string>
+    <string name="login_password_label">Password</string>
+    <string name="login_button">Entrar</string>
+    <string name="login_helper">Usuario demo: demo@shire.local / 1234</string>
+    <string name="go_to_register_button">Crear cuenta</string>
+    <string name="forgot_password_button">He olvidado mi contraseña</string>
+    <string name="register_title">Registrate</string>
+    <string name="register_subtitle">Crea tu usuario para guardar tus viajes</string>
+    <string name="register_name_label">Nombre</string>
+    <string name="register_button">Registrar</string>
+    <string name="back_to_login_button">Volver al login</string>
+    <string name="recover_password_title">Recuperar contraseña</string>
+    <string name="recover_password_subtitle">Introduce tu email y te enviaremos un enlace para restablecerla</string>
+    <string name="recover_password_button">Enviar correo de recuperacion</string>
+    <string name="new_password_label">Nueva contraseña</string>
+    <string name="account_name_label">Cuenta</string>
+    <string name="account_email_label">Email</string>
+    <string name="account_data_subtitle">Datos de la sesion activa</string>
+    <string name="logout_button">Cerrar sesion</string>
 </resources>

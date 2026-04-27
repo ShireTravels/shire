@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -18,9 +19,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.shire.R
 import com.example.shire.ui.theme.ShireTheme
 import com.example.shire.ui.viewmodel.TripsViewModel
+import com.example.shire.ui.viewmodel.HomeViewModel
 
 data class UpcomingTrip(
     val id: String,
@@ -35,6 +38,8 @@ fun TripsScreen(
     onNavigate: (String) -> Unit,
     viewModel: TripsViewModel = hiltViewModel()
 ) {
+    val homeViewModel: HomeViewModel = hiltViewModel()
+    val loggedInUser by homeViewModel.loggedInUser.collectAsStateWithLifecycle()
     val domainTrips = viewModel.trips
     val trips = domainTrips.map { trip ->
         UpcomingTrip(
@@ -69,7 +74,10 @@ fun TripsScreen(
                 ) {
                     Column {
                         Text(
-                            text = stringResource(id = R.string.good_morning),
+                            text = stringResource(
+                                id = R.string.home_greeting,
+                                loggedInUser?.name?.ifBlank { "viajero" } ?: "viajero"
+                            ),
                             color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
                             style = MaterialTheme.typography.labelLarge
                         )

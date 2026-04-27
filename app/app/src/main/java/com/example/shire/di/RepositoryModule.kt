@@ -13,6 +13,8 @@ import com.example.shire.domain.repository.ProfilePreferencesRepositoryImpl
 import com.example.shire.domain.repository.TripRepository
 import com.example.shire.domain.repository.ActivityRepository
 import com.example.shire.domain.repository.ActivityRepositoryImpl
+import com.example.shire.domain.repository.AuthRepository
+import com.example.shire.domain.repository.AuthRepositoryImpl
 import com.example.shire.domain.repository.TripRepositoryImpl
 import dagger.Binds
 import dagger.Module
@@ -65,5 +67,11 @@ abstract class RepositoryModule {
     abstract fun bindProfilePreferencesRepository(
         profilePreferencesRepository: ProfilePreferencesRepositoryImpl
     ): ProfilePreferencesRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAuthRepository(
+        authRepositoryImpl: AuthRepositoryImpl
+    ): AuthRepository
 }
 

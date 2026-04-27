@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -16,15 +17,34 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import androidx.navigation.NavType
 import androidx.navigation.compose.rememberNavController
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.res.stringResource
 import com.example.shire.R
 import com.example.shire.ui.components.BottomNavBar
+import com.example.shire.ui.viewmodel.AuthViewModel
 
 @Composable
-fun AppNavigation() {
+fun AppNavigation(
+    authViewModel: AuthViewModel = hiltViewModel()
+) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+    val authState by authViewModel.uiState.collectAsStateWithLifecycle()
+
+    val loggedIn = authState.loggedInUser != null
+    val startDestination = if (loggedIn) "tripsScreen" else "login"
+    val guestRoutes = setOf("login", "register")
+
+    LaunchedEffect(loggedIn, currentRoute) {
+        if (!authState.isLoading && !loggedIn && currentRoute !in guestRoutes) {
+            navController.navigate("login") {
+                popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                launchSingleTop = true
+            }
+        }
+    }
 
     val navigateAction: (String) -> Unit = { route ->
         val isChildRoute =
@@ -52,17 +72,62 @@ fun AppNavigation() {
 
     Scaffold(
         bottomBar = {
-            BottomNavBar(
-                currentRoute = currentRoute,
-                onNavigate = navigateAction
-            )
+            if (currentRoute !in guestRoutes) {
+                BottomNavBar(
+                    currentRoute = currentRoute,
+                    onNavigate = navigateAction
+                )
+            }
         }
     ) { innerPadding ->
         NavHost(
             navController = navController, 
-            startDestination = "tripsScreen",
+            startDestination = startDestination,
             modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())
         ) {
+            composable("login") {
+                LoginScreen(
+                    onLoginSuccess = {
+                        navController.navigate("tripsScreen") {
+                            popUpTo("login") { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    },
+                    onRegisterClick = {
+                        navController.navigate("register") {
+                            launchSingleTop = true
+                        }
+                    },
+                    onRecoverPasswordClick = {
+                        navController.navigate("recover_password") {
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
+
+            composable("register") {
+                RegisterScreen(
+                    onRegisterSuccess = {
+                        navController.navigate("tripsScreen") {
+                            popUpTo("register") { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    },
+                    onBackToLogin = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+            composable("recover_password") {
+                RecoverPasswordScreen(
+                    onBackToLogin = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
             // Página Trips
             composable("tripsScreen") {
                 TripsScreen(onNavigate = navigateAction)
