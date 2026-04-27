@@ -97,6 +97,11 @@ fun AppNavigation(
                         navController.navigate("register") {
                             launchSingleTop = true
                         }
+                    },
+                    onRecoverPasswordClick = {
+                        navController.navigate("recover_password") {
+                            launchSingleTop = true
+                        }
                     }
                 )
             }
@@ -109,6 +114,14 @@ fun AppNavigation(
                             launchSingleTop = true
                         }
                     },
+                    onBackToLogin = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+            composable("recover_password") {
+                RecoverPasswordScreen(
                     onBackToLogin = {
                         navController.popBackStack()
                     }

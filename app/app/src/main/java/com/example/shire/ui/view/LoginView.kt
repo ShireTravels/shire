@@ -34,6 +34,7 @@ import com.example.shire.ui.viewmodel.AuthViewModel
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
     onRegisterClick: () -> Unit,
+    onRecoverPasswordClick: () -> Unit,
     viewModel: AuthViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -121,6 +122,14 @@ fun LoginScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(text = stringResource(id = R.string.go_to_register_button))
+                }
+
+                TextButton(
+                    onClick = onRecoverPasswordClick,
+                    enabled = !uiState.isLoading,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(text = stringResource(id = R.string.forgot_password_button))
                 }
 
                 Spacer(modifier = Modifier.height(4.dp))

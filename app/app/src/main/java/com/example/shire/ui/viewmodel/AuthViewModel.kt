@@ -70,6 +70,28 @@ class AuthViewModel @Inject constructor(
         }
     }
 
+    fun recoverPassword(email: String, newPassword: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            val result = authRepository.recoverPassword(email, newPassword)
+            if (result.isFailure) {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = result.exceptionOrNull()?.message ?: "Error al recuperar la contraseña"
+                    )
+                }
+            } else {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = "Contraseña actualizada. Ya puedes iniciar sesión."
+                    )
+                }
+            }
+        }
+    }
+
     fun logout() {
         viewModelScope.launch {
             authRepository.logout()

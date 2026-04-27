@@ -45,7 +45,7 @@ class AuthRepositoryImpl @Inject constructor(
         val normalizedEmail = email.trim().lowercase()
         val normalizedPassword = password.trim()
 
-        if (normalizedEmail.isBlank()) return Result.failure(IllegalArgumentException("Email requerido"))
+        if (!isValidEmail(normalizedEmail)) return Result.failure(IllegalArgumentException("Email invalido"))
         if (normalizedPassword.isBlank()) return Result.failure(IllegalArgumentException("Password requerido"))
 
         val existingUser = database.getUserByEmail(normalizedEmail)
@@ -65,8 +65,9 @@ class AuthRepositoryImpl @Inject constructor(
         val normalizedName = name.trim()
 
         if (normalizedName.isBlank()) return Result.failure(IllegalArgumentException("Nombre requerido"))
-        if (normalizedEmail.isBlank()) return Result.failure(IllegalArgumentException("Email requerido"))
+        if (!isValidEmail(normalizedEmail)) return Result.failure(IllegalArgumentException("Email invalido"))
         if (normalizedPassword.isBlank()) return Result.failure(IllegalArgumentException("Password requerido"))
+        if (normalizedPassword.length < 4) return Result.failure(IllegalArgumentException("La contraseña debe tener al menos 4 caracteres"))
         if (database.getUserByEmail(normalizedEmail) != null) {
             return Result.failure(IllegalArgumentException("El email ya existe"))
         }
@@ -85,6 +86,30 @@ class AuthRepositoryImpl @Inject constructor(
 
         setLoggedInUserId(createdUser.id)
         return Result.success(createdUser.toLoggedInUser())
+    }
+
+    override suspend fun recoverPassword(email: String, newPassword: String): Result<Unit> {
+        val normalizedEmail = email.trim().lowercase()
+        val normalizedPassword = newPassword.trim()
+
+        if (!isValidEmail(normalizedEmail)) return Result.failure(IllegalArgumentException("Email invalido"))
+        if (normalizedPassword.isBlank()) return Result.failure(IllegalArgumentException("Nueva contraseña requerida"))
+        if (normalizedPassword.length < 4) return Result.failure(IllegalArgumentException("La contraseña debe tener al menos 4 caracteres"))
+
+        val existingUser = database.getUserByEmail(normalizedEmail)
+            ?: return Result.failure(IllegalArgumentException("No existe un usuario con ese email"))
+
+        database.upsertUser(
+            DbUser(
+                id = existingUser.id,
+                name = existingUser.name,
+                email = existingUser.email,
+                passwordHash = normalizedPassword,
+                createdAt = existingUser.createdAt
+            )
+        )
+
+        return Result.success(Unit)
     }
 
     override suspend fun logout() {
@@ -116,6 +141,10 @@ class AuthRepositoryImpl @Inject constructor(
     private fun getLoggedInUserId(): Int? {
         if (!sharedPrefs.contains(Keys.loggedInUserId)) return null
         return sharedPrefs.getInt(Keys.loggedInUserId, -1).takeIf { it > 0 }
+    }
+
+    private fun isValidEmail(email: String): Boolean {
+        return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
     }
 
     private fun DbUser.toLoggedInUser(): LoggedInUser = LoggedInUser(
