@@ -41,41 +41,50 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }.distinctUntilChanged()
 
-    override suspend fun login(email: String, password: String, name: String): Result<LoggedInUser> {
+    override suspend fun login(email: String, password: String): Result<LoggedInUser> {
         val normalizedEmail = email.trim().lowercase()
         val normalizedPassword = password.trim()
-        val normalizedName = name.trim()
 
         if (normalizedEmail.isBlank()) return Result.failure(IllegalArgumentException("Email requerido"))
         if (normalizedPassword.isBlank()) return Result.failure(IllegalArgumentException("Password requerido"))
 
         val existingUser = database.getUserByEmail(normalizedEmail)
-        val loggedUser = if (existingUser != null) {
-            if (existingUser.passwordHash != normalizedPassword) {
-                return Result.failure(IllegalArgumentException("Credenciales invalidas"))
-            }
-            existingUser
-        } else {
-            val finalName = if (normalizedName.isNotBlank()) {
-                normalizedName
-            } else {
-                normalizedEmail.substringBefore('@').ifBlank { "User" }
-            }
+            ?: return Result.failure(IllegalArgumentException("Usuario no encontrado"))
 
-            database.upsertUser(
-                DbUser(
-                    name = finalName,
-                    email = normalizedEmail,
-                    passwordHash = normalizedPassword,
-                    createdAt = System.currentTimeMillis()
-                )
-            )
-            database.getUserByEmail(normalizedEmail)
-                ?: return Result.failure(IllegalStateException("No se pudo crear el usuario"))
+        if (existingUser.passwordHash != normalizedPassword) {
+            return Result.failure(IllegalArgumentException("Credenciales invalidas"))
         }
 
-        setLoggedInUserId(loggedUser.id)
-        return Result.success(loggedUser.toLoggedInUser())
+        setLoggedInUserId(existingUser.id)
+        return Result.success(existingUser.toLoggedInUser())
+    }
+
+    override suspend fun register(email: String, password: String, name: String): Result<LoggedInUser> {
+        val normalizedEmail = email.trim().lowercase()
+        val normalizedPassword = password.trim()
+        val normalizedName = name.trim()
+
+        if (normalizedName.isBlank()) return Result.failure(IllegalArgumentException("Nombre requerido"))
+        if (normalizedEmail.isBlank()) return Result.failure(IllegalArgumentException("Email requerido"))
+        if (normalizedPassword.isBlank()) return Result.failure(IllegalArgumentException("Password requerido"))
+        if (database.getUserByEmail(normalizedEmail) != null) {
+            return Result.failure(IllegalArgumentException("El email ya existe"))
+        }
+
+        database.upsertUser(
+            DbUser(
+                name = normalizedName,
+                email = normalizedEmail,
+                passwordHash = normalizedPassword,
+                createdAt = System.currentTimeMillis()
+            )
+        )
+
+        val createdUser = database.getUserByEmail(normalizedEmail)
+            ?: return Result.failure(IllegalStateException("No se pudo crear el usuario"))
+
+        setLoggedInUserId(createdUser.id)
+        return Result.success(createdUser.toLoggedInUser())
     }
 
     override suspend fun logout() {

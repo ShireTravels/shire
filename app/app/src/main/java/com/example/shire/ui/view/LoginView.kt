@@ -13,6 +13,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -32,13 +33,13 @@ import com.example.shire.ui.viewmodel.AuthViewModel
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
+    onRegisterClick: () -> Unit,
     viewModel: AuthViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var name by remember { mutableStateOf("") }
 
     LaunchedEffect(uiState.loggedInUser?.id) {
         if (uiState.loggedInUser != null) {
@@ -68,16 +69,6 @@ fun LoginScreen(
 
         Card(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text(stringResource(id = R.string.login_name_label)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
@@ -109,7 +100,7 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Button(
-                    onClick = { viewModel.login(email = email, password = password, name = name) },
+                    onClick = { viewModel.login(email = email, password = password) },
                     enabled = !uiState.isLoading,
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -124,6 +115,15 @@ fun LoginScreen(
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
+                TextButton(
+                    onClick = onRegisterClick,
+                    enabled = !uiState.isLoading,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(text = stringResource(id = R.string.go_to_register_button))
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = stringResource(id = R.string.login_helper),
                     style = MaterialTheme.typography.bodySmall,

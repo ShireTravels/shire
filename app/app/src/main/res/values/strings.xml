@@ -168,11 +168,16 @@
 
     <string name="login_title">Inicia sesion</string>
     <string name="login_subtitle">Accede a tu cuenta o crea una nueva con email y password</string>
-    <string name="login_name_label">Nombre (opcional)</string>
     <string name="login_email_label">Email</string>
     <string name="login_password_label">Password</string>
     <string name="login_button">Entrar</string>
     <string name="login_helper">Usuario demo: demo@shire.local / 1234</string>
+    <string name="go_to_register_button">Crear cuenta</string>
+    <string name="register_title">Registrate</string>
+    <string name="register_subtitle">Crea tu usuario para guardar tus viajes</string>
+    <string name="register_name_label">Nombre</string>
+    <string name="register_button">Registrar</string>
+    <string name="back_to_login_button">Volver al login</string>
     <string name="account_name_label">Cuenta</string>
     <string name="account_email_label">Email</string>
     <string name="account_data_subtitle">Datos de la sesion activa</string>

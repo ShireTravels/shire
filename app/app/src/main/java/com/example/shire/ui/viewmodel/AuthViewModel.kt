@@ -40,15 +40,30 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    fun login(email: String, password: String, name: String = "") {
+    fun login(email: String, password: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            val result = authRepository.login(email, password, name)
+            val result = authRepository.login(email, password)
             if (result.isFailure) {
                 _uiState.update {
                     it.copy(
                         isLoading = false,
                         errorMessage = result.exceptionOrNull()?.message ?: "Error de login"
+                    )
+                }
+            }
+        }
+    }
+
+    fun register(email: String, password: String, name: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            val result = authRepository.register(email, password, name)
+            if (result.isFailure) {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = result.exceptionOrNull()?.message ?: "Error de registro"
                     )
                 }
             }

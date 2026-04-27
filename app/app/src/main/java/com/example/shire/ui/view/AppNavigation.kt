@@ -35,9 +35,10 @@ fun AppNavigation(
 
     val loggedIn = authState.loggedInUser != null
     val startDestination = if (loggedIn) "tripsScreen" else "login"
+    val guestRoutes = setOf("login", "register")
 
     LaunchedEffect(loggedIn, currentRoute) {
-        if (!authState.isLoading && !loggedIn && currentRoute != "login") {
+        if (!authState.isLoading && !loggedIn && currentRoute !in guestRoutes) {
             navController.navigate("login") {
                 popUpTo(navController.graph.startDestinationId) { inclusive = true }
                 launchSingleTop = true
@@ -71,7 +72,7 @@ fun AppNavigation(
 
     Scaffold(
         bottomBar = {
-            if (currentRoute != "login") {
+            if (currentRoute !in guestRoutes) {
                 BottomNavBar(
                     currentRoute = currentRoute,
                     onNavigate = navigateAction
@@ -91,6 +92,25 @@ fun AppNavigation(
                             popUpTo("login") { inclusive = true }
                             launchSingleTop = true
                         }
+                    },
+                    onRegisterClick = {
+                        navController.navigate("register") {
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
+
+            composable("register") {
+                RegisterScreen(
+                    onRegisterSuccess = {
+                        navController.navigate("tripsScreen") {
+                            popUpTo("register") { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    },
+                    onBackToLogin = {
+                        navController.popBackStack()
                     }
                 )
             }
