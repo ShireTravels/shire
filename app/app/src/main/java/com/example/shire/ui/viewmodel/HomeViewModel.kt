@@ -29,5 +29,5 @@ class HomeViewModel @Inject constructor(
 
     val greetingName: String
         get() = loggedInUser.value?.name?.ifBlank { "viajero" } ?: "viajero"
-}package com.example.shire.ui.viewmodel
+}
 
