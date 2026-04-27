@@ -104,10 +104,16 @@ class AuthRepositoryImpl @Inject constructor(
 
         if (!isValidEmail(normalizedEmail)) return Result.failure(IllegalArgumentException("Email invalido"))
 
-        return runCatching {
+        return try {
             firebaseAuth.sendPasswordResetEmail(normalizedEmail).awaitCompletion()
-        }.recoverCatching { error ->
-            throw mapFirebaseAuthError(error)
+            Result.success(Unit)
+        } catch (error: Throwable) {
+            // To avoid account enumeration, treat "user not found" like a successful request.
+            if (isUserNotFoundError(error)) {
+                Result.success(Unit)
+            } else {
+                Result.failure(mapRecoverPasswordError(error))
+            }
         }
     }
 
@@ -185,6 +191,21 @@ class AuthRepositoryImpl @Inject constructor(
                 message.contains("invalid-email") -> IllegalArgumentException("Email invalido")
             else -> error
         }
+    }
+
+    private fun mapRecoverPasswordError(error: Throwable): Throwable {
+        val message = error.message?.lowercase().orEmpty()
+        return when {
+            message.contains("invalid-email") ||
+                message.contains("badly formatted") -> IllegalArgumentException("Email invalido")
+            message.contains("too-many-requests") -> IllegalStateException("Demasiados intentos. Intentalo mas tarde")
+            else -> error
+        }
+    }
+
+    private fun isUserNotFoundError(error: Throwable): Boolean {
+        val message = error.message?.lowercase().orEmpty()
+        return message.contains("user-not-found") || message.contains("no user record")
     }
 
     private suspend fun Task<*>.awaitCompletion() {
