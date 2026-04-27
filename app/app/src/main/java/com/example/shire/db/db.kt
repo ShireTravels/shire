@@ -2,6 +2,9 @@ package com.example.shire.db
 
 import android.content.Context
 import androidx.room.Room
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
+import java.io.IOException
 
 class db(context: Context) : dbImpl {
 
@@ -73,21 +76,62 @@ class db(context: Context) : dbImpl {
 	}
 
 	companion object {
-		private const val DB_NAME = "shire.db"
+		private const val DB_NAME = "shire.sqlite"
+		private const val LEGACY_DB_NAME = "shire.db"
+		private val MIGRATION_4_5 = object : Migration(4, 5) {
+			override fun migrate(db: SupportSQLiteDatabase) {
+				// No schema changes; this migration exists to avoid destructive fallback wipes.
+			}
+		}
 		@Volatile
 		private var roomDatabase: ShireRoomDatabase? = null
 
 		private fun getOrCreateRoomDatabase(context: Context): ShireRoomDatabase {
+			migrateLegacyDatabaseFileIfNeeded(context)
+
 			return roomDatabase ?: synchronized(this) {
 				roomDatabase ?: Room.databaseBuilder(
 					context,
 					ShireRoomDatabase::class.java,
 					DB_NAME
 				)
-					.fallbackToDestructiveMigration()
+					.addMigrations(MIGRATION_4_5)
 					.allowMainThreadQueries()
 					.build()
 					.also { roomDatabase = it }
+			}
+		}
+
+		private fun migrateLegacyDatabaseFileIfNeeded(context: Context) {
+			val newDb = context.getDatabasePath(DB_NAME)
+			if (newDb.exists()) return
+
+			val legacyDb = context.getDatabasePath(LEGACY_DB_NAME)
+			if (!legacyDb.exists()) return
+
+			newDb.parentFile?.mkdirs()
+			try {
+				legacyDb.copyTo(newDb, overwrite = false)
+
+				copySidecarIfExists(
+					from = context.getDatabasePath("$LEGACY_DB_NAME-wal"),
+					to = context.getDatabasePath("$DB_NAME-wal")
+				)
+				copySidecarIfExists(
+					from = context.getDatabasePath("$LEGACY_DB_NAME-shm"),
+					to = context.getDatabasePath("$DB_NAME-shm")
+				)
+			} catch (_: IOException) {
+				// If copy fails, Room will create a fresh DB file with the new name.
+			}
+		}
+
+		private fun copySidecarIfExists(from: java.io.File, to: java.io.File) {
+			if (!from.exists() || to.exists()) return
+			try {
+				from.copyTo(to, overwrite = false)
+			} catch (_: IOException) {
+				// Ignore sidecar copy errors; primary DB copy is enough for fallback.
 			}
 		}
 

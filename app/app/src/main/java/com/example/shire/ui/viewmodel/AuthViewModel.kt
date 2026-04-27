@@ -70,10 +70,10 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    fun recoverPassword(email: String, newPassword: String) {
+    fun recoverPassword(email: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            val result = authRepository.recoverPassword(email, newPassword)
+            val result = authRepository.recoverPassword(email)
             if (result.isFailure) {
                 _uiState.update {
                     it.copy(
@@ -85,7 +85,7 @@ class AuthViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        errorMessage = "Contraseña actualizada. Ya puedes iniciar sesión."
+                        errorMessage = "Te hemos enviado un correo para restablecer la contraseña."
                     )
                 }
             }

@@ -181,8 +181,8 @@
     <string name="register_button">Registrar</string>
     <string name="back_to_login_button">Volver al login</string>
     <string name="recover_password_title">Recuperar contraseña</string>
-    <string name="recover_password_subtitle">Valida tu email y define una nueva contraseña</string>
-    <string name="recover_password_button">Actualizar contraseña</string>
+    <string name="recover_password_subtitle">Introduce tu email y te enviaremos un enlace para restablecerla</string>
+    <string name="recover_password_button">Enviar correo de recuperacion</string>
     <string name="new_password_label">Nueva contraseña</string>
     <string name="account_name_label">Cuenta</string>
     <string name="account_email_label">Email</string>

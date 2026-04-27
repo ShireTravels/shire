@@ -15,7 +15,7 @@ import androidx.room.TypeConverters
         Preferences::class,
         Trip::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 @TypeConverters(ShireTypeConverters::class)

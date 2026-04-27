@@ -22,7 +22,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -37,10 +36,9 @@ fun RecoverPasswordScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     var email by remember { mutableStateOf("") }
-    var newPassword by remember { mutableStateOf("") }
 
     LaunchedEffect(uiState.errorMessage) {
-        if (uiState.errorMessage == "Contraseña actualizada. Ya puedes iniciar sesión.") {
+        if (uiState.errorMessage == "Te hemos enviado un correo para restablecer la contraseña.") {
             onBackToLogin()
         }
     }
@@ -75,22 +73,11 @@ fun RecoverPasswordScreen(
                     singleLine = true
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
-
-                OutlinedTextField(
-                    value = newPassword,
-                    onValueChange = { newPassword = it },
-                    label = { Text(stringResource(id = R.string.new_password_label)) },
-                    visualTransformation = PasswordVisualTransformation(),
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
-
                 uiState.errorMessage?.let { message ->
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         text = message,
-                        color = if (message.startsWith("Contraseña actualizada")) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                        color = if (message.startsWith("Te hemos enviado")) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
@@ -98,7 +85,7 @@ fun RecoverPasswordScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Button(
-                    onClick = { viewModel.recoverPassword(email = email, newPassword = newPassword) },
+                    onClick = { viewModel.recoverPassword(email = email) },
                     enabled = !uiState.isLoading,
                     modifier = Modifier.fillMaxWidth()
                 ) {
