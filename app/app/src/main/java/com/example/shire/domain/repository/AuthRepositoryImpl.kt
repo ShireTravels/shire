@@ -40,7 +40,7 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     init {
-        restoreLocalUserFromFirebaseSession()
+        ensureDefaultUser()
     }
 
     override val loggedInUserFlow: Flow<LoggedInUser?> = callbackFlow {
@@ -108,7 +108,6 @@ class AuthRepositoryImpl @Inject constructor(
             ).awaitCompletion()
 
             firebaseUser.sendEmailVerification().awaitCompletion()
-            upsertLocalUserFromFirebase(firebaseUser)
             firebaseAuth.signOut()
             Unit
         }.recoverCatching { error ->
@@ -143,9 +142,17 @@ class AuthRepositoryImpl @Inject constructor(
         return resolveLoggedInUser(firebaseAuth.currentUser)
     }
 
-    private fun restoreLocalUserFromFirebaseSession() {
-        val firebaseUser = firebaseAuth.currentUser ?: return
-        runCatching { resolveLoggedInUser(firebaseUser) }
+    private fun ensureDefaultUser() {
+        if (database.getUserById(1) != null) return
+        database.upsertUser(
+            DbUser(
+                id = 1,
+                name = "Demo User",
+                email = "demo@shire.local",
+                passwordHash = "1234",
+                createdAt = System.currentTimeMillis()
+            )
+        )
     }
 
     private fun setLoggedInUserId(userId: Int) {
@@ -172,32 +179,25 @@ class AuthRepositoryImpl @Inject constructor(
             return null
         }
 
-        val localUser = upsertLocalUserFromFirebase(firebaseUser)
+        val normalizedEmail = firebaseUser.email?.trim()?.lowercase() ?: return null
+        val nameFromFirebase = firebaseUser.displayName?.trim().orEmpty()
+
+        val localUser = database.getUserByEmail(normalizedEmail) ?: run {
+            database.upsertUser(
+                DbUser(
+                    name = nameFromFirebase.ifBlank {
+                        normalizedEmail.substringBefore('@').ifBlank { "User" }
+                    },
+                    email = normalizedEmail,
+                    passwordHash = "",
+                    createdAt = System.currentTimeMillis()
+                )
+            )
+            database.getUserByEmail(normalizedEmail)
+        } ?: return null
 
         setLoggedInUserId(localUser.id)
         return localUser.toLoggedInUser()
-    }
-
-    private fun upsertLocalUserFromFirebase(firebaseUser: FirebaseUser): DbUser {
-        val normalizedEmail = firebaseUser.email?.trim()?.lowercase()
-            ?: throw IllegalStateException("Usuario Firebase sin email")
-        val nameFromFirebase = firebaseUser.displayName?.trim().orEmpty()
-
-        val existing = database.getUserByEmail(normalizedEmail)
-        val userToSave = DbUser(
-            id = existing?.id ?: 0,
-            name = nameFromFirebase.ifBlank {
-                existing?.name?.ifBlank { normalizedEmail.substringBefore('@').ifBlank { "User" } }
-                    ?: normalizedEmail.substringBefore('@').ifBlank { "User" }
-            },
-            email = normalizedEmail,
-            passwordHash = existing?.passwordHash.orEmpty(),
-            createdAt = existing?.createdAt ?: System.currentTimeMillis()
-        )
-
-        database.upsertUser(userToSave)
-        return database.getUserByEmail(normalizedEmail)
-            ?: throw IllegalStateException("No se pudo sincronizar el usuario local")
     }
 
     private fun mapFirebaseAuthError(error: Throwable): Throwable {
