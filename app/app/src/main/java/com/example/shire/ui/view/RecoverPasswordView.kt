@@ -14,7 +14,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,12 +36,6 @@ fun RecoverPasswordScreen(
 
     var email by remember { mutableStateOf("") }
 
-    LaunchedEffect(uiState.errorMessage) {
-        if (uiState.errorMessage == "Te hemos enviado un correo para restablecer la contraseña.") {
-            onBackToLogin()
-        }
-    }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -58,6 +51,13 @@ fun RecoverPasswordScreen(
         Text(
             text = stringResource(id = R.string.recover_password_subtitle),
             style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = stringResource(id = R.string.recover_password_helper),
+            style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
@@ -77,7 +77,16 @@ fun RecoverPasswordScreen(
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         text = message,
-                        color = if (message.startsWith("Te hemos enviado")) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+
+                uiState.successMessage?.let { message ->
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = message,
+                        color = MaterialTheme.colorScheme.primary,
                         style = MaterialTheme.typography.bodySmall
                     )
                 }

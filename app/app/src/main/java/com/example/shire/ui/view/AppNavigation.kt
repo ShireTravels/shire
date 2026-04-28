@@ -35,7 +35,7 @@ fun AppNavigation(
 
     val loggedIn = authState.loggedInUser != null
     val startDestination = if (loggedIn) "tripsScreen" else "login"
-    val guestRoutes = setOf("login", "register")
+    val guestRoutes = setOf("login", "register", "recover_password")
 
     LaunchedEffect(loggedIn, currentRoute) {
         if (!authState.isLoading && !loggedIn && currentRoute !in guestRoutes) {

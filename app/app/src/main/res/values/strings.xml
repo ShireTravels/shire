@@ -178,10 +178,12 @@
     <string name="register_title">Registrate</string>
     <string name="register_subtitle">Crea tu usuario para guardar tus viajes</string>
     <string name="register_name_label">Nombre</string>
+    <string name="register_password_hint">La contraseña debe tener al menos 6 caracteres.</string>
     <string name="register_button">Registrar</string>
     <string name="back_to_login_button">Volver al login</string>
     <string name="recover_password_title">Recuperar contraseña</string>
-    <string name="recover_password_subtitle">Introduce tu email y te enviaremos un enlace para restablecerla</string>
+    <string name="recover_password_subtitle">Introduce tu email y te enviaremos un enlace para restablecerla si la cuenta existe.</string>
+    <string name="recover_password_helper">Por seguridad no confirmamos si el correo está registrado. Revisa también la carpeta de spam.</string>
     <string name="recover_password_button">Enviar correo de recuperacion</string>
     <string name="new_password_label">Nueva contraseña</string>
     <string name="account_name_label">Cuenta</string>

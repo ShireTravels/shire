@@ -15,7 +15,8 @@ import kotlinx.coroutines.launch
 data class AuthUiState(
     val isLoading: Boolean = false,
     val loggedInUser: LoggedInUser? = null,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val successMessage: String? = null
 )
 
 @HiltViewModel
@@ -33,7 +34,8 @@ class AuthViewModel @Inject constructor(
                     it.copy(
                         isLoading = false,
                         loggedInUser = user,
-                        errorMessage = null
+                        errorMessage = null,
+                        successMessage = null
                     )
                 }
             }
@@ -42,13 +44,14 @@ class AuthViewModel @Inject constructor(
 
     fun login(email: String, password: String) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            _uiState.update { it.copy(isLoading = true, errorMessage = null, successMessage = null) }
             val result = authRepository.login(email, password)
             if (result.isFailure) {
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        errorMessage = result.exceptionOrNull()?.message ?: "Error de login"
+                        errorMessage = result.exceptionOrNull()?.message ?: "Error de login",
+                        successMessage = null
                     )
                 }
             }
@@ -57,13 +60,22 @@ class AuthViewModel @Inject constructor(
 
     fun register(email: String, password: String, name: String) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            _uiState.update { it.copy(isLoading = true, errorMessage = null, successMessage = null) }
             val result = authRepository.register(email, password, name)
             if (result.isFailure) {
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        errorMessage = result.exceptionOrNull()?.message ?: "Error de registro"
+                        errorMessage = result.exceptionOrNull()?.message ?: "Error de registro",
+                        successMessage = null
+                    )
+                }
+            } else {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = null,
+                        successMessage = "Cuenta creada. Revisa tu correo y valida tu email antes de iniciar sesion."
                     )
                 }
             }
@@ -72,20 +84,22 @@ class AuthViewModel @Inject constructor(
 
     fun recoverPassword(email: String) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            _uiState.update { it.copy(isLoading = true, errorMessage = null, successMessage = null) }
             val result = authRepository.recoverPassword(email)
             if (result.isFailure) {
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        errorMessage = result.exceptionOrNull()?.message ?: "Error al recuperar la contraseña"
+                        errorMessage = result.exceptionOrNull()?.message ?: "Error al recuperar la contraseña",
+                        successMessage = null
                     )
                 }
             } else {
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        errorMessage = "Te hemos enviado un correo para restablecer la contraseña."
+                        errorMessage = null,
+                        successMessage = "Si el email existe, te hemos enviado un correo para restablecer la contraseña."
                     )
                 }
             }

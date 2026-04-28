@@ -4,7 +4,11 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.util.Patterns
 import com.google.android.gms.tasks.Task
+import com.google.firebase.FirebaseTooManyRequestsException
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthException
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.UserProfileChangeRequest
 import com.example.shire.db.User as DbUser
@@ -36,7 +40,7 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     init {
-        ensureDefaultUser()
+        restoreLocalUserFromFirebaseSession()
     }
 
     override val loggedInUserFlow: Flow<LoggedInUser?> = callbackFlow {
@@ -62,14 +66,24 @@ class AuthRepositoryImpl @Inject constructor(
                 .signInWithEmailAndPassword(normalizedEmail, normalizedPassword)
                 .awaitCompletion()
 
-            resolveLoggedInUser(firebaseAuth.currentUser)
+            val firebaseUser = firebaseAuth.currentUser
+                ?: throw IllegalStateException("No se pudo recuperar el usuario autenticado")
+
+            firebaseUser.reload().awaitCompletion()
+            if (!firebaseUser.isEmailVerified) {
+                runCatching { firebaseUser.sendEmailVerification().awaitCompletion() }
+                firebaseAuth.signOut()
+                throw IllegalStateException("Debes verificar tu email antes de iniciar sesion. Te hemos reenviado un correo de verificacion.")
+            }
+
+            resolveLoggedInUser(firebaseUser)
                 ?: throw IllegalStateException("No se pudo recuperar el usuario autenticado")
         }.recoverCatching { error ->
-            throw mapFirebaseAuthError(error)
+            throw mapLoginError(error)
         }
     }
 
-    override suspend fun register(email: String, password: String, name: String): Result<LoggedInUser> {
+    override suspend fun register(email: String, password: String, name: String): Result<Unit> {
         val normalizedEmail = email.trim().lowercase()
         val normalizedPassword = password.trim()
         val normalizedName = name.trim()
@@ -77,23 +91,26 @@ class AuthRepositoryImpl @Inject constructor(
         if (normalizedName.isBlank()) return Result.failure(IllegalArgumentException("Nombre requerido"))
         if (!isValidEmail(normalizedEmail)) return Result.failure(IllegalArgumentException("Email invalido"))
         if (normalizedPassword.isBlank()) return Result.failure(IllegalArgumentException("Password requerido"))
-        if (normalizedPassword.length < 4) return Result.failure(IllegalArgumentException("La contraseña debe tener al menos 4 caracteres"))
+        if (normalizedPassword.length < 6) return Result.failure(IllegalArgumentException("La contraseña debe tener al menos 6 caracteres"))
 
         return runCatching {
             firebaseAuth
                 .createUserWithEmailAndPassword(normalizedEmail, normalizedPassword)
                 .awaitCompletion()
 
-            firebaseAuth.currentUser?.let { user ->
-                user.updateProfile(
-                    UserProfileChangeRequest.Builder()
-                        .setDisplayName(normalizedName)
-                        .build()
-                ).awaitCompletion()
-            }
-
-            resolveLoggedInUser(firebaseAuth.currentUser)
+            val firebaseUser = firebaseAuth.currentUser
                 ?: throw IllegalStateException("No se pudo crear el usuario")
+
+            firebaseUser.updateProfile(
+                UserProfileChangeRequest.Builder()
+                    .setDisplayName(normalizedName)
+                    .build()
+            ).awaitCompletion()
+
+            firebaseUser.sendEmailVerification().awaitCompletion()
+            upsertLocalUserFromFirebase(firebaseUser)
+            firebaseAuth.signOut()
+            Unit
         }.recoverCatching { error ->
             throw mapFirebaseAuthError(error)
         }
@@ -126,17 +143,9 @@ class AuthRepositoryImpl @Inject constructor(
         return resolveLoggedInUser(firebaseAuth.currentUser)
     }
 
-    private fun ensureDefaultUser() {
-        if (database.getUserById(1) != null) return
-        database.upsertUser(
-            DbUser(
-                id = 1,
-                name = "Demo User",
-                email = "demo@shire.local",
-                passwordHash = "1234",
-                createdAt = System.currentTimeMillis()
-            )
-        )
+    private fun restoreLocalUserFromFirebaseSession() {
+        val firebaseUser = firebaseAuth.currentUser ?: return
+        runCatching { resolveLoggedInUser(firebaseUser) }
     }
 
     private fun setLoggedInUserId(userId: Int) {
@@ -158,25 +167,37 @@ class AuthRepositoryImpl @Inject constructor(
             return null
         }
 
-        val normalizedEmail = firebaseUser.email?.trim()?.lowercase() ?: return null
-        val nameFromFirebase = firebaseUser.displayName?.trim().orEmpty()
+        if (!firebaseUser.isEmailVerified) {
+            sharedPrefs.edit().remove(Keys.loggedInUserId).apply()
+            return null
+        }
 
-        val localUser = database.getUserByEmail(normalizedEmail) ?: run {
-            database.upsertUser(
-                DbUser(
-                    name = nameFromFirebase.ifBlank {
-                        normalizedEmail.substringBefore('@').ifBlank { "User" }
-                    },
-                    email = normalizedEmail,
-                    passwordHash = "",
-                    createdAt = System.currentTimeMillis()
-                )
-            )
-            database.getUserByEmail(normalizedEmail)
-        } ?: return null
+        val localUser = upsertLocalUserFromFirebase(firebaseUser)
 
         setLoggedInUserId(localUser.id)
         return localUser.toLoggedInUser()
+    }
+
+    private fun upsertLocalUserFromFirebase(firebaseUser: FirebaseUser): DbUser {
+        val normalizedEmail = firebaseUser.email?.trim()?.lowercase()
+            ?: throw IllegalStateException("Usuario Firebase sin email")
+        val nameFromFirebase = firebaseUser.displayName?.trim().orEmpty()
+
+        val existing = database.getUserByEmail(normalizedEmail)
+        val userToSave = DbUser(
+            id = existing?.id ?: 0,
+            name = nameFromFirebase.ifBlank {
+                existing?.name?.ifBlank { normalizedEmail.substringBefore('@').ifBlank { "User" } }
+                    ?: normalizedEmail.substringBefore('@').ifBlank { "User" }
+            },
+            email = normalizedEmail,
+            passwordHash = existing?.passwordHash.orEmpty(),
+            createdAt = existing?.createdAt ?: System.currentTimeMillis()
+        )
+
+        database.upsertUser(userToSave)
+        return database.getUserByEmail(normalizedEmail)
+            ?: throw IllegalStateException("No se pudo sincronizar el usuario local")
     }
 
     private fun mapFirebaseAuthError(error: Throwable): Throwable {
@@ -189,7 +210,62 @@ class AuthRepositoryImpl @Inject constructor(
                 message.contains("email-already-in-use") -> IllegalArgumentException("El email ya existe")
             message.contains("badly formatted") ||
                 message.contains("invalid-email") -> IllegalArgumentException("Email invalido")
+            message.contains("too-many-requests") -> IllegalStateException("Demasiados intentos. Intentalo mas tarde")
+            message.contains("operation-not-allowed") -> IllegalStateException("El proveedor Email/Password no esta habilitado en Firebase")
             else -> error
+        }
+    }
+
+    private fun mapLoginError(error: Throwable): Throwable {
+        return when (error) {
+            is FirebaseAuthInvalidUserException -> {
+                val code = error.errorCode.lowercase()
+                when {
+                    code.contains("user-not-found") || code.contains("no user record") -> {
+                        IllegalArgumentException("No existe ninguna cuenta con ese correo.")
+                    }
+                    code.contains("user-disabled") -> {
+                        IllegalStateException("Tu cuenta está deshabilitada.")
+                    }
+                    else -> IllegalArgumentException("No existe ninguna cuenta con ese correo.")
+                }
+            }
+
+            is FirebaseAuthInvalidCredentialsException -> {
+                val message = error.message?.lowercase().orEmpty()
+                when {
+                    message.contains("password is invalid") || message.contains("user does not have a password") -> {
+                        IllegalArgumentException("La contraseña no es correcta.")
+                    }
+                    message.contains("email address is badly formatted") || message.contains("invalid-email") -> {
+                        IllegalArgumentException("El correo no tiene un formato válido.")
+                    }
+                    else -> IllegalArgumentException("Correo o contraseña incorrectos.")
+                }
+            }
+
+            is FirebaseAuthException -> {
+                when (error.errorCode.lowercase()) {
+                    "invalid-email" -> IllegalArgumentException("El correo no tiene un formato válido.")
+                    "user-not-found" -> IllegalArgumentException("No existe ninguna cuenta con ese correo.")
+                    "wrong-password" -> IllegalArgumentException("La contraseña no es correcta.")
+                    "user-disabled" -> IllegalStateException("Tu cuenta está deshabilitada.")
+                    "too-many-requests" -> IllegalStateException("Demasiados intentos. Intentalo más tarde.")
+                    else -> mapFirebaseAuthError(error)
+                }
+            }
+
+            is FirebaseTooManyRequestsException -> IllegalStateException("Demasiados intentos. Intentalo más tarde.")
+            is IllegalArgumentException, is IllegalStateException -> error
+            else -> {
+                val message = error.message?.lowercase().orEmpty()
+                when {
+                    message.contains("password is invalid") -> IllegalArgumentException("La contraseña no es correcta.")
+                    message.contains("no user record") || message.contains("user-not-found") -> IllegalArgumentException("No existe ninguna cuenta con ese correo.")
+                    message.contains("invalid-email") || message.contains("badly formatted") -> IllegalArgumentException("El correo no tiene un formato válido.")
+                    else -> IllegalArgumentException("Correo o contraseña incorrectos.")
+                }
+            }
         }
     }
 
