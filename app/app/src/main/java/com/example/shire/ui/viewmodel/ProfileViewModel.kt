@@ -7,9 +7,11 @@ import androidx.core.os.LocaleListCompat
 import com.example.shire.domain.model.CurrencyOption
 import com.example.shire.domain.model.DateFormatOption
 import com.example.shire.domain.model.LanguageOption
+import com.example.shire.domain.model.LoggedInUser
 import com.example.shire.domain.model.Preferences
 import com.example.shire.domain.model.TextSizeOption
 import com.example.shire.domain.model.ThemeOption
+import com.example.shire.domain.repository.AuthRepository
 import com.example.shire.domain.repository.ProfilePreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -20,11 +22,14 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-	private val preferencesRepository: ProfilePreferencesRepository
+	private val preferencesRepository: ProfilePreferencesRepository,
+	private val authRepository: AuthRepository
 ) : ViewModel() {
 
 	private val _preferences = MutableStateFlow<Preferences?>(null)
 	val preferences: StateFlow<Preferences?> = _preferences.asStateFlow()
+	private val _loggedInUser = MutableStateFlow<LoggedInUser?>(null)
+	val loggedInUser: StateFlow<LoggedInUser?> = _loggedInUser.asStateFlow()
 
 	val languageOptions: List<LanguageOption> = LanguageOption.entries
 	val currencyOptions: List<CurrencyOption> = CurrencyOption.entries
@@ -36,6 +41,18 @@ class ProfileViewModel @Inject constructor(
 			preferencesRepository.profilePreferencesFlow.collect { prefs ->
 				_preferences.value = prefs
 			}
+		}
+
+		viewModelScope.launch {
+			authRepository.loggedInUserFlow.collect { user ->
+				_loggedInUser.value = user
+			}
+		}
+	}
+
+	fun logout() {
+		viewModelScope.launch {
+			authRepository.logout()
 		}
 	}
 

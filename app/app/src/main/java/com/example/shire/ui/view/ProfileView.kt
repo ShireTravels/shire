@@ -36,6 +36,7 @@ fun ProfileScreen(
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val preferences by viewModel.preferences.collectAsStateWithLifecycle()
+    val loggedInUser by viewModel.loggedInUser.collectAsStateWithLifecycle()
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -81,6 +82,27 @@ fun ProfileScreen(
             item {
                 PreferenceSectionTitle(stringResource(id = R.string.personal_info_section))
                 PreferenceCard {
+                    loggedInUser?.let { user ->
+                        PreferenceValueItem(
+                            icon = Icons.Default.AccountCircle,
+                            iconTint = MaterialTheme.colorScheme.primary,
+                            iconBg = MaterialTheme.colorScheme.primaryContainer,
+                            title = stringResource(id = R.string.account_name_label),
+                            subtitle = stringResource(id = R.string.account_data_subtitle),
+                            value = user.name
+                        )
+                        HorizontalDivider(modifier = Modifier.padding(start = 56.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                        PreferenceValueItem(
+                            icon = Icons.Default.Email,
+                            iconTint = MaterialTheme.colorScheme.primary,
+                            iconBg = MaterialTheme.colorScheme.primaryContainer,
+                            title = stringResource(id = R.string.account_email_label),
+                            subtitle = "",
+                            value = user.email
+                        )
+                        HorizontalDivider(modifier = Modifier.padding(start = 56.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                    }
+
                     val prefs = preferences
                     if (prefs != null) {
                         OutlinedTextField(
@@ -103,6 +125,15 @@ fun ProfileScreen(
                             singleLine = true
                         )
                         Spacer(modifier = Modifier.height(8.dp))
+                    }
+
+                    Button(
+                        onClick = { viewModel.logout() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                    ) {
+                        Text(text = stringResource(id = R.string.logout_button))
                     }
                 }
             }

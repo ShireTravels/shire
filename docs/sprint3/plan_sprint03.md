@@ -91,3 +91,7 @@
 - **Firebase Firebase Integration:** Sometimes can be tricky to set up third parties auth services, because not only you have to configure/implement it in your code, but you also have to configure it from the auth provider platform
 - **Room Threading Issues:** Trying to access the Room database on the Main Thread (UI thread) might cause an application crash. All DAO calls need correct coroutine context.
 - **Constraint Violations:** Updating trips that have relational strictness without handling SQLite exceptions gracefully.
+
+## LEFT TO DO
+- ARNAU
+  - Finish LogIn and Register Form, when register or login, table users is not updating.

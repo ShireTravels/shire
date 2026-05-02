@@ -1,71 +1,44 @@
 package com.example.shire.domain.repository
 
-import androidx.compose.runtime.mutableStateListOf
+import android.content.Context
+import android.util.Log
+import com.example.shire.db.Activity as DbActivity
+import com.example.shire.db.db
 import com.example.shire.domain.model.Activity
+import dagger.hilt.android.qualifiers.ApplicationContext
 import java.time.LocalDate
 import java.time.LocalTime
 import javax.inject.Inject
 import javax.inject.Singleton
-import android.util.Log
 
 @Singleton
-class ActivityRepositoryImpl @Inject constructor() : ActivityRepository {
-    private val activityList = mutableStateListOf<Activity>()
+class ActivityRepositoryImpl @Inject constructor(
+    @ApplicationContext context: Context
+) : ActivityRepository {
 
-    init {
-        // Add some mock data to test initially
-        activityList.addAll(
-            listOf(
-                Activity(
-                    id = 1,
-                    tripId = 1,
-                    title = "Visita al Louvre",
-                    description = "Entrada reservada para las 10 AM",
-                    date = LocalDate.of(2026, 4, 13),
-                    time = LocalTime.of(10, 0)
-                ),
-                Activity(
-                    id = 2,
-                    tripId = 1,
-                    title = "Cena en la Torre Eiffel",
-                    description = "Cena romántica en el restaurante de la torre",
-                    date = LocalDate.of(2026, 4, 15),
-                    time = LocalTime.of(21, 0)
-                ),
-                Activity(
-                    id = 3,
-                    tripId = 2,
-                    title = "Tour por el Coliseo",
-                    description = "Visita guiada al Coliseo y Foro Romano",
-                    date = LocalDate.of(2026, 5, 6),
-                    time = LocalTime.of(9, 30)
-                )
-            )
-        )
-    }
+    private val database = db(context)
 
     override fun getActivity(activityId: Int): Activity? {
         Log.d("ActivityRepo", "Fetching activity with id: $activityId")
-        return activityList.find { it.id == activityId }
+        return database.getActivityById(activityId)?.toDomainActivity()
     }
 
     override fun getActivitiesForTrip(tripId: Int): List<Activity> {
         Log.d("ActivityRepo", "Fetching activities for trip: $tripId")
-        return activityList.filter { it.tripId == tripId }
+        return database.getActivitiesByTrip(tripId).map { it.toDomainActivity() }
     }
 
     override fun addActivity(activity: Activity): Activity {
-        val nextId = (activityList.maxOfOrNull { it.id } ?: 0) + 1
-        val newActivity = activity.copy(id = nextId)
-        activityList.add(newActivity)
-        Log.i("ActivityRepo", "Added new activity: ${newActivity.title} (ID: ${newActivity.id})")
-        return newActivity
+        val insertedId = database.insertActivity(activity.toDbActivity()).toInt()
+        val persistedActivity = if (activity.id > 0) activity else activity.copy(id = insertedId)
+        Log.i("ActivityRepo", "Added new activity: ${persistedActivity.title} (ID: ${persistedActivity.id})")
+        return persistedActivity
     }
 
     override fun updateActivity(activity: Activity): Boolean {
-        val index = activityList.indexOfFirst { it.id == activity.id }
-        if (index != -1) {
-            activityList[index] = activity
+        val exists = database.getActivityById(activity.id) != null
+        if (exists) {
+            database.insertActivity(activity.toDbActivity())
             Log.i("ActivityRepo", "Updated activity successfully (ID: ${activity.id})")
             return true
         }
@@ -74,13 +47,32 @@ class ActivityRepositoryImpl @Inject constructor() : ActivityRepository {
     }
 
     override fun deleteActivity(activityId: Int): Boolean {
-        val index = activityList.indexOfFirst { it.id == activityId }
-        if (index != -1) {
-            activityList.removeAt(index)
+        val deleted = database.deleteActivity(activityId) > 0
+        if (deleted) {
             Log.i("ActivityRepo", "Deleted activity successfully (ID: $activityId)")
             return true
         }
         Log.e("ActivityRepo", "Failed to delete activity: ID $activityId not found")
         return false
     }
+
+    private fun Activity.toDbActivity(): DbActivity = DbActivity(
+        id = id,
+        tripId = tripId,
+        title = title,
+        description = description,
+        date = date,
+        time = time,
+        price = price
+    )
+
+    private fun DbActivity.toDomainActivity(): Activity = Activity(
+        id = id,
+        tripId = tripId,
+        title = title,
+        description = description,
+        date = date,
+        time = time,
+        price = price
+    )
 }
