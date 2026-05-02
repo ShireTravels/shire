@@ -73,10 +73,15 @@ fun TripDetailsScreen(
     val tabs = listOf(stringResource(id = R.string.tab_itinerary), stringResource(id = R.string.tab_gallery), stringResource(id = R.string.tab_budget))
 
     val tripIdInt = tripId.toIntOrNull() ?: 0
-    val trip = viewModel.getTrip(tripIdInt)
+    val trip by viewModel.trip.collectAsStateWithLifecycle()
+    val userActivities by itineraryViewModel.activities.collectAsStateWithLifecycle()
 
     var showAddActivityDialog by remember { mutableStateOf(false) }
-    var refreshItineraryTrigger by remember { mutableStateOf(0) }
+    
+    LaunchedEffect(tripIdInt) {
+        viewModel.loadTrip(tripIdInt)
+        itineraryViewModel.loadActivities(tripIdInt)
+    }
     
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -87,21 +92,19 @@ fun TripDetailsScreen(
         }
     }
 
-    val itinerary = remember(trip, refreshItineraryTrigger) {
+    val itinerary = remember(trip, userActivities) {
         if (trip == null) return@remember emptyList<ItineraryDay>()
 
         // Pre-compute first and last day per hotel to show Check-in / Check-out only once
         val hotelFirstDay = mutableMapOf<Int, Int>()
         val hotelLastDay = mutableMapOf<Int, Int>()
-        trip.hotel.forEach { (day, hotelId) ->
+        trip!!.hotel.forEach { (day, hotelId) ->
             hotelFirstDay[hotelId] = minOf(hotelFirstDay[hotelId] ?: day, day)
             hotelLastDay[hotelId] = maxOf(hotelLastDay[hotelId] ?: day, day)
         }
 
         // The checkout day is the day AFTER the last hotel night
         val checkoutDay = hotelLastDay.mapValues { (_, lastDay) -> lastDay + 1 }
-
-        val userActivities = itineraryViewModel.getActivitiesForTrip(tripIdInt)
         val sdf = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault())
         val tripStartDateMs = try { trip.startDate.let { sdf.parse(it)?.time } } catch (e: Exception) { null }
 
@@ -337,7 +340,6 @@ fun TripDetailsScreen(
 
             // Budget Content
             if (selectedTabIndex == 2 && trip != null) {
-                val userActivities = itineraryViewModel.getActivitiesForTrip(tripIdInt)
                 val sdf = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault())
                 val tripStartDateMs = try { trip.startDate.let { sdf.parse(it)?.time } } catch (e: Exception) { null }
 
@@ -506,7 +508,6 @@ fun TripDetailsScreen(
                     val p = newPrice.toDoubleOrNull() ?: 0.0
 
                     if (itineraryViewModel.addActivity(tripIdInt, newTitle, newDesc, d, t, p)) {
-                        refreshItineraryTrigger++
                         showAddActivityDialog = false
                     }
                 }) {

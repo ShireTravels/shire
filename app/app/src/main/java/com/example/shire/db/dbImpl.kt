@@ -16,16 +16,20 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.util.Date
 import java.util.LinkedList
+import kotlinx.coroutines.flow.Flow
 
 interface dbImpl {
     fun upsertUser(user: User): Long
-    fun getUserById(id: Int): User?
+    fun getUserById(id: Int): Flow<User?>
+    fun getUserByIdSync(id: Int): User?
     fun getUserByEmail(email: String): User?
-    fun getUserByUsername(username: String): User?
+    fun getUserByUsername(username: String): Flow<User?>
+    fun getUserByUsernameSync(username: String): User?
 
     fun insertActivity(activity: Activity): Long
     fun getActivityById(id: Int): Activity?
-    fun getActivitiesByTrip(tripId: Int): List<Activity>
+    fun getActivitiesByTrip(tripId: Int): Flow<List<Activity>>
+    fun getActivitiesByTripSync(tripId: Int): List<Activity>
     fun deleteActivity(id: Int): Int
 
     fun insertCar(car: Car): Long
@@ -52,8 +56,9 @@ interface dbImpl {
     fun getPreferences(userId: Int): Preferences?
 
     fun insertTrip(trip: Trip): Long
-    fun getTrips(userId: Int): List<Trip>
-    fun getTripById(userId: Int, id: Int): Trip?
+    fun getTrips(userId: Int): Flow<List<Trip>>
+    fun getTripsSync(userId: Int): List<Trip>
+    fun getTripById(userId: Int, id: Int): Flow<Trip?>
     fun deleteTrip(userId: Int, id: Int): Int
 
     fun closeDb()

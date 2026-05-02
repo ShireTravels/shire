@@ -40,7 +40,7 @@ fun TripsScreen(
 ) {
     val homeViewModel: HomeViewModel = hiltViewModel()
     val loggedInUser by homeViewModel.loggedInUser.collectAsStateWithLifecycle()
-    val domainTrips = viewModel.trips
+    val domainTrips by viewModel.trips.collectAsStateWithLifecycle()
     val trips = domainTrips.map { trip ->
         UpcomingTrip(
             id = trip.id.toString(),

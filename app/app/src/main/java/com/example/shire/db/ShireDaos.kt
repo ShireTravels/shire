@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface UserDao {
@@ -11,13 +12,19 @@ interface UserDao {
     fun upsert(user: User): Long
 
     @Query("SELECT * FROM users WHERE id = :id LIMIT 1")
-    fun getById(id: Int): User?
+    fun getById(id: Int): Flow<User?>
+
+    @Query("SELECT * FROM users WHERE id = :id LIMIT 1")
+    fun getByIdSync(id: Int): User?
 
     @Query("SELECT * FROM users WHERE email = :email LIMIT 1")
     fun getByEmail(email: String): User?
 
     @Query("SELECT * FROM users WHERE username = :username LIMIT 1")
-    fun getByUsername(username: String): User?
+    fun getByUsername(username: String): Flow<User?>
+
+    @Query("SELECT * FROM users WHERE username = :username LIMIT 1")
+    fun getByUsernameSync(username: String): User?
 }
 
 @Dao
@@ -29,7 +36,10 @@ interface ActivityDao {
     fun getById(activityId: Int): Activity?
 
     @Query("SELECT * FROM activities WHERE trip_id = :tripId ORDER BY date ASC, time ASC")
-    fun getByTripId(tripId: Int): List<Activity>
+    fun getByTripId(tripId: Int): Flow<List<Activity>>
+
+    @Query("SELECT * FROM activities WHERE trip_id = :tripId ORDER BY date ASC, time ASC")
+    fun getByTripIdSync(tripId: Int): List<Activity>
 
     @Query("DELETE FROM activities WHERE id = :activityId")
     fun deleteById(activityId: Int): Int
@@ -110,10 +120,13 @@ interface TripDao {
     fun insert(trip: Trip): Long
 
     @Query("SELECT * FROM trips WHERE user_id = :userId ORDER BY start_date ASC")
-    fun getByUserId(userId: Int): List<Trip>
+    fun getByUserId(userId: Int): Flow<List<Trip>>
+
+    @Query("SELECT * FROM trips WHERE user_id = :userId ORDER BY start_date ASC")
+    fun getByUserIdSync(userId: Int): List<Trip>
 
     @Query("SELECT * FROM trips WHERE user_id = :userId AND id = :id LIMIT 1")
-    fun getByUserIdAndTripId(userId: Int, id: Int): Trip?
+    fun getByUserIdAndTripId(userId: Int, id: Int): Flow<Trip?>
 
     @Query("DELETE FROM trips WHERE user_id = :userId AND id = :tripId")
     fun deleteByUserIdAndTripId(userId: Int, tripId: Int): Int

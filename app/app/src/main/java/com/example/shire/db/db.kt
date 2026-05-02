@@ -5,6 +5,7 @@ import androidx.room.Room
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import java.io.IOException
+import kotlinx.coroutines.flow.Flow
 
 class db(context: Context) : dbImpl {
 
@@ -12,16 +13,19 @@ class db(context: Context) : dbImpl {
 
 	override fun upsertUser(user: User): Long = roomDb.userDao().upsert(user)
 
-	override fun getUserById(id: Int): User? = roomDb.userDao().getById(id)
+	override fun getUserById(id: Int): Flow<User?> = roomDb.userDao().getById(id)
+	override fun getUserByIdSync(id: Int): User? = roomDb.userDao().getByIdSync(id)
 
 	override fun getUserByEmail(email: String): User? = roomDb.userDao().getByEmail(email)
-	override fun getUserByUsername(username: String): User? = roomDb.userDao().getByUsername(username)
+	override fun getUserByUsername(username: String): Flow<User?> = roomDb.userDao().getByUsername(username)
+	override fun getUserByUsernameSync(username: String): User? = roomDb.userDao().getByUsernameSync(username)
 
 	override fun insertActivity(activity: Activity): Long = roomDb.activityDao().insert(activity)
 
 	override fun getActivityById(id: Int): Activity? = roomDb.activityDao().getById(id)
 
-	override fun getActivitiesByTrip(tripId: Int): List<Activity> = roomDb.activityDao().getByTripId(tripId)
+	override fun getActivitiesByTrip(tripId: Int): Flow<List<Activity>> = roomDb.activityDao().getByTripId(tripId)
+	override fun getActivitiesByTripSync(tripId: Int): List<Activity> = roomDb.activityDao().getByTripIdSync(tripId)
 
 	override fun deleteActivity(id: Int): Int = roomDb.activityDao().deleteById(id)
 
@@ -63,9 +67,10 @@ class db(context: Context) : dbImpl {
 
 	override fun insertTrip(trip: Trip): Long = roomDb.tripDao().insert(trip)
 
-	override fun getTrips(userId: Int): List<Trip> = roomDb.tripDao().getByUserId(userId)
+	override fun getTrips(userId: Int): Flow<List<Trip>> = roomDb.tripDao().getByUserId(userId)
+	override fun getTripsSync(userId: Int): List<Trip> = roomDb.tripDao().getByUserIdSync(userId)
 
-	override fun getTripById(userId: Int, id: Int): Trip? = roomDb.tripDao().getByUserIdAndTripId(userId, id)
+	override fun getTripById(userId: Int, id: Int): Flow<Trip?> = roomDb.tripDao().getByUserIdAndTripId(userId, id)
 
 	override fun deleteTrip(userId: Int, id: Int): Int = roomDb.tripDao().deleteByUserIdAndTripId(userId, id)
 

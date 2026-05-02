@@ -10,6 +10,8 @@ import java.time.LocalDate
 import java.time.LocalTime
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 @Singleton
 class ActivityRepositoryImpl @Inject constructor(
@@ -23,9 +25,11 @@ class ActivityRepositoryImpl @Inject constructor(
         return database.getActivityById(activityId)?.toDomainActivity()
     }
 
-    override fun getActivitiesForTrip(tripId: Int): List<Activity> {
+    override fun getActivitiesForTrip(tripId: Int): Flow<List<Activity>> {
         Log.d("ActivityRepo", "Fetching activities for trip: $tripId")
-        return database.getActivitiesByTrip(tripId).map { it.toDomainActivity() }
+        return database.getActivitiesByTrip(tripId).map { dbActivities ->
+            dbActivities.map { it.toDomainActivity() }
+        }
     }
 
     override fun addActivity(activity: Activity): Activity {

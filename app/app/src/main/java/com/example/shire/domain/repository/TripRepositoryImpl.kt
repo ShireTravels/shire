@@ -12,6 +12,11 @@ import java.time.LocalDate
 import java.time.LocalTime
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 
 @Singleton
 class TripRepositoryImpl @Inject constructor(
@@ -33,7 +38,7 @@ class TripRepositoryImpl @Inject constructor(
     }
 
     private fun seedTripsIfNeeded() {
-        if (database.getTrips(defaultUserId).isNotEmpty()) return
+        if (database.getTripsSync(defaultUserId).isNotEmpty()) return
 
         val hotelParis = hotelRepository.getHotel(101)
         val flightToParis = flightRepository.getFlight(201)
@@ -76,7 +81,7 @@ class TripRepositoryImpl @Inject constructor(
     }
 
     private fun ensureDefaultUser() {
-        if (database.getUserById(defaultUserId) != null) return
+        if (database.getUserByIdSync(defaultUserId) != null) return
         database.upsertUser(
             DbUser(
                 id = defaultUserId,
@@ -89,7 +94,7 @@ class TripRepositoryImpl @Inject constructor(
     }
 
     private fun seedActivitiesIfNeeded() {
-        if (database.getActivitiesByTrip(1).isNotEmpty() || database.getActivitiesByTrip(2).isNotEmpty()) return
+        if (database.getActivitiesByTripSync(1).isNotEmpty() || database.getActivitiesByTripSync(2).isNotEmpty()) return
 
         listOf(
             DbActivity(
@@ -124,17 +129,20 @@ class TripRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getTrip(tripId: Int): Trip? {
+    override fun getTrip(tripId: Int): Flow<Trip?> {
         val currentUserId = getCurrentUserId()
         Log.d("TripRepo", "Fetching trip with id: $tripId")
-        return database.getTripById(currentUserId, tripId)?.toDomainTrip()
+        return database.getTripById(currentUserId, tripId).map { it?.toDomainTrip() }
     }
 
-    override fun getTrips(): List<Trip> {
-        val currentUserId = getCurrentUserId()
-        val trips = database.getTrips(currentUserId).map { it.toDomainTrip() }
-        Log.d("TripRepo", "Fetching all trips. Total trips: ${trips.size}")
-        return trips
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun getTrips(): Flow<List<Trip>> {
+        return authRepository.loggedInUserFlow.flatMapLatest { user ->
+            val userId = user?.id ?: defaultUserId
+            database.getTrips(userId).map { dbTrips ->
+                dbTrips.map { it.toDomainTrip() }
+            }
+        }
     }
 
     override fun addTrip(trip: Trip): Trip {

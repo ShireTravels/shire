@@ -13,6 +13,11 @@ import java.time.LocalDate
 import java.time.LocalTime
 import javax.inject.Inject
 import android.util.Log
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 @HiltViewModel
 class ItineraryViewModel @Inject constructor(
@@ -22,9 +27,21 @@ class ItineraryViewModel @Inject constructor(
 
     var errorMessage by mutableStateOf<String?>(null)
 
+    private val _activities = MutableStateFlow<List<Activity>>(emptyList())
+    val activities: StateFlow<List<Activity>> = _activities.asStateFlow()
+
+    fun loadActivities(tripId: Int) {
+        viewModelScope.launch {
+            activityRepository.getActivitiesForTrip(tripId).collect {
+                _activities.value = it.sortedBy { activity -> activity.time }
+            }
+        }
+    }
+
     fun getActivitiesForTrip(tripId: Int): List<Activity> {
-        Log.d("ItineraryVM", "Fetching activities for trip $tripId")
-        return activityRepository.getActivitiesForTrip(tripId).sortedBy { it.time }
+        // Legacy support if needed, but we should use the flow.
+        // Return current state for now to avoid breaking immediate calls.
+        return _activities.value
     }
 
     fun addActivity(
@@ -77,10 +94,12 @@ class ItineraryViewModel @Inject constructor(
     }
 
     fun deleteActivity(activityId: Int): Boolean {
-        val success = activityRepository.deleteActivity(activityId)
-        if (success) Log.i("ItineraryVM", "Deleted activity $activityId")
-        else Log.e("ItineraryVM", "Failed to delete activity $activityId")
-        return success
+        viewModelScope.launch {
+            val success = activityRepository.deleteActivity(activityId)
+            if (success) Log.i("ItineraryVM", "Deleted activity $activityId")
+            else Log.e("ItineraryVM", "Failed to delete activity $activityId")
+        }
+        return true
     }
 
     private fun validateActivityInput(

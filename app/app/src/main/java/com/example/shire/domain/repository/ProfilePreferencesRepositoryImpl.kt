@@ -16,6 +16,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import com.example.shire.db.User as DbUser
 
 @Singleton
@@ -42,7 +45,7 @@ class ProfilePreferencesRepositoryImpl @Inject constructor(
 
     private fun getCurrentPreferences(): Preferences {
         val loggedInUser = authRepository.getLoggedInUser()
-        val dbUser = loggedInUser?.let { database.getUserById(it.id) }
+        val dbUser = loggedInUser?.let { database.getUserByIdSync(it.id) }
 
         return Preferences(
             language = sharedPrefs.getString(Keys.language, null)?.toLanguageOptionOrDefault() ?: LanguageOption.SPANISH,
@@ -58,8 +61,13 @@ class ProfilePreferencesRepositoryImpl @Inject constructor(
         )
     }
 
-    override val userFlow: Flow<com.example.shire.domain.model.User?> = authRepository.loggedInUserFlow.map { loggedInUser ->
-        loggedInUser?.let { database.getUserById(it.id)?.toDomainUser() }
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override val userFlow: Flow<com.example.shire.domain.model.User?> = authRepository.loggedInUserFlow.flatMapLatest { loggedInUser ->
+        loggedInUser?.let {
+            database.getUserById(it.id).map { dbUser ->
+                dbUser?.toDomainUser()
+            }
+        } ?: emptyFlow()
     }.distinctUntilChanged()
 
     override val profilePreferencesFlow: Flow<Preferences> = callbackFlow {
@@ -106,13 +114,13 @@ class ProfilePreferencesRepositoryImpl @Inject constructor(
     }
 
     override suspend fun setUsername(username: String) {
-        val existing = database.getUserByUsername(username)
+        val existing = database.getUserByUsernameSync(username)
         val currentUser = authRepository.getLoggedInUser()
         if (existing != null && existing.id != currentUser?.id) {
             throw IllegalArgumentException("El nombre de usuario ya está en uso")
         }
 
-        val user = currentUser?.let { database.getUserById(it.id) }
+        val user = currentUser?.let { database.getUserByIdSync(it.id) }
         if (user != null) {
             database.upsertUser(user.copy(username = username))
         }
@@ -120,7 +128,7 @@ class ProfilePreferencesRepositoryImpl @Inject constructor(
     }
 
     override suspend fun setDateOfBirth(dateOfBirth: String) {
-        val user = authRepository.getLoggedInUser()?.let { database.getUserById(it.id) }
+        val user = authRepository.getLoggedInUser()?.let { database.getUserByIdSync(it.id) }
         if (user != null) {
             database.upsertUser(user.copy(birthdate = dateOfBirth))
         }
@@ -128,35 +136,35 @@ class ProfilePreferencesRepositoryImpl @Inject constructor(
     }
 
     override suspend fun setLogin(login: String) {
-        val user = authRepository.getLoggedInUser()?.let { database.getUserById(it.id) }
+        val user = authRepository.getLoggedInUser()?.let { database.getUserByIdSync(it.id) }
         if (user != null) {
             database.upsertUser(user.copy(login = login))
         }
     }
 
     override suspend fun setAddress(address: String) {
-        val user = authRepository.getLoggedInUser()?.let { database.getUserById(it.id) }
+        val user = authRepository.getLoggedInUser()?.let { database.getUserByIdSync(it.id) }
         if (user != null) {
             database.upsertUser(user.copy(address = address))
         }
     }
 
     override suspend fun setCountry(country: String) {
-        val user = authRepository.getLoggedInUser()?.let { database.getUserById(it.id) }
+        val user = authRepository.getLoggedInUser()?.let { database.getUserByIdSync(it.id) }
         if (user != null) {
             database.upsertUser(user.copy(country = country))
         }
     }
 
     override suspend fun setPhone(phone: String) {
-        val user = authRepository.getLoggedInUser()?.let { database.getUserById(it.id) }
+        val user = authRepository.getLoggedInUser()?.let { database.getUserByIdSync(it.id) }
         if (user != null) {
             database.upsertUser(user.copy(phone = phone))
         }
     }
 
     override suspend fun setReceiveEmails(enabled: Boolean) {
-        val user = authRepository.getLoggedInUser()?.let { database.getUserById(it.id) }
+        val user = authRepository.getLoggedInUser()?.let { database.getUserByIdSync(it.id) }
         if (user != null) {
             database.upsertUser(user.copy(receiveEmails = enabled))
         }
