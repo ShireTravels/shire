@@ -15,6 +15,7 @@ class db(context: Context) : dbImpl {
 	override fun getUserById(id: Int): User? = roomDb.userDao().getById(id)
 
 	override fun getUserByEmail(email: String): User? = roomDb.userDao().getByEmail(email)
+	override fun getUserByUsername(username: String): User? = roomDb.userDao().getByUsername(username)
 
 	override fun insertActivity(activity: Activity): Long = roomDb.activityDao().insert(activity)
 

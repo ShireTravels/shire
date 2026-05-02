@@ -21,6 +21,7 @@ interface dbImpl {
     fun upsertUser(user: User): Long
     fun getUserById(id: Int): User?
     fun getUserByEmail(email: String): User?
+    fun getUserByUsername(username: String): User?
 
     fun insertActivity(activity: Activity): Long
     fun getActivityById(id: Int): Activity?
@@ -229,7 +230,10 @@ data class Place(
 
 @Entity(
     tableName = "users",
-    indices = [Index(value = ["email"], unique = true)]
+    indices = [
+        Index(value = ["email"], unique = true),
+        Index(value = ["username"], unique = true)
+    ]
 )
 data class User(
     @PrimaryKey(autoGenerate = true)
@@ -239,7 +243,15 @@ data class User(
     @ColumnInfo(name = "password_hash")
     val passwordHash: String,
     @ColumnInfo(name = "created_at")
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val login: String = "",
+    val username: String = "",
+    val birthdate: String = "",
+    val address: String = "",
+    val country: String = "",
+    val phone: String = "",
+    @ColumnInfo(name = "receive_emails")
+    val receiveEmails: Boolean = false
 )
 
 @Entity(
@@ -270,10 +282,7 @@ data class Preferences(
     @ColumnInfo(name = "weekly_summary_enabled")
     val weeklySummaryEnabled: Boolean,
     @ColumnInfo(name = "terms_accepted")
-    val termsAccepted: Boolean?,
-    val username: String = "",
-    @ColumnInfo(name = "date_of_birth")
-    val dateOfBirth: String = ""
+    val termsAccepted: Boolean?
 )
 
 @Entity(
@@ -315,7 +324,14 @@ object UsersTable : BaseDbTable<User>(
             name TEXT NOT NULL,
             email TEXT NOT NULL UNIQUE,
             password_hash TEXT NOT NULL,
-            created_at INTEGER NOT NULL
+            created_at INTEGER NOT NULL,
+            login TEXT NOT NULL,
+            username TEXT NOT NULL UNIQUE,
+            birthdate TEXT NOT NULL,
+            address TEXT NOT NULL,
+            country TEXT NOT NULL,
+            phone TEXT NOT NULL,
+            receive_emails INTEGER NOT NULL
         )
     """.trimIndent()
 ) {
@@ -325,6 +341,13 @@ object UsersTable : BaseDbTable<User>(
         put("email", item.email)
         put("password_hash", item.passwordHash)
         put("created_at", item.createdAt)
+        put("login", item.login)
+        put("username", item.username)
+        put("birthdate", item.birthdate)
+        put("address", item.address)
+        put("country", item.country)
+        put("phone", item.phone)
+        put("receive_emails", if (item.receiveEmails) 1 else 0)
     }
 
     override fun fromCursor(cursor: Cursor): User = User(
@@ -332,7 +355,14 @@ object UsersTable : BaseDbTable<User>(
         name = cursor.getString(cursor.getColumnIndexOrThrow("name")),
         email = cursor.getString(cursor.getColumnIndexOrThrow("email")),
         passwordHash = cursor.getString(cursor.getColumnIndexOrThrow("password_hash")),
-        createdAt = cursor.getLong(cursor.getColumnIndexOrThrow("created_at"))
+        createdAt = cursor.getLong(cursor.getColumnIndexOrThrow("created_at")),
+        login = cursor.getString(cursor.getColumnIndexOrThrow("login")),
+        username = cursor.getString(cursor.getColumnIndexOrThrow("username")),
+        birthdate = cursor.getString(cursor.getColumnIndexOrThrow("birthdate")),
+        address = cursor.getString(cursor.getColumnIndexOrThrow("address")),
+        country = cursor.getString(cursor.getColumnIndexOrThrow("country")),
+        phone = cursor.getString(cursor.getColumnIndexOrThrow("phone")),
+        receiveEmails = cursor.getInt(cursor.getColumnIndexOrThrow("receive_emails")) == 1
     )
 }
 

@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface ProfilePreferencesRepository {
     val profilePreferencesFlow: Flow<Preferences>
+    val userFlow: Flow<com.example.shire.domain.model.User?>
     suspend fun setLanguage(language: LanguageOption)
     suspend fun setCurrency(currency: CurrencyOption)
     suspend fun setDateFormat(dateFormat: DateFormatOption)
@@ -22,4 +23,9 @@ interface ProfilePreferencesRepository {
     suspend fun setTermsAccepted(accepted: Boolean)
     suspend fun setUsername(username: String)
     suspend fun setDateOfBirth(dateOfBirth: String)
+    suspend fun setLogin(login: String)
+    suspend fun setAddress(address: String)
+    suspend fun setCountry(country: String)
+    suspend fun setPhone(phone: String)
+    suspend fun setReceiveEmails(enabled: Boolean)
 }

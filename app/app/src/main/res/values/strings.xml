@@ -190,4 +190,9 @@
     <string name="account_email_label">Email</string>
     <string name="account_data_subtitle">Datos de la sesion activa</string>
     <string name="logout_button">Cerrar sesion</string>
+    <string name="login_user_label">Login (identificador)</string>
+    <string name="address_label">Dirección</string>
+    <string name="country_label">País</string>
+    <string name="phone_label">Teléfono</string>
+    <string name="receive_emails_label">Recibir correos informativos</string>
 </resources>

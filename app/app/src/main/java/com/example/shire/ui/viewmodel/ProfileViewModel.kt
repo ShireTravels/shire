@@ -30,6 +30,8 @@ class ProfileViewModel @Inject constructor(
 	val preferences: StateFlow<Preferences?> = _preferences.asStateFlow()
 	private val _loggedInUser = MutableStateFlow<LoggedInUser?>(null)
 	val loggedInUser: StateFlow<LoggedInUser?> = _loggedInUser.asStateFlow()
+	private val _fullUser = MutableStateFlow<com.example.shire.domain.model.User?>(null)
+	val fullUser: StateFlow<com.example.shire.domain.model.User?> = _fullUser.asStateFlow()
 
 	val languageOptions: List<LanguageOption> = LanguageOption.entries
 	val currencyOptions: List<CurrencyOption> = CurrencyOption.entries
@@ -46,6 +48,12 @@ class ProfileViewModel @Inject constructor(
 		viewModelScope.launch {
 			authRepository.loggedInUserFlow.collect { user ->
 				_loggedInUser.value = user
+			}
+		}
+
+		viewModelScope.launch {
+			preferencesRepository.userFlow.collect { user ->
+				_fullUser.value = user
 			}
 		}
 	}
@@ -113,6 +121,36 @@ class ProfileViewModel @Inject constructor(
 	fun updateDateOfBirth(newDateOfBirth: String) {
 		viewModelScope.launch {
 			preferencesRepository.setDateOfBirth(newDateOfBirth)
+		}
+	}
+
+	fun updateLogin(login: String) {
+		viewModelScope.launch {
+			preferencesRepository.setLogin(login)
+		}
+	}
+
+	fun updateAddress(address: String) {
+		viewModelScope.launch {
+			preferencesRepository.setAddress(address)
+		}
+	}
+
+	fun updateCountry(country: String) {
+		viewModelScope.launch {
+			preferencesRepository.setCountry(country)
+		}
+	}
+
+	fun updatePhone(phone: String) {
+		viewModelScope.launch {
+			preferencesRepository.setPhone(phone)
+		}
+	}
+
+	fun updateReceiveEmails(enabled: Boolean) {
+		viewModelScope.launch {
+			preferencesRepository.setReceiveEmails(enabled)
 		}
 	}
 

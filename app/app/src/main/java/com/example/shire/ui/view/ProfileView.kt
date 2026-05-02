@@ -37,6 +37,7 @@ fun ProfileScreen(
 ) {
     val preferences by viewModel.preferences.collectAsStateWithLifecycle()
     val loggedInUser by viewModel.loggedInUser.collectAsStateWithLifecycle()
+    val fullUser by viewModel.fullUser.collectAsStateWithLifecycle()
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -82,7 +83,7 @@ fun ProfileScreen(
             item {
                 PreferenceSectionTitle(stringResource(id = R.string.personal_info_section))
                 PreferenceCard {
-                    loggedInUser?.let { user ->
+                    fullUser?.let { user ->
                         PreferenceValueItem(
                             icon = Icons.Default.AccountCircle,
                             iconTint = MaterialTheme.colorScheme.primary,
@@ -101,12 +102,19 @@ fun ProfileScreen(
                             value = user.email
                         )
                         HorizontalDivider(modifier = Modifier.padding(start = 56.dp), color = MaterialTheme.colorScheme.outlineVariant)
-                    }
 
-                    val prefs = preferences
-                    if (prefs != null) {
                         OutlinedTextField(
-                            value = prefs.username,
+                            value = user.login,
+                            onValueChange = viewModel::updateLogin,
+                            label = { Text(stringResource(id = R.string.login_user_label)) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            singleLine = true
+                        )
+
+                        OutlinedTextField(
+                            value = user.username,
                             onValueChange = viewModel::updateUsername,
                             label = { Text(stringResource(id = R.string.username_label)) },
                             modifier = Modifier
@@ -115,7 +123,7 @@ fun ProfileScreen(
                             singleLine = true
                         )
                         OutlinedTextField(
-                            value = prefs.dateOfBirth,
+                            value = user.birthdate,
                             onValueChange = viewModel::updateDateOfBirth,
                             label = { Text(stringResource(id = R.string.dob_label)) },
                             placeholder = { Text(stringResource(id = R.string.dob_placeholder)) },
@@ -124,6 +132,44 @@ fun ProfileScreen(
                                 .padding(horizontal = 16.dp, vertical = 8.dp),
                             singleLine = true
                         )
+                        OutlinedTextField(
+                            value = user.address,
+                            onValueChange = viewModel::updateAddress,
+                            label = { Text(stringResource(id = R.string.address_label)) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            singleLine = true
+                        )
+                        OutlinedTextField(
+                            value = user.country,
+                            onValueChange = viewModel::updateCountry,
+                            label = { Text(stringResource(id = R.string.country_label)) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            singleLine = true
+                        )
+                        OutlinedTextField(
+                            value = user.phone,
+                            onValueChange = viewModel::updatePhone,
+                            label = { Text(stringResource(id = R.string.phone_label)) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            singleLine = true
+                        )
+                        
+                        PreferenceSwitchItem(
+                            icon = Icons.Default.Email,
+                            iconTint = MaterialTheme.colorScheme.primary,
+                            iconBg = MaterialTheme.colorScheme.primaryContainer,
+                            title = stringResource(id = R.string.receive_emails_label),
+                            subtitle = "",
+                            checked = user.receiveEmails,
+                            onCheckedChange = viewModel::updateReceiveEmails
+                        )
+                        
                         Spacer(modifier = Modifier.height(8.dp))
                     }
 

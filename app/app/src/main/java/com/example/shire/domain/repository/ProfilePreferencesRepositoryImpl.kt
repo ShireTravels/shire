@@ -15,13 +15,17 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import com.example.shire.db.User as DbUser
 
 @Singleton
 class ProfilePreferencesRepositoryImpl @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val authRepository: AuthRepository
 ) : ProfilePreferencesRepository {
 
     private val sharedPrefs: SharedPreferences = context.getSharedPreferences("profile_preferences", Context.MODE_PRIVATE)
+    private val database = com.example.shire.db.db(context)
 
     private object Keys {
         const val language = "profile_language"
@@ -37,6 +41,9 @@ class ProfilePreferencesRepositoryImpl @Inject constructor(
     }
 
     private fun getCurrentPreferences(): Preferences {
+        val loggedInUser = authRepository.getLoggedInUser()
+        val dbUser = loggedInUser?.let { database.getUserById(it.id) }
+
         return Preferences(
             language = sharedPrefs.getString(Keys.language, null)?.toLanguageOptionOrDefault() ?: LanguageOption.SPANISH,
             currency = sharedPrefs.getString(Keys.currency, null)?.toCurrencyOptionOrDefault() ?: CurrencyOption.EUR,
@@ -46,10 +53,14 @@ class ProfilePreferencesRepositoryImpl @Inject constructor(
             tripRemindersEnabled = sharedPrefs.getBoolean(Keys.tripReminders, true),
             weeklySummaryEnabled = sharedPrefs.getBoolean(Keys.weeklySummary, false),
             termsAccepted = if (sharedPrefs.contains(Keys.termsAccepted)) sharedPrefs.getBoolean(Keys.termsAccepted, false) else null,
-            username = sharedPrefs.getString(Keys.username, null) ?: "",
-            dateOfBirth = sharedPrefs.getString(Keys.dateOfBirth, null) ?: ""
+            username = dbUser?.username ?: sharedPrefs.getString(Keys.username, null) ?: "",
+            dateOfBirth = dbUser?.birthdate ?: sharedPrefs.getString(Keys.dateOfBirth, null) ?: ""
         )
     }
+
+    override val userFlow: Flow<com.example.shire.domain.model.User?> = authRepository.loggedInUserFlow.map { loggedInUser ->
+        loggedInUser?.let { database.getUserById(it.id)?.toDomainUser() }
+    }.distinctUntilChanged()
 
     override val profilePreferencesFlow: Flow<Preferences> = callbackFlow {
         val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ ->
@@ -95,13 +106,75 @@ class ProfilePreferencesRepositoryImpl @Inject constructor(
     }
 
     override suspend fun setUsername(username: String) {
+        val existing = database.getUserByUsername(username)
+        val currentUser = authRepository.getLoggedInUser()
+        if (existing != null && existing.id != currentUser?.id) {
+            throw IllegalArgumentException("El nombre de usuario ya está en uso")
+        }
+
+        val user = currentUser?.let { database.getUserById(it.id) }
+        if (user != null) {
+            database.upsertUser(user.copy(username = username))
+        }
         sharedPrefs.edit().putString(Keys.username, username).apply()
     }
 
     override suspend fun setDateOfBirth(dateOfBirth: String) {
+        val user = authRepository.getLoggedInUser()?.let { database.getUserById(it.id) }
+        if (user != null) {
+            database.upsertUser(user.copy(birthdate = dateOfBirth))
+        }
         sharedPrefs.edit().putString(Keys.dateOfBirth, dateOfBirth).apply()
     }
+
+    override suspend fun setLogin(login: String) {
+        val user = authRepository.getLoggedInUser()?.let { database.getUserById(it.id) }
+        if (user != null) {
+            database.upsertUser(user.copy(login = login))
+        }
+    }
+
+    override suspend fun setAddress(address: String) {
+        val user = authRepository.getLoggedInUser()?.let { database.getUserById(it.id) }
+        if (user != null) {
+            database.upsertUser(user.copy(address = address))
+        }
+    }
+
+    override suspend fun setCountry(country: String) {
+        val user = authRepository.getLoggedInUser()?.let { database.getUserById(it.id) }
+        if (user != null) {
+            database.upsertUser(user.copy(country = country))
+        }
+    }
+
+    override suspend fun setPhone(phone: String) {
+        val user = authRepository.getLoggedInUser()?.let { database.getUserById(it.id) }
+        if (user != null) {
+            database.upsertUser(user.copy(phone = phone))
+        }
+    }
+
+    override suspend fun setReceiveEmails(enabled: Boolean) {
+        val user = authRepository.getLoggedInUser()?.let { database.getUserById(it.id) }
+        if (user != null) {
+            database.upsertUser(user.copy(receiveEmails = enabled))
+        }
+    }
 }
+
+private fun DbUser.toDomainUser(): com.example.shire.domain.model.User = com.example.shire.domain.model.User(
+    id = id,
+    name = name,
+    email = email,
+    login = login,
+    username = username,
+    birthdate = birthdate,
+    address = address,
+    country = country,
+    phone = phone,
+    receiveEmails = receiveEmails
+)
 
 private fun String.toLanguageOptionOrDefault(): LanguageOption {
     return LanguageOption.entries.firstOrNull { it.id == this } ?: LanguageOption.SPANISH
