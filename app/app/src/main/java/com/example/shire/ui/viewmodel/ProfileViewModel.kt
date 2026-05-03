@@ -19,6 +19,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
@@ -32,6 +37,16 @@ class ProfileViewModel @Inject constructor(
 	val loggedInUser: StateFlow<LoggedInUser?> = _loggedInUser.asStateFlow()
 	private val _fullUser = MutableStateFlow<com.example.shire.domain.model.User?>(null)
 	val fullUser: StateFlow<com.example.shire.domain.model.User?> = _fullUser.asStateFlow()
+
+	var login by mutableStateOf("")
+	var username by mutableStateOf("")
+	var birthdate by mutableStateOf("")
+	var address by mutableStateOf("")
+	var country by mutableStateOf("")
+	var phone by mutableStateOf("")
+
+	private var isInitialized = false
+	private val updateJobs = mutableMapOf<String, Job>()
 
 	val languageOptions: List<LanguageOption> = LanguageOption.entries
 	val currencyOptions: List<CurrencyOption> = CurrencyOption.entries
@@ -54,6 +69,15 @@ class ProfileViewModel @Inject constructor(
 		viewModelScope.launch {
 			preferencesRepository.userFlow.collect { user ->
 				_fullUser.value = user
+				if (!isInitialized && user != null) {
+					login = user.login
+					username = user.username
+					birthdate = user.birthdate
+					address = user.address
+					country = user.country
+					phone = user.phone
+					isInitialized = true
+				}
 			}
 		}
 	}
@@ -112,39 +136,53 @@ class ProfileViewModel @Inject constructor(
 		}
 	}
 
-	fun updateUsername(username: String) {
-		viewModelScope.launch {
-			preferencesRepository.setUsername(username)
+	fun updateUsername(newUsername: String) {
+		username = newUsername
+		debounceUpdate("username") {
+			preferencesRepository.setUsername(newUsername)
 		}
 	}
 
 	fun updateDateOfBirth(newDateOfBirth: String) {
-		viewModelScope.launch {
+		birthdate = newDateOfBirth
+		debounceUpdate("birthdate") {
 			preferencesRepository.setDateOfBirth(newDateOfBirth)
 		}
 	}
 
-	fun updateLogin(login: String) {
-		viewModelScope.launch {
-			preferencesRepository.setLogin(login)
+	fun updateLogin(newLogin: String) {
+		login = newLogin
+		debounceUpdate("login") {
+			preferencesRepository.setLogin(newLogin)
 		}
 	}
 
-	fun updateAddress(address: String) {
-		viewModelScope.launch {
-			preferencesRepository.setAddress(address)
+	fun updateAddress(newAddress: String) {
+		address = newAddress
+		debounceUpdate("address") {
+			preferencesRepository.setAddress(newAddress)
 		}
 	}
 
-	fun updateCountry(country: String) {
-		viewModelScope.launch {
-			preferencesRepository.setCountry(country)
+	fun updateCountry(newCountry: String) {
+		country = newCountry
+		debounceUpdate("country") {
+			preferencesRepository.setCountry(newCountry)
 		}
 	}
 
-	fun updatePhone(phone: String) {
-		viewModelScope.launch {
-			preferencesRepository.setPhone(phone)
+	fun updatePhone(newPhone: String) {
+		phone = newPhone
+		debounceUpdate("phone") {
+			preferencesRepository.setPhone(newPhone)
+		}
+	}
+
+	private fun debounceUpdate(key: String, action: suspend () -> Unit) {
+		updateJobs[key]?.cancel()
+		updateJobs[key] = viewModelScope.launch {
+			delay(500)
+			action()
 		}
 	}
 

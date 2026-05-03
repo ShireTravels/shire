@@ -33,7 +33,7 @@ class TripRepositoryImpl @Inject constructor(
 
     init {
         ensureDefaultUser()
-        seedTripsIfNeeded()
+        //seedTripsIfNeeded()
         seedActivitiesIfNeeded()
     }
 
