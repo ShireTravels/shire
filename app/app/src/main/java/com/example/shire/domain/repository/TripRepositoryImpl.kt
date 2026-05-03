@@ -165,7 +165,7 @@ class TripRepositoryImpl @Inject constructor(
 
     override fun updateTrip(trip: Trip): Boolean {
         val currentUserId = getCurrentUserId()
-        val exists = database.getTripById(currentUserId, trip.id) != null
+        val exists = database.getTripByIdSync(currentUserId, trip.id) != null
         if (exists) {
             database.insertTrip(trip.toDbTrip())
             Log.i("TripRepo", "Updated trip successfully (ID: ${trip.id})")

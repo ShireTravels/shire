@@ -71,6 +71,7 @@ class db(context: Context) : dbImpl {
 	override fun getTripsSync(userId: Int): List<Trip> = roomDb.tripDao().getByUserIdSync(userId)
 
 	override fun getTripById(userId: Int, id: Int): Flow<Trip?> = roomDb.tripDao().getByUserIdAndTripId(userId, id)
+	override fun getTripByIdSync(userId: Int, id: Int): Trip? = roomDb.tripDao().getByUserIdAndTripIdSync(userId, id)
 
 	override fun deleteTrip(userId: Int, id: Int): Int = roomDb.tripDao().deleteByUserIdAndTripId(userId, id)
 
