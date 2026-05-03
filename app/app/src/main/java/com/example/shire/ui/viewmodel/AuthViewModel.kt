@@ -58,10 +58,10 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    fun register(email: String, password: String, name: String) {
+    fun register(email: String, password: String, name: String, username: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null, successMessage = null) }
-            val result = authRepository.register(email, password, name)
+            val result = authRepository.register(email, password, name, username)
             if (result.isFailure) {
                 _uiState.update {
                     it.copy(

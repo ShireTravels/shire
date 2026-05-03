@@ -37,6 +37,7 @@ fun RegisterScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     var name by remember { mutableStateOf("") }
+    var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
@@ -66,6 +67,16 @@ fun RegisterScreen(
                     value = name,
                     onValueChange = { name = it },
                     label = { Text(stringResource(id = R.string.register_name_label)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedTextField(
+                    value = username,
+                    onValueChange = { username = it },
+                    label = { Text("Username") }, // Usaremos un literal por ahora para evitar problemas con strings.xml faltantes, pero lo normal sería R.string.register_username_label
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -119,7 +130,7 @@ fun RegisterScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Button(
-                    onClick = { viewModel.register(email = email, password = password, name = name) },
+                    onClick = { viewModel.register(email = email, password = password, name = name, username = username) },
                     enabled = !uiState.isLoading,
                     modifier = Modifier.fillMaxWidth()
                 ) {

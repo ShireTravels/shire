@@ -109,7 +109,6 @@ class db(context: Context) : dbImpl {
 					DB_NAME
 				)
 					.addMigrations(MIGRATION_4_5)
-					.allowMainThreadQueries()
 					.build()
 					.also { roomDatabase = it }
 			}
