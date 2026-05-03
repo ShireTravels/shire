@@ -34,9 +34,4 @@ class TripsViewModel @Inject constructor(
             repository.deleteTrip(tripId)
         }
     }
-
-    fun getTripById(tripId: Int): Trip? {
-        Log.d("TripsViewModel", "Getting trip by ID: $tripId")
-        return repository.getTrip(tripId)
-    }
 }

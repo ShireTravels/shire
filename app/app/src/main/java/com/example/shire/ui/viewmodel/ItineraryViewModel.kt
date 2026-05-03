@@ -30,10 +30,18 @@ class ItineraryViewModel @Inject constructor(
     private val _activities = MutableStateFlow<List<Activity>>(emptyList())
     val activities: StateFlow<List<Activity>> = _activities.asStateFlow()
 
+    private val _selectedTrip = MutableStateFlow<Trip?>(null)
+    val selectedTrip: StateFlow<Trip?> = _selectedTrip.asStateFlow()
+
     fun loadActivities(tripId: Int) {
         viewModelScope.launch {
             activityRepository.getActivitiesForTrip(tripId).collect {
                 _activities.value = it.sortedBy { activity -> activity.time }
+            }
+        }
+        viewModelScope.launch {
+            tripRepository.getTrip(tripId).collect {
+                _selectedTrip.value = it
             }
         }
     }
@@ -125,7 +133,7 @@ class ItineraryViewModel @Inject constructor(
             return false
         }
 
-        val trip = tripRepository.getTrip(tripId)
+        val trip = _selectedTrip.value
         if (trip != null) {
             try {
                 val formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")
@@ -139,8 +147,6 @@ class ItineraryViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 Log.e("ItineraryVM", "Error parsing trip dates for validation", e)
-                // If there's an error parsing the formats, better to just let it pass loosely or log it.
-                // In a robust implementation, the models would store Date or LocalDate instances.
             }
         }
         
