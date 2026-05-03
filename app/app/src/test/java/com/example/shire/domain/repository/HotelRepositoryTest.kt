@@ -6,7 +6,6 @@ import com.example.shire.db.Hotel as DbHotel
 import com.example.shire.domain.model.Hotel
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -21,11 +20,8 @@ class HotelRepositoryTest {
 
     @Before
     fun setUp() {
-        mockkStatic("com.example.shire.db.DbKt")
         mockDb = mockk(relaxed = true)
         mockContext = mockk(relaxed = true)
-
-        every { com.example.shire.db.db(any()) } returns mockDb
 
         // Return a predefined hotel when requested
         every { mockDb.getHotelById(101) } returns DbHotel(
@@ -43,7 +39,7 @@ class HotelRepositoryTest {
         every { mockDb.getHotels() } returns emptyList()
         every { mockDb.insertHotel(any()) } returns 1L
 
-        repository = HotelRepositoryImpl(mockContext)
+        repository = HotelRepositoryImpl(mockDb)
     }
 
     @After

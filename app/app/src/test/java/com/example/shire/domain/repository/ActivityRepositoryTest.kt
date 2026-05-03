@@ -26,11 +26,8 @@ class ActivityRepositoryTest {
 
     @Before
     fun setUp() {
-        mockkStatic("com.example.shire.db.DbKt")
         mockDb = mockk(relaxed = true)
         mockContext = mockk(relaxed = true)
-
-        every { com.example.shire.db.db(any()) } returns mockDb
 
         every { mockDb.getActivityById(501) } returns DbActivity(
             id = 501,
@@ -45,7 +42,7 @@ class ActivityRepositoryTest {
         every { mockDb.getActivitiesByTrip(1) } returns flowOf(emptyList())
         every { mockDb.insertActivity(any()) } returns 1L
 
-        repository = ActivityRepositoryImpl(mockContext)
+        repository = ActivityRepositoryImpl(mockDb)
     }
 
     @After
@@ -56,6 +53,6 @@ class ActivityRepositoryTest {
     @Test
     fun `test getActivity returns mapped domain object`() = runBlocking {
         val activity = repository.getActivity(501)
-        assertEquals("Museum Tour", activity.title)
+        assertEquals("Museum Tour", activity?.title)
     }
 }

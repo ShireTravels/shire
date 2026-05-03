@@ -6,7 +6,6 @@ import com.example.shire.db.Place as DbPlace
 import com.example.shire.domain.model.Place
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -22,11 +21,8 @@ class PlaceRepositoryTest {
 
     @Before
     fun setUp() {
-        mockkStatic("com.example.shire.db.DbKt")
         mockDb = mockk(relaxed = true)
         mockContext = mockk(relaxed = true)
-
-        every { com.example.shire.db.db(any()) } returns mockDb
 
         every { mockDb.getPlaceById(401) } returns DbPlace(
             id = 401,
@@ -43,7 +39,7 @@ class PlaceRepositoryTest {
         every { mockDb.getPlaces() } returns emptyList()
         every { mockDb.insertPlace(any()) } returns 1L
 
-        repository = PlaceRepositoryImpl(mockContext)
+        repository = PlaceRepositoryImpl(mockDb)
     }
 
     @After

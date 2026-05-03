@@ -30,7 +30,6 @@ class TripRepositoryTest {
 
     @Before
     fun setUp() {
-        mockkStatic("com.example.shire.db.DbKt")
         mockDb = mockk(relaxed = true)
         mockAuthRepo = mockk(relaxed = true)
         mockHotelRepo = mockk(relaxed = true)
@@ -39,7 +38,6 @@ class TripRepositoryTest {
         mockPlaceRepo = mockk(relaxed = true)
         mockContext = mockk(relaxed = true)
 
-        every { com.example.shire.db.db(any()) } returns mockDb
         every { mockAuthRepo.getLoggedInUser() } returns com.example.shire.domain.model.LoggedInUser(1, "Test", "test@test.com")
 
         every { mockDb.getTripById(1, 601) } returns flowOf(DbTrip(
@@ -61,12 +59,12 @@ class TripRepositoryTest {
         every { mockDb.insertTrip(any()) } returns 1L
 
         repository = TripRepositoryImpl(
-            mockContext,
+            mockDb,
+            mockAuthRepo,
             mockHotelRepo,
             mockFlightRepo,
             mockCarRepo,
-            mockPlaceRepo,
-            mockAuthRepo
+            mockPlaceRepo
         )
     }
 

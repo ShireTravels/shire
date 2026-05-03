@@ -6,7 +6,6 @@ import com.example.shire.db.Car as DbCar
 import com.example.shire.domain.model.Car
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -21,11 +20,8 @@ class CarRepositoryTest {
 
     @Before
     fun setUp() {
-        mockkStatic("com.example.shire.db.DbKt")
         mockDb = mockk(relaxed = true)
         mockContext = mockk(relaxed = true)
-
-        every { com.example.shire.db.db(any()) } returns mockDb
 
         every { mockDb.getCarById(201) } returns DbCar(
             id = 201,
@@ -41,7 +37,7 @@ class CarRepositoryTest {
         every { mockDb.getCars() } returns emptyList()
         every { mockDb.insertCar(any()) } returns 1L
 
-        repository = CarRepositoryImpl(mockContext)
+        repository = CarRepositoryImpl(mockDb)
     }
 
     @After

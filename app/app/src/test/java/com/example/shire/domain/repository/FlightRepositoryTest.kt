@@ -6,7 +6,6 @@ import com.example.shire.db.Flight as DbFlight
 import com.example.shire.domain.model.Flight
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -22,11 +21,8 @@ class FlightRepositoryTest {
 
     @Before
     fun setUp() {
-        mockkStatic("com.example.shire.db.DbKt")
         mockDb = mockk(relaxed = true)
         mockContext = mockk(relaxed = true)
-
-        every { com.example.shire.db.db(any()) } returns mockDb
 
         every { mockDb.getFlightById(301) } returns DbFlight(
             id = 301,
@@ -45,7 +41,7 @@ class FlightRepositoryTest {
         every { mockDb.getFlights() } returns emptyList()
         every { mockDb.insertFlight(any()) } returns 1L
 
-        repository = FlightRepositoryImpl(mockContext)
+        repository = FlightRepositoryImpl(mockDb)
     }
 
     @After
