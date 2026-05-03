@@ -159,7 +159,8 @@ class AuthRepositoryImpl @Inject constructor(
                 name = "Demo User",
                 email = "demo@shire.local",
                 passwordHash = "1234",
-                createdAt = System.currentTimeMillis()
+                createdAt = System.currentTimeMillis(),
+                username = "demo_user"
             )
         )
     }
@@ -199,7 +200,8 @@ class AuthRepositoryImpl @Inject constructor(
                     },
                     email = normalizedEmail,
                     passwordHash = "",
-                    createdAt = System.currentTimeMillis()
+                    createdAt = System.currentTimeMillis(),
+                    username = normalizedEmail.substringBefore('@') + "_" + System.currentTimeMillis()
                 )
             )
             database.getUserByEmail(normalizedEmail)

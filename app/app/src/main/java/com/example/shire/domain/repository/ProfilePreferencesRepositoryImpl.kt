@@ -56,8 +56,8 @@ class ProfilePreferencesRepositoryImpl @Inject constructor(
             tripRemindersEnabled = sharedPrefs.getBoolean(Keys.tripReminders, true),
             weeklySummaryEnabled = sharedPrefs.getBoolean(Keys.weeklySummary, false),
             termsAccepted = if (sharedPrefs.contains(Keys.termsAccepted)) sharedPrefs.getBoolean(Keys.termsAccepted, false) else null,
-            username = dbUser?.username ?: sharedPrefs.getString(Keys.username, null) ?: "",
-            dateOfBirth = dbUser?.birthdate ?: sharedPrefs.getString(Keys.dateOfBirth, null) ?: ""
+            username = dbUser?.username ?: "",
+            dateOfBirth = dbUser?.birthdate ?: ""
         )
     }
 
@@ -124,7 +124,6 @@ class ProfilePreferencesRepositoryImpl @Inject constructor(
         if (user != null) {
             database.upsertUser(user.copy(username = username))
         }
-        sharedPrefs.edit().putString(Keys.username, username).apply()
     }
 
     override suspend fun setDateOfBirth(dateOfBirth: String) {
@@ -132,7 +131,6 @@ class ProfilePreferencesRepositoryImpl @Inject constructor(
         if (user != null) {
             database.upsertUser(user.copy(birthdate = dateOfBirth))
         }
-        sharedPrefs.edit().putString(Keys.dateOfBirth, dateOfBirth).apply()
     }
 
     override suspend fun setLogin(login: String) {
