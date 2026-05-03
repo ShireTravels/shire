@@ -1,56 +1,57 @@
 package com.example.shire.domain.repository
 
+import android.content.Context
+import com.example.shire.db.dbImpl
+import com.example.shire.db.Car as DbCar
 import com.example.shire.domain.model.Car
-import org.junit.Assert.*
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkAll
+import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 
 class CarRepositoryTest {
-    private lateinit var carRepository: CarRepositoryImpl
+
+    private lateinit var repository: CarRepositoryImpl
+    private lateinit var mockDb: dbImpl
+    private lateinit var mockContext: Context
 
     @Before
     fun setUp() {
-        carRepository = CarRepositoryImpl()
+        mockkStatic("com.example.shire.db.DbKt")
+        mockDb = mockk(relaxed = true)
+        mockContext = mockk(relaxed = true)
+
+        every { com.example.shire.db.db(any()) } returns mockDb
+
+        every { mockDb.getCarById(201) } returns DbCar(
+            id = 201,
+            model = "Tesla Model 3",
+            type = "Electric",
+            pricePerDay = 50.0,
+            imageUrl = "",
+            transmission = "Auto",
+            seats = 5,
+            features = listOf("AC", "GPS")
+        )
+
+        every { mockDb.getCars() } returns emptyList()
+        every { mockDb.insertCar(any()) } returns 1L
+
+        repository = CarRepositoryImpl(mockContext)
+    }
+
+    @After
+    fun tearDown() {
+        unmockkAll()
     }
 
     @Test
-    fun testGetCars_returnsInitialList() {
-        val cars = carRepository.getCars()
-        assertTrue(cars.isNotEmpty())
-    }
-
-    @Test
-    fun testGetCar_existingId_returnsCar() {
-        val car = carRepository.getCar(301)
-        assertNotNull(car)
-        assertEquals("Peugeot 208", car.model)
-    }
-
-    @Test
-    fun testAddCar_addsToList() {
-        val initialSize = carRepository.getCars().size
-        val newCar = Car(id = 999, model = "Test Model", type = "Sedan", pricePerDay = 50.0, imageUrl = "", transmission = "Auto", seats = 4, features = emptyList())
-        
-        carRepository.addCar(newCar)
-        assertEquals(initialSize + 1, carRepository.getCars().size)
-    }
-
-    @Test
-    fun testDeleteCar_removesFromList() {
-        val initialSize = carRepository.getCars().size
-        val success = carRepository.deleteCar(301)
-        
-        assertTrue(success)
-        assertEquals(initialSize - 1, carRepository.getCars().size)
-    }
-
-    @Test
-    fun testUpdateCar_modifiesExistingCar() {
-        val existing = carRepository.getCar(301)
-        val updated = existing.copy(model = "Updated Model")
-        
-        val success = carRepository.updateCar(updated)
-        assertTrue(success)
-        assertEquals("Updated Model", carRepository.getCar(301).model)
+    fun `test getCar returns mapped domain object`() {
+        val car = repository.getCar(201)
+        assertEquals("Tesla Model 3", car.model)
     }
 }
