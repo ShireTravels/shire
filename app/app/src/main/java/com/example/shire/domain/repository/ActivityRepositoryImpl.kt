@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import com.example.shire.db.Activity as DbActivity
 import com.example.shire.db.db
+import com.example.shire.db.dbImpl
 import com.example.shire.domain.model.Activity
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.time.LocalDate
@@ -15,10 +16,9 @@ import kotlinx.coroutines.flow.map
 
 @Singleton
 class ActivityRepositoryImpl @Inject constructor(
-    @ApplicationContext context: Context
+    private val database: dbImpl
 ) : ActivityRepository {
 
-    private val database = db(context)
 
     override fun getActivity(activityId: Int): Activity? {
         Log.d("ActivityRepo", "Fetching activity with id: $activityId")

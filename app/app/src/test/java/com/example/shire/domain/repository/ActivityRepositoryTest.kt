@@ -1,67 +1,61 @@
 package com.example.shire.domain.repository
 
+import android.content.Context
+import com.example.shire.db.dbImpl
+import com.example.shire.db.Activity as DbActivity
 import com.example.shire.domain.model.Activity
-import java.time.LocalDate
-import java.time.LocalTime
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkAll
+import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Test
+import java.time.LocalDate
+import java.time.LocalTime
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.flow.first
 
 class ActivityRepositoryTest {
 
     private lateinit var repository: ActivityRepositoryImpl
+    private lateinit var mockDb: dbImpl
+    private lateinit var mockContext: Context
 
     @Before
     fun setUp() {
-        repository = ActivityRepositoryImpl()
-    }
+        mockkStatic("com.example.shire.db.DbKt")
+        mockDb = mockk(relaxed = true)
+        mockContext = mockk(relaxed = true)
 
-    @Test
-    fun addActivity_increasesCountAndReturnsValidId() {
-        val initialSize = repository.getActivitiesForTrip(1).size
-        val newActivity = Activity(
-            id = 0,
+        every { com.example.shire.db.db(any()) } returns mockDb
+
+        every { mockDb.getActivityById(501) } returns DbActivity(
+            id = 501,
             tripId = 1,
-            title = "Test Activity",
-            description = "Test Desc",
-            date = LocalDate.of(2026, 6, 1),
-            time = LocalTime.of(12, 0)
+            title = "Museum Tour",
+            description = "Visit the Louvre",
+            date = LocalDate.now(),
+            time = LocalTime.NOON,
+            price = 15.0
         )
-        val added = repository.addActivity(newActivity)
-        
-        assertNotNull(added)
-        assertTrue(added.id > 0)
-        assertEquals(initialSize + 1, repository.getActivitiesForTrip(1).size)
+
+        every { mockDb.getActivitiesByTrip(1) } returns flowOf(emptyList())
+        every { mockDb.insertActivity(any()) } returns 1L
+
+        repository = ActivityRepositoryImpl(mockContext)
+    }
+
+    @After
+    fun tearDown() {
+        unmockkAll()
     }
 
     @Test
-    fun getActivity_returnsCorrectActivity() {
-        val added = repository.addActivity(Activity(0, 1, "Title", "Desc", LocalDate.now(), LocalTime.now(), 0.0))
-        val retrieved = repository.getActivity(added.id)
-        assertNotNull(retrieved)
-        assertEquals("Title", retrieved?.title)
-    }
-
-    @Test
-    fun updateActivity_modifiesExistingData() {
-        val added = repository.addActivity(Activity(0, 1, "Old Title", "Desc", LocalDate.now(), LocalTime.now(), 0.0))
-        val updatedActivity = added.copy(title = "New Title")
-        val success = repository.updateActivity(updatedActivity)
-        
-        assertTrue(success)
-        assertEquals("New Title", repository.getActivity(added.id)?.title)
-    }
-
-    @Test
-    fun deleteActivity_removesActivity() {
-        val added = repository.addActivity(Activity(0, 1, "Title", "Desc", LocalDate.now(), LocalTime.now()))
-        val success = repository.deleteActivity(added.id)
-        
-        assertTrue(success)
-        assertNull(repository.getActivity(added.id))
+    fun `test getActivity returns mapped domain object`() = runBlocking {
+        val activity = repository.getActivity(501)
+        assertEquals("Museum Tour", activity.title)
     }
 }

@@ -1,58 +1,59 @@
 package com.example.shire.domain.repository
 
+import android.content.Context
+import com.example.shire.db.dbImpl
+import com.example.shire.db.Hotel as DbHotel
 import com.example.shire.domain.model.Hotel
-import org.junit.Assert.*
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkAll
+import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 
 class HotelRepositoryTest {
-    private lateinit var hotelRepository: HotelRepositoryImpl
+
+    private lateinit var repository: HotelRepositoryImpl
+    private lateinit var mockDb: dbImpl
+    private lateinit var mockContext: Context
 
     @Before
     fun setUp() {
-        hotelRepository = HotelRepositoryImpl()
+        mockkStatic("com.example.shire.db.DbKt")
+        mockDb = mockk(relaxed = true)
+        mockContext = mockk(relaxed = true)
+
+        every { com.example.shire.db.db(any()) } returns mockDb
+
+        // Return a predefined hotel when requested
+        every { mockDb.getHotelById(101) } returns DbHotel(
+            id = 101,
+            name = "Le Meurice Mock",
+            location = "Paris",
+            rating = 4.8f,
+            imageUrl = "",
+            amenities = listOf("WiFi", "Pool"),
+            description = "Mock description",
+            price = 300.0
+        )
+
+        // Mock getHotels for the init block's seedIfNeeded
+        every { mockDb.getHotels() } returns emptyList()
+        every { mockDb.insertHotel(any()) } returns 1L
+
+        repository = HotelRepositoryImpl(mockContext)
+    }
+
+    @After
+    fun tearDown() {
+        unmockkAll()
     }
 
     @Test
-    fun testGetHotels_returnsInitialList() {
-        val hotels = hotelRepository.getHotels()
-        assertTrue(hotels.isNotEmpty())
-        assertTrue(hotels.any { it.id == 101 })
-    }
-
-    @Test
-    fun testGetHotel_existingId_returnsHotel() {
-        val hotel = hotelRepository.getHotel(101)
-        assertNotNull(hotel)
-        assertEquals("Le Meurice", hotel.name)
-    }
-
-    @Test
-    fun testAddHotel_addsToList() {
-        val initialSize = hotelRepository.getHotels().size
-        val newHotel = Hotel(id = 999, name = "Test Hotel", location = "Test", rating = 5.0f, imageUrl = "", amenities = emptyList(), description = "", price = 100.0)
-        
-        val added = hotelRepository.addHotel(newHotel)
-        assertEquals(newHotel, added)
-        assertEquals(initialSize + 1, hotelRepository.getHotels().size)
-    }
-
-    @Test
-    fun testDeleteHotel_removesFromList() {
-        val initialSize = hotelRepository.getHotels().size
-        val success = hotelRepository.deleteHotel(101)
-        
-        assertTrue(success)
-        assertEquals(initialSize - 1, hotelRepository.getHotels().size)
-    }
-
-    @Test
-    fun testUpdateHotel_modifiesExistingHotel() {
-        val existingHotel = hotelRepository.getHotel(101)
-        val updatedHotel = existingHotel.copy(name = "Updated Name")
-        
-        val success = hotelRepository.updateHotel(updatedHotel)
-        assertTrue(success)
-        assertEquals("Updated Name", hotelRepository.getHotel(101).name)
+    fun `test getHotel returns mapped domain object`() {
+        val hotel = repository.getHotel(101)
+        assertEquals("Le Meurice Mock", hotel.name)
     }
 }

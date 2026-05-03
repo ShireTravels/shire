@@ -41,6 +41,7 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.time.ZoneId
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.shire.R
 
 data class BudgetDay(val day: Int, val total: Double, val items: List<Pair<String, Double>>)
@@ -73,8 +74,8 @@ fun TripDetailsScreen(
     val tabs = listOf(stringResource(id = R.string.tab_itinerary), stringResource(id = R.string.tab_gallery), stringResource(id = R.string.tab_budget))
 
     val tripIdInt = tripId.toIntOrNull() ?: 0
-    val trip by viewModel.trip.collectAsStateWithLifecycle()
-    val userActivities by itineraryViewModel.activities.collectAsStateWithLifecycle()
+    val trip = viewModel.trip.collectAsStateWithLifecycle().value
+    val userActivities = itineraryViewModel.activities.collectAsStateWithLifecycle().value
 
     var showAddActivityDialog by remember { mutableStateOf(false) }
     

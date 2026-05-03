@@ -10,4 +10,5 @@ interface TripRepository {
     fun addTrip(trip: Trip): Trip
     fun deleteTrip(tripId: Int): Boolean
     fun updateTrip(trip: Trip): Boolean
+    fun isTitleDuplicate(title: String): Boolean
 }

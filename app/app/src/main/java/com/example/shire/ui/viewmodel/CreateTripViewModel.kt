@@ -213,11 +213,15 @@ class CreateTripViewModel @Inject constructor(
             addCurrentDestination()
         }
 
-        val newId = (tripRepository.getTrips().maxOfOrNull { it.id } ?: 0) + 1
-
         val title = if (destinationsList.isNotEmpty()) {
             "Viaje a " + destinationsList.joinToString(", ")
         } else "Nuevo Viaje"
+
+        if (tripRepository.isTitleDuplicate(title)) {
+            errorMessage = "Ya tienes un viaje con este nombre: $title"
+            Log.w("CreateTripViewModel", "Validation failed: Duplicate trip title")
+            return -1
+        }
 
         val finalStartDate = datesList.firstOrNull()?.split(" - ")?.getOrNull(0) ?: tripStartDate
         val finalEndDate = datesList.lastOrNull()?.split(" - ")?.getOrNull(1) ?: tripEndDate
@@ -225,7 +229,7 @@ class CreateTripViewModel @Inject constructor(
         val tripPrice = accumulatedTotalPrice + pendingActivities.sumOf { it.price }
 
         val trip = Trip(
-            id = newId,
+            id = 0, // Let Room generate the ID
             title = title,
             startDate = finalStartDate,
             endDate = finalEndDate,
@@ -238,7 +242,8 @@ class CreateTripViewModel @Inject constructor(
             description = ""
         )
 
-        tripRepository.addTrip(trip)
+        val persistedTrip = tripRepository.addTrip(trip)
+        val newId = persistedTrip.id
 
         pendingActivities.forEach { activity ->
             activityRepository.addActivity(activity.copy(tripId = newId))

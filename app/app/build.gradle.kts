@@ -53,6 +53,7 @@ kotlin {
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
@@ -63,18 +64,21 @@ dependencies {
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.appcompat)
     testImplementation(libs.junit)
+    testImplementation("io.mockk:mockk:1.13.8")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+    androidTestImplementation("androidx.room:room-testing:2.6.1")
+    androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
     implementation("androidx.compose.material:material-icons-extended:1.6.0")
     implementation ("androidx.datastore:datastore-preferences:1.1.3")
     implementation(libs.hilt.android)
     "kapt"(libs.hilt.compiler)
     implementation ("androidx.hilt:hilt-navigation-compose:1.2.0")
-    implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
     "kapt"("androidx.room:room-compiler:2.6.1")
@@ -94,12 +98,5 @@ dependencies {
 
 // Allow references to generated code
 kapt {
-    correctErrorTypes = false
-}
-
-val kaptTmpDir = rootProject.layout.projectDirectory.dir(".gradle/tmp").asFile.absolutePath
-
-tasks.withType<org.jetbrains.kotlin.gradle.internal.KaptWithoutKotlincTask>().configureEach {
-    kaptProcessJvmArgs.add("-Djava.io.tmpdir=$kaptTmpDir")
-    kaptProcessJvmArgs.add("-Dorg.sqlite.tmpdir=$kaptTmpDir")
+    correctErrorTypes = true
 }

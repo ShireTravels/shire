@@ -1,6 +1,7 @@
 package com.example.shire.db
 
 import android.content.Context
+import android.util.Log
 import androidx.room.Room
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
@@ -11,7 +12,7 @@ class db(context: Context) : dbImpl {
 
 	private val roomDb: ShireRoomDatabase = getOrCreateRoomDatabase(context.applicationContext)
 
-	override fun upsertUser(user: User): Long = roomDb.userDao().upsert(user)
+	override fun upsertUser(user: User): Long = roomDb.userDao().upsert(user).also { Log.i("ShireDB", "Upserted user: ${user.email} (ID: $it)") }
 
 	override fun getUserById(id: Int): Flow<User?> = roomDb.userDao().getById(id)
 	override fun getUserByIdSync(id: Int): User? = roomDb.userDao().getByIdSync(id)
@@ -20,14 +21,14 @@ class db(context: Context) : dbImpl {
 	override fun getUserByUsername(username: String): Flow<User?> = roomDb.userDao().getByUsername(username)
 	override fun getUserByUsernameSync(username: String): User? = roomDb.userDao().getByUsernameSync(username)
 
-	override fun insertActivity(activity: Activity): Long = roomDb.activityDao().insert(activity)
+	override fun insertActivity(activity: Activity): Long = roomDb.activityDao().insert(activity).also { Log.i("ShireDB", "Inserted activity: ${activity.title} (ID: $it)") }
 
 	override fun getActivityById(id: Int): Activity? = roomDb.activityDao().getById(id)
 
 	override fun getActivitiesByTrip(tripId: Int): Flow<List<Activity>> = roomDb.activityDao().getByTripId(tripId)
 	override fun getActivitiesByTripSync(tripId: Int): List<Activity> = roomDb.activityDao().getByTripIdSync(tripId)
 
-	override fun deleteActivity(id: Int): Int = roomDb.activityDao().deleteById(id)
+	override fun deleteActivity(id: Int): Int = roomDb.activityDao().deleteById(id).also { Log.i("ShireDB", "Deleted activity ID: $id (Rows: $it)") }
 
 	override fun insertCar(car: Car): Long = roomDb.carDao().insert(car)
 
@@ -61,21 +62,22 @@ class db(context: Context) : dbImpl {
 
 	override fun deletePlace(id: Int): Int = roomDb.placeDao().deleteById(id)
 
-	override fun savePreferences(preferences: Preferences): Long = roomDb.preferencesDao().upsert(preferences)
+	override fun savePreferences(preferences: Preferences): Long = roomDb.preferencesDao().upsert(preferences).also { Log.i("ShireDB", "Saved preferences for user ID: ${preferences.userId}") }
 
 	override fun getPreferences(userId: Int): Preferences? = roomDb.preferencesDao().getByUserId(userId)
 
-	override fun insertTrip(trip: Trip): Long = roomDb.tripDao().insert(trip)
+	override fun insertTrip(trip: Trip): Long = roomDb.tripDao().insert(trip).also { Log.i("ShireDB", "Inserted trip: ${trip.title} (ID: $it)") }
 
 	override fun getTrips(userId: Int): Flow<List<Trip>> = roomDb.tripDao().getByUserId(userId)
 	override fun getTripsSync(userId: Int): List<Trip> = roomDb.tripDao().getByUserIdSync(userId)
 
 	override fun getTripById(userId: Int, id: Int): Flow<Trip?> = roomDb.tripDao().getByUserIdAndTripId(userId, id)
 	override fun getTripByIdSync(userId: Int, id: Int): Trip? = roomDb.tripDao().getByUserIdAndTripIdSync(userId, id)
+	override fun getTripByTitleSync(userId: Int, title: String): Trip? = roomDb.tripDao().getByUserIdAndTitleSync(userId, title)
 
-	override fun deleteTrip(userId: Int, id: Int): Int = roomDb.tripDao().deleteByUserIdAndTripId(userId, id)
+	override fun deleteTrip(userId: Int, id: Int): Int = roomDb.tripDao().deleteByUserIdAndTripId(userId, id).also { Log.i("ShireDB", "Deleted trip ID: $id for user $userId (Rows: $it)") }
 
-	override fun insertAccessLog(log: AccessLog): Long = roomDb.accessLogDao().insert(log)
+	override fun insertAccessLog(log: AccessLog): Long = roomDb.accessLogDao().insert(log).also { Log.v("ShireDB", "Access log: ${log.action} for user ${log.userId}") }
 
 	override fun getAccessLogs(userId: Int): List<AccessLog> = roomDb.accessLogDao().getByUserId(userId)
 

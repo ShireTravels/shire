@@ -131,6 +131,9 @@ interface TripDao {
     @Query("SELECT * FROM trips WHERE user_id = :userId AND id = :id LIMIT 1")
     fun getByUserIdAndTripIdSync(userId: Int, id: Int): Trip?
 
+    @Query("SELECT * FROM trips WHERE user_id = :userId AND title = :title LIMIT 1")
+    fun getByUserIdAndTitleSync(userId: Int, title: String): Trip?
+
     @Query("DELETE FROM trips WHERE user_id = :userId AND id = :tripId")
     fun deleteByUserIdAndTripId(userId: Int, tripId: Int): Int
 }

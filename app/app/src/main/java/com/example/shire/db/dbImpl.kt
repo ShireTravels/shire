@@ -60,6 +60,7 @@ interface dbImpl {
     fun getTripsSync(userId: Int): List<Trip>
     fun getTripById(userId: Int, id: Int): Flow<Trip?>
     fun getTripByIdSync(userId: Int, id: Int): Trip?
+    fun getTripByTitleSync(userId: Int, title: String): Trip?
     fun deleteTrip(userId: Int, id: Int): Int
 
     fun insertAccessLog(log: AccessLog): Long
@@ -604,8 +605,6 @@ object PreferencesTable : BaseDbTable<Preferences>(
             trip_reminders_enabled INTEGER NOT NULL,
             weekly_summary_enabled INTEGER NOT NULL,
             terms_accepted INTEGER,
-            username TEXT NOT NULL,
-            date_of_birth TEXT NOT NULL,
             FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
         )
     """.trimIndent()
@@ -620,8 +619,6 @@ object PreferencesTable : BaseDbTable<Preferences>(
         put("trip_reminders_enabled", if (item.tripRemindersEnabled) 1 else 0)
         put("weekly_summary_enabled", if (item.weeklySummaryEnabled) 1 else 0)
         put("terms_accepted", item.termsAccepted?.let { if (it) 1 else 0 })
-        put("username", item.username)
-        put("date_of_birth", item.dateOfBirth)
     }
 
     override fun fromCursor(cursor: Cursor): Preferences = Preferences(
@@ -647,9 +644,7 @@ object PreferencesTable : BaseDbTable<Preferences>(
             null
         } else {
             cursor.getInt(cursor.getColumnIndexOrThrow("terms_accepted")) == 1
-        },
-        username = cursor.getString(cursor.getColumnIndexOrThrow("username")),
-        dateOfBirth = cursor.getString(cursor.getColumnIndexOrThrow("date_of_birth"))
+        }
     )
 }
 
