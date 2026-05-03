@@ -2,12 +2,14 @@ package com.example.shire.ui.viewmodel
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.shire.domain.model.Trip
 import com.example.shire.domain.repository.TripRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -27,7 +29,11 @@ class TripGalleryViewModel @Inject constructor(
 
     private fun loadTrip() {
         if (tripId != -1) {
-            _trip.value = tripRepository.getTrip(tripId)
+            viewModelScope.launch {
+                tripRepository.getTrip(tripId).collect {
+                    _trip.value = it
+                }
+            }
         }
     }
 

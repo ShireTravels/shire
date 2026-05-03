@@ -1,80 +1,90 @@
 package com.example.shire.domain.repository
 
+import com.example.shire.db.dbImpl
+import com.example.shire.db.Trip as DbTrip
+import com.example.shire.domain.model.LoggedInUser
 import com.example.shire.domain.model.Trip
+import io.mockk.*
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Test
+import java.util.LinkedList
 
 class TripRepositoryTest {
 
     private lateinit var repository: TripRepositoryImpl
+    private val database: dbImpl = mockk(relaxed = true)
+    private val authRepository: AuthRepository = mockk()
+    private val hotelRepository: HotelRepository = mockk()
+    private val flightRepository: FlightRepository = mockk()
+    private val carRepository: CarRepository = mockk()
+    private val placeRepository: PlaceRepository = mockk()
+
+    private val testUser = LoggedInUser(1, "Test User", "test@example.com")
 
     @Before
     fun setUp() {
+        coEvery { authRepository.getLoggedInUser() } returns testUser
+        coEvery { authRepository.loggedInUserFlow } returns flowOf(testUser)
+        
         repository = TripRepositoryImpl(
-            HotelRepositoryImpl(),
-            FlightRepositoryImpl(),
-            CarRepositoryImpl(),
-            PlaceRepositoryImpl()
+            database,
+            authRepository,
+            hotelRepository,
+            flightRepository,
+            carRepository,
+            placeRepository
         )
     }
 
     @Test
-    fun addTrip_increasesCountAndReturnsValidId() {
-        val initialSize = repository.getTrips().size
-        val newTrip = Trip(
-            id = 10,
-            title = "Test Trip",
-            startDate = "10/10/2026",
-            endDate = "20/10/2026",
-            price = 500.0,
-            hotel = hashMapOf(),
-            flight = hashMapOf(),
-            car = hashMapOf(),
-            places = hashMapOf(),
-            gallery = java.util.LinkedList(),
-            description = "Test Desc"
+    fun getTrips_returnsMappedDomainTrips() = runTest {
+        val dbTrips = listOf(
+            DbTrip(1, 1, "Paris", "01/01/2026", "05/01/2026", 100.0, hashMapOf(), hashMapOf(), hashMapOf(), hashMapOf(), LinkedList(), "Desc")
         )
-        val addedTrip = repository.addTrip(newTrip)
-        
-        assertEquals(10, addedTrip.id)
-        assertEquals(initialSize + 1, repository.getTrips().size)
+        every { database.getTrips(1) } returns flowOf(dbTrips)
+
+        val result = repository.getTrips().first()
+
+        assertEquals(1, result.size)
+        assertEquals("Paris", result[0].title)
+        verify { database.getTrips(1) }
     }
 
     @Test
-    fun getTrip_returnsCorrectTrip() {
-        val newTrip = Trip(0, "Test Trip", "10/10/2026", "20/10/2026", 500.0, hashMapOf(), hashMapOf(), hashMapOf(), hashMapOf(), java.util.LinkedList(), "Desc")
-        val addedTrip = repository.addTrip(newTrip)
-        val retrieved = repository.getTrip(addedTrip.id)
-        
-        assertNotNull(retrieved)
-        assertEquals("Test Trip", retrieved?.title)
+    fun addTrip_persistsToDatabase() = runTest {
+        val newTrip = Trip(0, "Rome", "10/10/2026", "15/10/2026", 500.0, hashMapOf(), hashMapOf(), hashMapOf(), hashMapOf(), LinkedList(), "Desc")
+        every { database.insertTrip(any()) } returns 123L
+
+        val result = repository.addTrip(newTrip)
+
+        assertEquals(123, result.id)
+        verify { database.insertTrip(match { it.title == "Rome" && it.userId == 1 }) }
     }
 
     @Test
-    fun updateTrip_modifiesExistingData() {
-        val newTrip = Trip(0, "Old Title", "10/10/2026", "20/10/2026", 500.0, hashMapOf(), hashMapOf(), hashMapOf(), hashMapOf(), java.util.LinkedList(), "Desc")
-        val addedTrip = repository.addTrip(newTrip)
-        
-        val retrieved = repository.getTrip(addedTrip.id)!!
-        val updatedTrip = retrieved.copy(title = "New Title")
-        val success = repository.updateTrip(updatedTrip)
-        
+    fun updateTrip_returnsTrueIfSuccess() = runTest {
+        val trip = Trip(123, "Updated Rome", "10/10/2026", "15/10/2026", 500.0, hashMapOf(), hashMapOf(), hashMapOf(), hashMapOf(), LinkedList(), "Desc")
+        every { database.getTripByIdSync(1, 123) } returns mockk()
+        every { database.insertTrip(any()) } returns 123L
+
+        val success = repository.updateTrip(trip)
+
         assertTrue(success)
-        assertEquals("New Title", repository.getTrip(addedTrip.id)?.title)
+        verify { database.insertTrip(match { it.title == "Updated Rome" }) }
     }
 
     @Test
-    fun deleteTrip_removesTrip() {
-        val newTrip = Trip(0, "To Delete", "10/10/2026", "20/10/2026", 500.0, hashMapOf(), hashMapOf(), hashMapOf(), hashMapOf(), java.util.LinkedList(), "Desc")
-        val addedTrip = repository.addTrip(newTrip)
-        val success = repository.deleteTrip(addedTrip.id)
-        
+    fun deleteTrip_callsDatabase() = runTest {
+        every { database.deleteTrip(1, 123) } returns 1
+
+        val success = repository.deleteTrip(123)
+
         assertTrue(success)
-        assertNull(repository.getTrip(addedTrip.id))
+        verify { database.deleteTrip(1, 123) }
     }
 }

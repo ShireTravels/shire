@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import com.example.shire.db.Activity as DbActivity
 import com.example.shire.db.db
+import com.example.shire.db.dbImpl
 import com.example.shire.domain.model.Activity
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.time.LocalDate

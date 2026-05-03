@@ -1,67 +1,61 @@
 package com.example.shire.domain.repository
 
+import com.example.shire.db.dbImpl
+import com.example.shire.db.Activity as DbActivity
 import com.example.shire.domain.model.Activity
-import java.time.LocalDate
-import java.time.LocalTime
+import io.mockk.*
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Test
+import java.time.LocalDate
+import java.time.LocalTime
 
 class ActivityRepositoryTest {
 
     private lateinit var repository: ActivityRepositoryImpl
+    private val database: dbImpl = mockk(relaxed = true)
 
     @Before
     fun setUp() {
-        repository = ActivityRepositoryImpl()
+        repository = ActivityRepositoryImpl(database)
     }
 
     @Test
-    fun addActivity_increasesCountAndReturnsValidId() {
-        val initialSize = repository.getActivitiesForTrip(1).size
-        val newActivity = Activity(
-            id = 0,
-            tripId = 1,
-            title = "Test Activity",
-            description = "Test Desc",
-            date = LocalDate.of(2026, 6, 1),
-            time = LocalTime.of(12, 0)
+    fun getActivitiesForTrip_returnsMappedList() = runTest {
+        val dbActivities = listOf(
+            DbActivity(1, 10, "Visit Louvre", "Museum", LocalDate.now(), LocalTime.now(), 20.0)
         )
-        val added = repository.addActivity(newActivity)
-        
-        assertNotNull(added)
-        assertTrue(added.id > 0)
-        assertEquals(initialSize + 1, repository.getActivitiesForTrip(1).size)
+        every { database.getActivitiesByTrip(10) } returns flowOf(dbActivities)
+
+        val result = repository.getActivitiesForTrip(10).first()
+
+        assertEquals(1, result.size)
+        assertEquals("Visit Louvre", result[0].title)
+        verify { database.getActivitiesByTrip(10) }
     }
 
     @Test
-    fun getActivity_returnsCorrectActivity() {
-        val added = repository.addActivity(Activity(0, 1, "Title", "Desc", LocalDate.now(), LocalTime.now(), 0.0))
-        val retrieved = repository.getActivity(added.id)
-        assertNotNull(retrieved)
-        assertEquals("Title", retrieved?.title)
+    fun addActivity_persistsToDatabase() = runTest {
+        val activity = Activity(0, 10, "Dinner", "Italian", LocalDate.now(), LocalTime.now(), 50.0)
+        every { database.insertActivity(any()) } returns 456L
+
+        val result = repository.addActivity(activity)
+
+        assertEquals(456, result.id)
+        verify { database.insertActivity(match { it.title == "Dinner" && it.tripId == 10 }) }
     }
 
     @Test
-    fun updateActivity_modifiesExistingData() {
-        val added = repository.addActivity(Activity(0, 1, "Old Title", "Desc", LocalDate.now(), LocalTime.now(), 0.0))
-        val updatedActivity = added.copy(title = "New Title")
-        val success = repository.updateActivity(updatedActivity)
-        
+    fun deleteActivity_callsDatabase() = runTest {
+        every { database.deleteActivity(789) } returns 1
+
+        val success = repository.deleteActivity(789)
+
         assertTrue(success)
-        assertEquals("New Title", repository.getActivity(added.id)?.title)
-    }
-
-    @Test
-    fun deleteActivity_removesActivity() {
-        val added = repository.addActivity(Activity(0, 1, "Title", "Desc", LocalDate.now(), LocalTime.now()))
-        val success = repository.deleteActivity(added.id)
-        
-        assertTrue(success)
-        assertNull(repository.getActivity(added.id))
+        verify { database.deleteActivity(789) }
     }
 }

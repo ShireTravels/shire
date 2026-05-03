@@ -6,6 +6,7 @@ import com.example.shire.db.Activity as DbActivity
 import com.example.shire.db.Trip as DbTrip
 import com.example.shire.db.User as DbUser
 import com.example.shire.db.db
+import com.example.shire.db.dbImpl
 import com.example.shire.domain.model.Trip
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.time.LocalDate
