@@ -60,6 +60,7 @@ interface dbImpl {
     fun getTripsSync(userId: Int): List<Trip>
     fun getTripById(userId: Int, id: Int): Flow<Trip?>
     fun getTripByIdSync(userId: Int, id: Int): Trip?
+    fun getTripByTitleSync(userId: Int, title: String): Trip?
     fun deleteTrip(userId: Int, id: Int): Int
 
     fun insertAccessLog(log: AccessLog): Long

@@ -15,10 +15,9 @@ import kotlinx.coroutines.flow.map
 
 @Singleton
 class ActivityRepositoryImpl @Inject constructor(
-    @ApplicationContext context: Context
+    private val database: dbImpl
 ) : ActivityRepository {
 
-    private val database = db(context)
 
     override fun getActivity(activityId: Int): Activity? {
         Log.d("ActivityRepo", "Fetching activity with id: $activityId")

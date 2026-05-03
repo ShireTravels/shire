@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.map
 
 @Singleton
 class TripRepositoryImpl @Inject constructor(
-    @ApplicationContext context: Context,
+    private val database: dbImpl,
     private val authRepository: AuthRepository,
     private val hotelRepository: HotelRepository,
     private val flightRepository: FlightRepository,
@@ -28,7 +28,6 @@ class TripRepositoryImpl @Inject constructor(
     private val placeRepository: PlaceRepository
 ) : TripRepository {
 
-    private val database = db(context)
     private val defaultUserId = 1
 
     init {
@@ -146,6 +145,9 @@ class TripRepositoryImpl @Inject constructor(
     }
 
     override fun addTrip(trip: Trip): Trip {
+        if (!validateDates(trip.startDate, trip.endDate)) {
+            throw IllegalArgumentException("Invalid trip dates")
+        }
         val insertedId = database.insertTrip(trip.toDbTrip()).toInt()
         val persistedTrip = if (trip.id > 0) trip else trip.copy(id = insertedId)
         Log.i("TripRepo", "Added new trip: ${persistedTrip.title} (ID: ${persistedTrip.id})")
@@ -165,6 +167,8 @@ class TripRepositoryImpl @Inject constructor(
 
     override fun updateTrip(trip: Trip): Boolean {
         val currentUserId = getCurrentUserId()
+        if (!validateDates(trip.startDate, trip.endDate)) return false
+        
         val exists = database.getTripByIdSync(currentUserId, trip.id) != null
         if (exists) {
             database.insertTrip(trip.toDbTrip())
@@ -173,6 +177,22 @@ class TripRepositoryImpl @Inject constructor(
         }
         Log.e("TripRepo", "Failed to update trip: ID ${trip.id} not found")
         return false
+    }
+
+    override fun isTitleDuplicate(title: String): Boolean {
+        val currentUserId = getCurrentUserId()
+        return database.getTripByTitleSync(currentUserId, title) != null
+    }
+
+    private fun validateDates(startDate: String, endDate: String): Boolean {
+        return try {
+            val sdf = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault())
+            val start = sdf.parse(startDate)
+            val end = sdf.parse(endDate)
+            start != null && end != null && !start.after(end)
+        } catch (e: Exception) {
+            false
+        }
     }
 
     private fun Trip.toDbTrip(): DbTrip = DbTrip(
