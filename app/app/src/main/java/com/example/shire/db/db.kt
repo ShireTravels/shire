@@ -74,6 +74,10 @@ class db(context: Context) : dbImpl {
 
 	override fun deleteTrip(userId: Int, id: Int): Int = roomDb.tripDao().deleteByUserIdAndTripId(userId, id)
 
+	override fun insertAccessLog(log: AccessLog): Long = roomDb.accessLogDao().insert(log)
+
+	override fun getAccessLogs(userId: Int): List<AccessLog> = roomDb.accessLogDao().getByUserId(userId)
+
 	override fun closeDb() {
 		synchronized(db::class.java) {
 			roomDatabase?.close()

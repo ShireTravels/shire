@@ -61,6 +61,9 @@ interface dbImpl {
     fun getTripById(userId: Int, id: Int): Flow<Trip?>
     fun deleteTrip(userId: Int, id: Int): Int
 
+    fun insertAccessLog(log: AccessLog): Long
+    fun getAccessLogs(userId: Int): List<AccessLog>
+
     fun closeDb()
 }
 
@@ -319,6 +322,28 @@ data class Trip(
     var places: HashMap<Int, MutableList<Int>>,
     var gallery: LinkedList<String>,
     var description: String
+)
+
+@Entity(
+    tableName = "access_logs",
+    foreignKeys = [
+        ForeignKey(
+            entity = User::class,
+            parentColumns = ["id"],
+            childColumns = ["user_id"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
+    indices = [Index(value = ["user_id"])]
+)
+data class AccessLog(
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
+    @ColumnInfo(name = "user_id")
+    val userId: Int,
+    val action: String, // "LOGIN" or "LOGOUT"
+    @ColumnInfo(name = "timestamp")
+    val timestamp: Long = System.currentTimeMillis()
 )
 
 object UsersTable : BaseDbTable<User>(
@@ -677,6 +702,33 @@ object TripTable : BaseDbTable<Trip>(
     )
 }
 
+object AccessLogTable : BaseDbTable<AccessLog>(
+    tableName = "access_logs",
+    createSql = """
+        CREATE TABLE IF NOT EXISTS access_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            action TEXT NOT NULL,
+            timestamp INTEGER NOT NULL,
+            FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    """.trimIndent()
+) {
+    override fun toContentValues(item: AccessLog): ContentValues = ContentValues().apply {
+        if (item.id > 0) put("id", item.id)
+        put("user_id", item.userId)
+        put("action", item.action)
+        put("timestamp", item.timestamp)
+    }
+
+    override fun fromCursor(cursor: Cursor): AccessLog = AccessLog(
+        id = cursor.getInt(cursor.getColumnIndexOrThrow("id")),
+        userId = cursor.getInt(cursor.getColumnIndexOrThrow("user_id")),
+        action = cursor.getString(cursor.getColumnIndexOrThrow("action")),
+        timestamp = cursor.getLong(cursor.getColumnIndexOrThrow("timestamp"))
+    )
+}
+
 val ALL_DB_TABLES: List<DbTable<*>> = listOf(
     UsersTable,
     ActivityTable,
@@ -685,5 +737,6 @@ val ALL_DB_TABLES: List<DbTable<*>> = listOf(
     HotelTable,
     PlaceTable,
     PreferencesTable,
-    TripTable
+    TripTable,
+    AccessLogTable
 )

@@ -13,9 +13,10 @@ import androidx.room.TypeConverters
         Hotel::class,
         Place::class,
         Preferences::class,
-        Trip::class
+        Trip::class,
+        AccessLog::class
     ],
-    version = 6,
+    version = 7,
     exportSchema = false
 )
 @TypeConverters(ShireTypeConverters::class)
@@ -28,4 +29,5 @@ abstract class ShireRoomDatabase : RoomDatabase() {
     abstract fun placeDao(): PlaceDao
     abstract fun preferencesDao(): PreferencesDao
     abstract fun tripDao(): TripDao
+    abstract fun accessLogDao(): AccessLogDao
 }

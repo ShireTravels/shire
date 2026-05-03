@@ -131,3 +131,12 @@ interface TripDao {
     @Query("DELETE FROM trips WHERE user_id = :userId AND id = :tripId")
     fun deleteByUserIdAndTripId(userId: Int, tripId: Int): Int
 }
+
+@Dao
+interface AccessLogDao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insert(log: AccessLog): Long
+
+    @Query("SELECT * FROM access_logs WHERE user_id = :userId ORDER BY timestamp DESC")
+    fun getByUserId(userId: Int): List<AccessLog>
+}

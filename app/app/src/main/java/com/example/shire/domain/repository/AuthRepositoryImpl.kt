@@ -11,6 +11,7 @@ import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.UserProfileChangeRequest
+import com.example.shire.db.AccessLog
 import com.example.shire.db.User as DbUser
 import com.example.shire.db.db
 import com.example.shire.domain.model.LoggedInUser
@@ -76,8 +77,12 @@ class AuthRepositoryImpl @Inject constructor(
                 throw IllegalStateException("Debes verificar tu email antes de iniciar sesion. Te hemos reenviado un correo de verificacion.")
             }
 
-            resolveLoggedInUser(firebaseUser)
+            val user = resolveLoggedInUser(firebaseUser)
                 ?: throw IllegalStateException("No se pudo recuperar el usuario autenticado")
+
+            database.insertAccessLog(AccessLog(userId = user.id, action = "LOGIN"))
+
+            user
         }.recoverCatching { error ->
             throw mapLoginError(error)
         }
@@ -134,6 +139,10 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override suspend fun logout() {
+        val user = getLoggedInUser()
+        if (user != null) {
+            database.insertAccessLog(AccessLog(userId = user.id, action = "LOGOUT"))
+        }
         firebaseAuth.signOut()
         sharedPrefs.edit().remove(Keys.loggedInUserId).apply()
     }
