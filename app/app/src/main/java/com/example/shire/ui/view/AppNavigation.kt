@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -17,6 +18,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import androidx.navigation.NavType
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.res.stringResource
@@ -34,14 +36,21 @@ fun AppNavigation(
     val authState by authViewModel.uiState.collectAsStateWithLifecycle()
 
     val loggedIn = authState.loggedInUser != null
-    val startDestination = if (loggedIn) "tripsScreen" else "login"
-    val guestRoutes = setOf("login", "register", "recover_password")
+    val startDestination = "splash"
+    val guestRoutes = setOf("login", "register", "recover_password", "splash")
 
-    LaunchedEffect(loggedIn, currentRoute) {
-        if (!authState.isLoading && !loggedIn && currentRoute !in guestRoutes) {
-            navController.navigate("login") {
-                popUpTo(navController.graph.startDestinationId) { inclusive = true }
-                launchSingleTop = true
+    LaunchedEffect(authState.isLoading, loggedIn, currentRoute) {
+        if (!authState.isLoading) {
+            if (currentRoute == "splash") {
+                val dest = if (loggedIn) "trips" else "login"
+                navController.navigate(dest) {
+                    popUpTo("splash") { inclusive = true }
+                }
+            } else if (!loggedIn && currentRoute !in guestRoutes) {
+                navController.navigate("login") {
+                    popUpTo(navController.graph.id) { inclusive = true }
+                    launchSingleTop = true
+                }
             }
         }
     }
@@ -59,13 +68,13 @@ fun AppNavigation(
             // Standard navigation for child screens
             navController.navigate(route)
         } else {
-            // Tab navigation setup to prevent duplicates
+            // Tab navigation setup to prevent duplicates and always reset to root
             navController.navigate(route) {
-                popUpTo(navController.graph.startDestinationId) {
+                popUpTo(navController.graph.findStartDestination().id) {
                     saveState = true
                 }
                 launchSingleTop = true
-                restoreState = true
+                restoreState = false
             }
         }
     }
@@ -85,10 +94,19 @@ fun AppNavigation(
             startDestination = startDestination,
             modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())
         ) {
+            composable("splash") {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+
             composable("login") {
                 LoginScreen(
                     onLoginSuccess = {
-                        navController.navigate("tripsScreen") {
+                        navController.navigate("trips") {
                             popUpTo("login") { inclusive = true }
                             launchSingleTop = true
                         }
@@ -109,7 +127,7 @@ fun AppNavigation(
             composable("register") {
                 RegisterScreen(
                     onRegisterSuccess = {
-                        navController.navigate("tripsScreen") {
+                        navController.navigate("trips") {
                             popUpTo("register") { inclusive = true }
                             launchSingleTop = true
                         }
@@ -129,7 +147,7 @@ fun AppNavigation(
             }
 
             // Página Trips
-            composable("tripsScreen") {
+            composable("trips") {
                 TripsScreen(onNavigate = navigateAction)
             }
             // Página Principal
@@ -144,9 +162,6 @@ fun AppNavigation(
             }
 
             // --- New Placeholder Routes for Bottom Navigation ---
-            composable("trips") {
-                TripsScreen(onNavigate = navigateAction)
-            }
             composable("trip_details/{tripId}") { backStackEntry ->
                 val tripId = backStackEntry.arguments?.getString("tripId") ?: ""
                 TripDetailsScreen(tripId = tripId, onNavigateUp = { navController.popBackStack() }, onNavigate = navigateAction)

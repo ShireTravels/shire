@@ -1,14 +1,14 @@
 package com.example.shire.db
 
 import androidx.room.Dao
-import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface UserDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     fun upsert(user: User): Long
 
     @Query("SELECT * FROM users WHERE id = :id LIMIT 1")
@@ -29,7 +29,7 @@ interface UserDao {
 
 @Dao
 interface ActivityDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     fun insert(activity: Activity): Long
 
     @Query("SELECT * FROM activities WHERE id = :activityId LIMIT 1")
@@ -47,7 +47,7 @@ interface ActivityDao {
 
 @Dao
 interface CarDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     fun insert(car: Car): Long
 
     @Query("SELECT * FROM cars WHERE id = :carId LIMIT 1")
@@ -62,7 +62,7 @@ interface CarDao {
 
 @Dao
 interface FlightDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     fun insert(flight: Flight): Long
 
     @Query("SELECT * FROM flights WHERE id = :flightId LIMIT 1")
@@ -77,7 +77,7 @@ interface FlightDao {
 
 @Dao
 interface HotelDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     fun insert(hotel: Hotel): Long
 
     @Query("SELECT * FROM hotels WHERE id = :hotelId LIMIT 1")
@@ -92,7 +92,7 @@ interface HotelDao {
 
 @Dao
 interface PlaceDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     fun insert(place: Place): Long
 
     @Query("SELECT * FROM places WHERE id = :placeId LIMIT 1")
@@ -107,7 +107,7 @@ interface PlaceDao {
 
 @Dao
 interface PreferencesDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     fun upsert(preferences: Preferences): Long
 
     @Query("SELECT * FROM preferences WHERE user_id = :userId LIMIT 1")
@@ -116,7 +116,7 @@ interface PreferencesDao {
 
 @Dao
 interface TripDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     fun insert(trip: Trip): Long
 
     @Query("SELECT * FROM trips WHERE user_id = :userId ORDER BY start_date ASC")
@@ -140,7 +140,7 @@ interface TripDao {
 
 @Dao
 interface AccessLogDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     fun insert(log: AccessLog): Long
 
     @Query("SELECT * FROM access_logs WHERE user_id = :userId ORDER BY timestamp DESC")

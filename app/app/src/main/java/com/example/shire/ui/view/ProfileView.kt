@@ -104,7 +104,7 @@ fun ProfileScreen(
                         HorizontalDivider(modifier = Modifier.padding(start = 56.dp), color = MaterialTheme.colorScheme.outlineVariant)
 
                         OutlinedTextField(
-                            value = user.login,
+                            value = viewModel.login,
                             onValueChange = viewModel::updateLogin,
                             label = { Text(stringResource(id = R.string.login_user_label)) },
                             modifier = Modifier
@@ -114,7 +114,7 @@ fun ProfileScreen(
                         )
 
                         OutlinedTextField(
-                            value = user.username,
+                            value = viewModel.username,
                             onValueChange = viewModel::updateUsername,
                             label = { Text(stringResource(id = R.string.username_label)) },
                             modifier = Modifier
@@ -123,7 +123,7 @@ fun ProfileScreen(
                             singleLine = true
                         )
                         OutlinedTextField(
-                            value = user.birthdate,
+                            value = viewModel.birthdate,
                             onValueChange = viewModel::updateDateOfBirth,
                             label = { Text(stringResource(id = R.string.dob_label)) },
                             placeholder = { Text(stringResource(id = R.string.dob_placeholder)) },
@@ -133,7 +133,7 @@ fun ProfileScreen(
                             singleLine = true
                         )
                         OutlinedTextField(
-                            value = user.address,
+                            value = viewModel.address,
                             onValueChange = viewModel::updateAddress,
                             label = { Text(stringResource(id = R.string.address_label)) },
                             modifier = Modifier
@@ -142,7 +142,7 @@ fun ProfileScreen(
                             singleLine = true
                         )
                         OutlinedTextField(
-                            value = user.country,
+                            value = viewModel.country,
                             onValueChange = viewModel::updateCountry,
                             label = { Text(stringResource(id = R.string.country_label)) },
                             modifier = Modifier
@@ -151,7 +151,7 @@ fun ProfileScreen(
                             singleLine = true
                         )
                         OutlinedTextField(
-                            value = user.phone,
+                            value = viewModel.phone,
                             onValueChange = viewModel::updatePhone,
                             label = { Text(stringResource(id = R.string.phone_label)) },
                             modifier = Modifier
