@@ -3,20 +3,17 @@ package com.example.shire.domain.repository
 import android.content.Context
 import android.util.Log
 import com.example.shire.db.Flight as DbFlight
-import com.example.shire.db.db
+import com.example.shire.db.dbImpl
 import com.example.shire.domain.model.Flight
 import com.example.shire.domain.model.User
-import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.Date
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class FlightRepositoryImpl @Inject constructor(
-    @ApplicationContext context: Context
+    private val database: dbImpl
 ) : FlightRepository {
-
-    private val database = db(context)
 
     private val seedFlights = run {
         val dateValue = Date()

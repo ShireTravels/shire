@@ -3,19 +3,16 @@ package com.example.shire.domain.repository
 import android.content.Context
 import android.util.Log
 import com.example.shire.db.Car as DbCar
-import com.example.shire.db.db
+import com.example.shire.db.dbImpl
 import com.example.shire.domain.model.Car
 import com.example.shire.domain.model.User
-import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class CarRepositoryImpl @Inject constructor(
-    @ApplicationContext context: Context
+    private val database: dbImpl
 ) : CarRepository {
-
-    private val database = db(context)
 
     private val seedCars = listOf(
         Car(

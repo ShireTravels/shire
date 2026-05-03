@@ -18,6 +18,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 
 @Singleton
 class TripRepositoryImpl @Inject constructor(
@@ -32,13 +36,15 @@ class TripRepositoryImpl @Inject constructor(
     private val defaultUserId = 1
 
     init {
-        ensureDefaultUser()
-        seedTripsIfNeeded()
-        seedActivitiesIfNeeded()
+        CoroutineScope(Dispatchers.IO).launch {
+            ensureDefaultUser()
+            seedTripsIfNeeded()
+            seedActivitiesIfNeeded()
+        }
     }
 
-    private fun seedTripsIfNeeded() {
-        if (database.getTripsSync(defaultUserId).isNotEmpty()) return
+    private suspend fun seedTripsIfNeeded() = withContext(Dispatchers.IO) {
+        if (database.getTripsSync(defaultUserId).isNotEmpty()) return@withContext
 
         val hotelParis = hotelRepository.getHotel(101)
         val flightToParis = flightRepository.getFlight(201)
@@ -80,8 +86,8 @@ class TripRepositoryImpl @Inject constructor(
             .forEach { seedTrip -> database.insertTrip(seedTrip.toDbTrip()) }
     }
 
-    private fun ensureDefaultUser() {
-        if (database.getUserByIdSync(defaultUserId) != null) return
+    private suspend fun ensureDefaultUser() = withContext(Dispatchers.IO) {
+        if (database.getUserByIdSync(defaultUserId) != null) return@withContext
         database.upsertUser(
             DbUser(
                 id = defaultUserId,
@@ -93,8 +99,8 @@ class TripRepositoryImpl @Inject constructor(
         )
     }
 
-    private fun seedActivitiesIfNeeded() {
-        if (database.getActivitiesByTripSync(1).isNotEmpty() || database.getActivitiesByTripSync(2).isNotEmpty()) return
+    private suspend fun seedActivitiesIfNeeded() = withContext(Dispatchers.IO) {
+        if (database.getActivitiesByTripSync(1).isNotEmpty() || database.getActivitiesByTripSync(2).isNotEmpty()) return@withContext
 
         listOf(
             DbActivity(
@@ -170,14 +176,20 @@ class TripRepositoryImpl @Inject constructor(
         val currentUserId = getCurrentUserId()
         if (!validateDates(trip.startDate, trip.endDate)) return false
         
-        val exists = database.getTripByIdSync(currentUserId, trip.id) != null
-        if (exists) {
-            database.insertTrip(trip.toDbTrip())
-            Log.i("TripRepo", "Updated trip successfully (ID: ${trip.id})")
-            return true
+        val existingTrip = database.getTripByIdSync(currentUserId, trip.id)
+        if (existingTrip == null) {
+            Log.e("TripRepo", "Failed to update trip: ID ${trip.id} not found")
+            return false
         }
-        Log.e("TripRepo", "Failed to update trip: ID ${trip.id} not found")
-        return false
+        
+        if (existingTrip.title != trip.title && isTitleDuplicate(trip.title)) {
+            Log.w("TripRepo", "Failed to update trip: Title '${trip.title}' already exists")
+            return false
+        }
+        
+        database.insertTrip(trip.toDbTrip())
+        Log.i("TripRepo", "Updated trip successfully (ID: ${trip.id})")
+        return true
     }
 
     override fun isTitleDuplicate(title: String): Boolean {

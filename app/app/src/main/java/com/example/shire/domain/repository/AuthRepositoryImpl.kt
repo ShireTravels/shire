@@ -23,6 +23,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -40,16 +44,24 @@ class AuthRepositoryImpl @Inject constructor(
         const val loggedInUserId = "logged_in_user_id"
     }
 
+    @Volatile private var cachedLoggedInUser: LoggedInUser? = null
+
     init {
-        ensureDefaultUser()
+        CoroutineScope(Dispatchers.IO).launch {
+            ensureDefaultUser()
+        }
     }
 
     override val loggedInUserFlow: Flow<LoggedInUser?> = callbackFlow {
         val listener = FirebaseAuth.AuthStateListener { auth ->
-            trySend(resolveLoggedInUser(auth.currentUser))
+            launch(Dispatchers.IO) {
+                trySend(resolveLoggedInUser(auth.currentUser))
+            }
         }
         firebaseAuth.addAuthStateListener(listener)
-        trySend(resolveLoggedInUser(firebaseAuth.currentUser))
+        launch(Dispatchers.IO) {
+            trySend(resolveLoggedInUser(firebaseAuth.currentUser))
+        }
         awaitClose {
             firebaseAuth.removeAuthStateListener(listener)
         }
@@ -77,10 +89,12 @@ class AuthRepositoryImpl @Inject constructor(
                 throw IllegalStateException("Debes verificar tu email antes de iniciar sesion. Te hemos reenviado un correo de verificacion.")
             }
 
-            val user = resolveLoggedInUser(firebaseUser)
+            val user = withContext(Dispatchers.IO) { resolveLoggedInUser(firebaseUser) }
                 ?: throw IllegalStateException("No se pudo recuperar el usuario autenticado")
 
-            database.insertAccessLog(AccessLog(userId = user.id, action = "LOGIN"))
+            withContext(Dispatchers.IO) {
+                database.insertAccessLog(AccessLog(userId = user.id, action = "LOGIN"))
+            }
 
             user
         }.recoverCatching { error ->
@@ -88,17 +102,25 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun register(email: String, password: String, name: String): Result<Unit> {
+    override suspend fun register(email: String, password: String, name: String, username: String): Result<Unit> {
         val normalizedEmail = email.trim().lowercase()
         val normalizedPassword = password.trim()
         val normalizedName = name.trim()
+        val normalizedUsername = username.trim()
 
         if (normalizedName.isBlank()) return Result.failure(IllegalArgumentException("Nombre requerido"))
+        if (normalizedUsername.isBlank()) return Result.failure(IllegalArgumentException("Username requerido"))
         if (!isValidEmail(normalizedEmail)) return Result.failure(IllegalArgumentException("Email invalido"))
         if (normalizedPassword.isBlank()) return Result.failure(IllegalArgumentException("Password requerido"))
         if (normalizedPassword.length < 6) return Result.failure(IllegalArgumentException("La contraseña debe tener al menos 6 caracteres"))
 
         return runCatching {
+            withContext(Dispatchers.IO) {
+                if (database.getUserByUsernameSync(normalizedUsername) != null) {
+                    throw IllegalArgumentException("El nombre de usuario ya está en uso")
+                }
+            }
+
             firebaseAuth
                 .createUserWithEmailAndPassword(normalizedEmail, normalizedPassword)
                 .awaitCompletion()
@@ -111,6 +133,18 @@ class AuthRepositoryImpl @Inject constructor(
                     .setDisplayName(normalizedName)
                     .build()
             ).awaitCompletion()
+
+            withContext(Dispatchers.IO) {
+                database.upsertUser(
+                    DbUser(
+                        name = normalizedName,
+                        email = normalizedEmail,
+                        passwordHash = "",
+                        username = normalizedUsername,
+                        createdAt = System.currentTimeMillis()
+                    )
+                )
+            }
 
             firebaseUser.sendEmailVerification().awaitCompletion()
             firebaseAuth.signOut()
@@ -141,24 +175,28 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun logout() {
         val user = getLoggedInUser()
         if (user != null) {
-            database.insertAccessLog(AccessLog(userId = user.id, action = "LOGOUT"))
+            withContext(Dispatchers.IO) {
+                database.insertAccessLog(AccessLog(userId = user.id, action = "LOGOUT"))
+            }
         }
         firebaseAuth.signOut()
         sharedPrefs.edit().remove(Keys.loggedInUserId).apply()
+        cachedLoggedInUser = null
     }
 
     override fun getLoggedInUser(): LoggedInUser? {
-        return resolveLoggedInUser(firebaseAuth.currentUser)
+        return cachedLoggedInUser
     }
 
-    private fun ensureDefaultUser() {
-        if (database.getUserById(1) != null) return
+    private suspend fun ensureDefaultUser() = withContext(Dispatchers.IO) {
+        if (database.getUserByIdSync(1) != null) return@withContext
         database.upsertUser(
             DbUser(
                 id = 1,
                 name = "Demo User",
                 email = "demo@shire.local",
                 passwordHash = "1234",
+                username = "demo",
                 createdAt = System.currentTimeMillis()
             )
         )
@@ -177,21 +215,24 @@ class AuthRepositoryImpl @Inject constructor(
         return Patterns.EMAIL_ADDRESS.matcher(email).matches()
     }
 
-    private fun resolveLoggedInUser(firebaseUser: FirebaseUser?): LoggedInUser? {
+    private suspend fun resolveLoggedInUser(firebaseUser: FirebaseUser?): LoggedInUser? = withContext(Dispatchers.IO) {
         if (firebaseUser == null) {
             sharedPrefs.edit().remove(Keys.loggedInUserId).apply()
-            return null
+            cachedLoggedInUser = null
+            return@withContext null
         }
 
         if (!firebaseUser.isEmailVerified) {
             sharedPrefs.edit().remove(Keys.loggedInUserId).apply()
-            return null
+            cachedLoggedInUser = null
+            return@withContext null
         }
 
-        val normalizedEmail = firebaseUser.email?.trim()?.lowercase() ?: return null
+        val normalizedEmail = firebaseUser.email?.trim()?.lowercase() ?: return@withContext null
         val nameFromFirebase = firebaseUser.displayName?.trim().orEmpty()
 
         val localUser = database.getUserByEmail(normalizedEmail) ?: run {
+            val autoGeneratedUsername = "${normalizedEmail.substringBefore('@')}_${System.currentTimeMillis()}"
             database.upsertUser(
                 DbUser(
                     name = nameFromFirebase.ifBlank {
@@ -199,14 +240,17 @@ class AuthRepositoryImpl @Inject constructor(
                     },
                     email = normalizedEmail,
                     passwordHash = "",
+                    username = autoGeneratedUsername,
                     createdAt = System.currentTimeMillis()
                 )
             )
             database.getUserByEmail(normalizedEmail)
-        } ?: return null
+        } ?: return@withContext null
 
         setLoggedInUserId(localUser.id)
-        return localUser.toLoggedInUser()
+        val resultUser = localUser.toLoggedInUser()
+        cachedLoggedInUser = resultUser
+        return@withContext resultUser
     }
 
     private fun mapFirebaseAuthError(error: Throwable): Throwable {
