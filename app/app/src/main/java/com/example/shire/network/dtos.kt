@@ -1,44 +1,56 @@
 package com.example.shire.network
 
+import com.google.gson.annotations.SerializedName
+
 data class HotelDto(
-    val id: Long,
+    val id: String,
     val name: String,
-    val city: String,
     val address: String,
-    val images: List<String> = emptyList(),
-    val rooms: List<RoomDto> = emptyList()
+    val rating: Int,
+    val rooms: List<RoomDto> = emptyList(),
+    @SerializedName("image_url") val imageUrl: String
 )
 
 data class HotelDetailsDto(
-    val id: Long,
+    val id: String,
     val name: String,
-    val description: String?,
     val address: String,
-    val images: List<String> = emptyList(),
-    val rooms: List<RoomDto> = emptyList()
+    val rating: Int,
+    val rooms: List<RoomDto> = emptyList(),
+    @SerializedName("image_url") val imageUrl: String
 )
 
 data class RoomDto(
-    val id: Long,
-    val type: String,
+    val id: String,
+    @SerializedName("room_type") val roomType: String,
     val price: Double,
     val images: List<String> = emptyList()
 )
 
 data class ReservationDto(
-    val id: Long,
-    val hotelId: Long,
-    val roomId: Long,
-    val startDate: String,
-    val endDate: String,
-    val userName: String,
-    val price: Double
+    val id: String? = null,
+    @SerializedName("hotel_id") val hotelId: String,
+    @SerializedName("room_id") val roomId: String,
+    @SerializedName("start_date") val startDate: String,
+    @SerializedName("end_date") val endDate: String,
+    @SerializedName("guest_name") val guestName: String,
+    @SerializedName("guest_email") val guestEmail: String
 )
 
 data class CreateReservationRequest(
-    val hotelId: Long,
-    val roomId: Long,
-    val startDate: String,
-    val endDate: String,
-    val userName: String
+    @SerializedName("hotel_id") val hotelId: String,
+    @SerializedName("room_id") val roomId: String,
+    @SerializedName("start_date") val startDate: String,
+    @SerializedName("end_date") val endDate: String,
+    @SerializedName("guest_name") val guestName: String,
+    @SerializedName("guest_email") val guestEmail: String
+)
+
+data class ReserveRequest(
+    @SerializedName("hotel_id") val hotelId: String,
+    @SerializedName("room_id") val roomId: String,
+    @SerializedName("start_date") val startDate: String,
+    @SerializedName("end_date") val endDate: String,
+    @SerializedName("guest_name") val guestName: String,
+    @SerializedName("guest_email") val guestEmail: String
 )
