@@ -3,6 +3,7 @@ package com.example.shire.db
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.room.SkipQueryVerification
 
 @Database(
     entities = [
@@ -19,6 +20,7 @@ import androidx.room.TypeConverters
     version = 7,
     exportSchema = false
 )
+@SkipQueryVerification
 @TypeConverters(ShireTypeConverters::class)
 abstract class ShireRoomDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao

@@ -10,6 +10,8 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -20,10 +22,21 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.shire.R
 import com.example.shire.ui.theme.ShireTheme
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.shire.ui.viewmodel.HotelDetailsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HotelDetailsScreen(onNavigateUp: () -> Unit) {
+fun HotelDetailsScreen(
+    onNavigateUp: () -> Unit,
+    viewModel: HotelDetailsViewModel = hiltViewModel()
+) {
+    val uiState = viewModel.uiState.collectAsState().value
+
+    LaunchedEffect(Unit) {
+        viewModel.loadHotel()
+    }
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
@@ -61,14 +74,28 @@ fun HotelDetailsScreen(onNavigateUp: () -> Unit) {
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "120€",
+                            text = uiState.hotel?.rooms?.firstOrNull()?.price?.let { "${it}€" } ?: "--",
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                     Button(
-                        onClick = { /* TODO implement booking action */ },
+                        onClick = {
+                            uiState.hotel?.rooms?.firstOrNull()?.let { room ->
+                                viewModel.reserveHotel(
+                                    groupId = "G01",
+                                    request = com.example.shire.network.ReserveRequest(
+                                        hotelId = uiState.hotel.id,
+                                        roomId = room.id,
+                                        startDate = "2026-05-14",
+                                        endDate = "2026-05-15",
+                                        guestName = "Guest",
+                                        guestEmail = "guest@example.com"
+                                    )
+                                )
+                            }
+                        },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF006CE4)),
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier
@@ -99,7 +126,7 @@ fun HotelDetailsScreen(onNavigateUp: () -> Unit) {
                         .background(Color.LightGray)
                 ) {
                     Text(
-                        text = stringResource(id = R.string.main_photo),
+                        text = uiState.hotel?.name ?: stringResource(id = R.string.main_photo),
                         modifier = Modifier.align(Alignment.Center),
                         color = Color.DarkGray
                     )
@@ -120,7 +147,7 @@ fun HotelDetailsScreen(onNavigateUp: () -> Unit) {
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Hotel Plaza Barcelona",
+                                text = uiState.hotel?.name ?: "Hotel Plaza Barcelona",
                                 fontSize = 26.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onBackground
@@ -135,7 +162,7 @@ fun HotelDetailsScreen(onNavigateUp: () -> Unit) {
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
-                                    text = "Ciutat Vella, Barcelona",
+                                    text = uiState.hotel?.address ?: "Ciutat Vella, Barcelona",
                                     fontSize = 14.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -152,7 +179,7 @@ fun HotelDetailsScreen(onNavigateUp: () -> Unit) {
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
-                                    text = "4.5",
+                                    text = uiState.hotel?.rating?.toString() ?: "4.5",
                                     color = Color.White,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 16.sp
@@ -171,7 +198,7 @@ fun HotelDetailsScreen(onNavigateUp: () -> Unit) {
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = stringResource(id = R.string.hotel_desc_placeholder),
+                        text = if (uiState.isLoading) stringResource(id = R.string.hotel_desc_placeholder) else uiState.errorMessage ?: stringResource(id = R.string.hotel_desc_placeholder),
                         fontSize = 15.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         lineHeight = 22.sp
